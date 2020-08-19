@@ -1,0 +1,6 @@
+httpd
+test
+a.out
+*.o
+*~
+\#*#
