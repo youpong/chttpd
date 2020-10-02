@@ -2,11 +2,17 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 typedef struct {
   bool debug;
 } Option;
+
+typedef struct {
+  char *peer_addr;
+  time_t date;
+} Logger;
 
 Option *parse(int, char **);
 void server_start(Option *);
