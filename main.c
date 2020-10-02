@@ -2,12 +2,32 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdbool.h>
+
+typedef struct {
+  bool debug;
+} Option;
+
+Option *parse(int, char **);
+void server_start(Option *);
 
 int main(int argc, char **argv) {
-  int sv_sock;
+  Option *opts = parse(argc, argv);
+  server_start(opts);
 
+  return 0;
+}
+
+Option *parse(int argvc, char **argv) {
+  return NULL;
+}
+
+void server_start(Option *opts) {
+}
+
+void foo() {
   /* create a socket, endpoint of connection */
-  sv_sock = socket(AF_INET, SOCK_STREAM, 0);
+  int sv_sock = socket(AF_INET, SOCK_STREAM, 0);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -25,6 +45,4 @@ int main(int argc, char **argv) {
 
   close(sock);
   close(sv_sock);
-
-  return 0;
 }
