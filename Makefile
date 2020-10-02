@@ -1,3 +1,4 @@
+CC = clang
 CFLAGS = -g -Wall -std=c18
 
 TARGET = httpd
