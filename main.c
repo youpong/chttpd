@@ -20,6 +20,7 @@ Option *parse(int, char **);
 void server_start(Option *);
 int sv_listen(Option *);
 int sv_accept(int);
+void worker_start(int);
 
 int main(int argc, char **argv) {
   Option *opts = parse(argc, argv);
@@ -41,17 +42,14 @@ void server_start(Option *opts) {
 
     pid_t pid = fork();
     switch (pid) {
-    case -1:
-      // error
-      break;
-    case 0:
-      // child
-      write(sock, "Hello", 5);
+    case -1: // error
+      perror("fork");
+      exit(1);
+    case 0: // child
+      worker_start(sock);
       close(sock);
       _exit(0);
-      break;
-    default:
-        // parent
+    default: // parent
         ;
     }
   }
@@ -88,9 +86,18 @@ int sv_listen(Option *opts) {
 }
 
 int sv_accept(int sv_sock) {
+  int sock;  
   struct sockaddr_in client;
   socklen_t len = sizeof(client);
-  int sock = accept(sv_sock, (struct sockaddr *)&client, &len);
+
+  if ((sock = accept(sv_sock, (struct sockaddr *)&client, &len)) < 0) {
+    perror("accept");
+    exit(1);
+  }
 
   return sock;
+}
+
+void worker_start(int sock) {
+  write(sock, "Hello", 5);
 }
