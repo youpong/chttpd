@@ -1,26 +1,10 @@
+#include "httpd.h"
 #include <netinet/in.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
-
-typedef struct {
-  bool debug;
-} Option;
-
-typedef struct {
-  char *peer_addr;
-  time_t date;
-} Logger;
-
-Option *parse(int, char **);
-void server_start(Option *);
-int sv_listen(Option *);
-int sv_accept(int);
-void worker_start(int, Option *);
 
 int main(int argc, char **argv) {
   Option *opt = parse(argc, argv);
@@ -50,7 +34,7 @@ void server_start(Option *opt) {
       close(sock);
       _exit(0);
     default: // parent
-        ;
+             ;
     }
   }
 
@@ -86,7 +70,7 @@ int sv_listen(Option *opt) {
 }
 
 int sv_accept(int sv_sock) {
-  int sock;  
+  int sock;
   struct sockaddr_in client;
   socklen_t len = sizeof(client);
 
@@ -96,8 +80,4 @@ int sv_accept(int sv_sock) {
   }
 
   return sock;
-}
-
-void worker_start(int sock, Option *opt) {
-  write(sock, "Hello", 5);
 }

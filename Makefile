@@ -2,6 +2,7 @@ CC = clang
 CFLAGS = -g -Wall -std=c18
 
 TARGET = httpd
+OBJS = main.o worker.o
 
 .PHONY: all clean format check 
 
@@ -16,5 +17,6 @@ format:
 check: all test client
 	./test
 
-$(TARGET): main.o
+$(OJBS): httpd.h
+$(TARGET): $(OBJS)
 	$(CC) -o $@ $^
