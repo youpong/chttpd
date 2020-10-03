@@ -20,11 +20,11 @@ Option *parse(int, char **);
 void server_start(Option *);
 int sv_listen(Option *);
 int sv_accept(int);
-void worker_start(int);
+void worker_start(int, Option *);
 
 int main(int argc, char **argv) {
-  Option *opts = parse(argc, argv);
-  server_start(opts);
+  Option *opt = parse(argc, argv);
+  server_start(opt);
 
   return 0;
 }
@@ -33,9 +33,9 @@ Option *parse(int argvc, char **argv) {
   return NULL;
 }
 
-void server_start(Option *opts) {
+void server_start(Option *opt) {
 
-  int sv_sock = sv_listen(opts);
+  int sv_sock = sv_listen(opt);
 
   while (true) {
     int sock = sv_accept(sv_sock);
@@ -46,7 +46,7 @@ void server_start(Option *opts) {
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock);
+      worker_start(sock, opt);
       close(sock);
       _exit(0);
     default: // parent
@@ -57,7 +57,7 @@ void server_start(Option *opts) {
   close(sv_sock);
 }
 
-int sv_listen(Option *opts) {
+int sv_listen(Option *opt) {
   int sv_sock;
 
   /* create a socket, endpoint of connection */
@@ -98,6 +98,6 @@ int sv_accept(int sv_sock) {
   return sock;
 }
 
-void worker_start(int sock) {
+void worker_start(int sock, Option *opt) {
   write(sock, "Hello", 5);
 }
