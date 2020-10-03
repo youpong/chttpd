@@ -1,5 +1,7 @@
 #include <netinet/in.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
@@ -58,18 +60,29 @@ void server_start(Option *opts) {
 }
 
 int sv_listen(Option *opts) {
+  int sv_sock;
+
   /* create a socket, endpoint of connection */
-  int sv_sock = socket(AF_INET, SOCK_STREAM, 0);
+  if ((sv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("socket");
+    exit(1);
+  }
 
   /* bind */
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(12345);
+  addr.sin_port = htons(8088);
   addr.sin_addr.s_addr = INADDR_ANY;
-  bind(sv_sock, (struct sockaddr *)&addr, sizeof(addr));
+  if (bind(sv_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    perror("bind");
+    exit(1);
+  }
 
   /* listen */
-  listen(sv_sock, 5);
+  if (listen(sv_sock, 5) == -1) {
+    perror("listen");
+    exit(1);
+  }
 
   return sv_sock;
 }
