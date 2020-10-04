@@ -2,8 +2,6 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 int main(int argc, char **argv) {
@@ -22,7 +20,10 @@ void server_start(Option *opt) {
   int sv_sock = sv_listen(opt);
 
   while (true) {
-    int sock = sv_accept(sv_sock);
+    struct sockaddr_in *client_addr = malloc(sizeof(struct sockaddr_in));
+    int sock = sv_accept(sv_sock, client_addr);
+    printf("address: %s, port: %d\n", inet_ntoa(client_addr->sin_addr),
+           ntohs(client_addr->sin_port));
 
     pid_t pid = fork();
     switch (pid) {
@@ -59,6 +60,7 @@ int sv_listen(Option *opt) {
     perror("bind");
     exit(1);
   }
+  printf("listen port: %d\n", ntohs(addr.sin_port));
 
   /* listen */
   if (listen(sv_sock, 5) == -1) {
@@ -69,12 +71,11 @@ int sv_listen(Option *opt) {
   return sv_sock;
 }
 
-int sv_accept(int sv_sock) {
+int sv_accept(int sv_sock, struct sockaddr_in *client) {
   int sock;
-  struct sockaddr_in client;
   socklen_t len = sizeof(client);
 
-  if ((sock = accept(sv_sock, (struct sockaddr *)&client, &len)) < 0) {
+  if ((sock = accept(sv_sock, (struct sockaddr *)client, &len)) < 0) {
     perror("accept");
     exit(1);
   }
