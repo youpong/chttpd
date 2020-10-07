@@ -35,14 +35,14 @@ void server_start(Option *opt) {
       exit(1);
     case 0: // child
       worker_start(sock->fd, sock->addr, opt);
-      socket_close(sock);
+      delete_socket(sock);
       _exit(0);
     default: // parent
       ;
     }
   }
 
-  socket_close(sv_sock);
+  delete_socket(sv_sock);
 }
 
 Socket *create_server_socket(int port) {
@@ -93,6 +93,8 @@ Socket *new_socket() {
   return sock;
 }
 
-void  socket_close(Socket *sock) {
+void delete_socket(Socket *sock) {
   close(sock->fd);
+  free(sock->addr);
+  free(sock);
 }

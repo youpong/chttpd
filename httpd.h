@@ -28,5 +28,5 @@ Socket *create_server_socket(int);
 Socket *server_accept(Socket *);
 Socket *new_socket();
 void socket_close(Socket *);
-//void delete_socket(Socket *);
+void delete_socket(Socket *);
 void worker_start(int, struct sockaddr_in *, Option *);
