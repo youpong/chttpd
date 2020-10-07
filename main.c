@@ -24,10 +24,10 @@ void server_start(Option *opt) {
 	 ntohs(sv_sock->addr->sin_port));
   
   while (true) {
-    struct sockaddr_in *client_addr = malloc(sizeof(struct sockaddr_in));
-    int sock = sv_accept(sv_sock, client_addr);
-    printf("address: %s, port: %d\n", inet_ntoa(client_addr->sin_addr),
-           ntohs(client_addr->sin_port));
+    //struct sockaddr_in *client_addr = malloc(sizeof(struct sockaddr_in));
+    Socket *sock = server_accept(sv_sock);
+    printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
+           ntohs(sock->addr->sin_port));
 
     pid_t pid = fork();
     switch (pid) {
@@ -35,8 +35,8 @@ void server_start(Option *opt) {
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock, client_addr, opt);
-      close(sock);
+      worker_start(sock->fd, sock->addr, opt);
+      socket_close(sock);
       _exit(0);
     default: // parent
       ;
@@ -75,11 +75,14 @@ Socket *create_server_socket(int port) {
   return sv_sock;
 }
 
-int sv_accept(Socket *sv_sock, struct sockaddr_in *client) {
-  int sock;
-  socklen_t len = sizeof(client);
+Socket *server_accept(Socket *sv_sock) {
+  //int sock;
+  Socket *sock = malloc(sizeof(Socket));
+  sock->addr = malloc(sizeof(struct sockaddr_in));
+  sock->addr_len = sizeof(*sock->addr);
 
-  if ((sock = accept(sv_sock->fd, (struct sockaddr *)client, &len)) < 0) {
+  if ((sock->fd = accept(sv_sock->fd, (struct sockaddr *)sock->addr,
+		     &sock->addr_len)) < 0) {
     perror("accept");
     exit(1);
   }
