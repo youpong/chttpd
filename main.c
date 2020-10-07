@@ -21,8 +21,8 @@ Option *parse(int argvc, char **argv) {
 void server_start(Option *opt) {
   Socket *sv_sock = create_server_socket(opt->port);
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
-	 ntohs(sv_sock->addr->sin_port));
-  
+         ntohs(sv_sock->addr->sin_port));
+
   while (true) {
     Socket *sock = server_accept(sv_sock);
     printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
@@ -34,11 +34,11 @@ void server_start(Option *opt) {
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock->fd, sock->addr, opt);
+      worker_start(sock, opt);
       delete_socket(sock);
       _exit(0);
     default: // parent
-      ;
+             ;
     }
   }
 
@@ -75,9 +75,9 @@ Socket *create_server_socket(int port) {
 
 Socket *server_accept(Socket *sv_sock) {
   Socket *sock = new_socket();
-  
+
   if ((sock->fd = accept(sv_sock->fd, (struct sockaddr *)sock->addr,
-		     &sock->addr_len)) < 0) {
+                         &sock->addr_len)) < 0) {
     perror("accept");
     exit(1);
   }
