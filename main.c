@@ -24,7 +24,6 @@ void server_start(Option *opt) {
 	 ntohs(sv_sock->addr->sin_port));
   
   while (true) {
-    //struct sockaddr_in *client_addr = malloc(sizeof(struct sockaddr_in));
     Socket *sock = server_accept(sv_sock);
     printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
            ntohs(sock->addr->sin_port));
@@ -47,8 +46,7 @@ void server_start(Option *opt) {
 }
 
 Socket *create_server_socket(int port) {
-  Socket *sv_sock = malloc(sizeof(Socket));
-  sv_sock->addr = malloc(sizeof(struct sockaddr_in));
+  Socket *sv_sock = new_socket();
 
   /* create a socket, endpoint of connection */
   if ((sv_sock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -61,7 +59,7 @@ Socket *create_server_socket(int port) {
   addr->sin_family = AF_INET;
   addr->sin_port = htons(8088);
   addr->sin_addr.s_addr = INADDR_ANY;
-  if (bind(sv_sock->fd, (struct sockaddr *)addr, sizeof(*addr)) < 0) {
+  if (bind(sv_sock->fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
     perror("bind");
     exit(1);
   }
@@ -76,16 +74,21 @@ Socket *create_server_socket(int port) {
 }
 
 Socket *server_accept(Socket *sv_sock) {
-  //int sock;
-  Socket *sock = malloc(sizeof(Socket));
-  sock->addr = malloc(sizeof(struct sockaddr_in));
-  sock->addr_len = sizeof(*sock->addr);
-
+  Socket *sock = new_socket();
+  
   if ((sock->fd = accept(sv_sock->fd, (struct sockaddr *)sock->addr,
 		     &sock->addr_len)) < 0) {
     perror("accept");
     exit(1);
   }
+
+  return sock;
+}
+
+Socket *new_socket() {
+  Socket *sock = malloc(sizeof(Socket));
+  sock->addr = malloc(sizeof(struct sockaddr_in));
+  sock->addr_len = sizeof(*sock->addr);
 
   return sock;
 }
