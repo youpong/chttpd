@@ -2,7 +2,8 @@ CC = clang
 CFLAGS = -g -Wall -std=c18
 
 TARGET = httpd
-OBJS = main.o worker.o
+SRCS = main.c worker.c
+OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean format check 
 
@@ -17,6 +18,10 @@ format:
 check: all test client
 	./test
 
-$(OJBS): httpd.h
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $(OBJS)
+
+# following doesn't work... why?
+# $(OJBS): httpd.h
+main.o: httpd.h
+worker.o: httpd.h

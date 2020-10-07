@@ -7,7 +7,13 @@
 #include <arpa/inet.h>
 
 typedef struct {
+  struct sockaddr_in *addr;
+  int fd;
+} Socket;
+
+typedef struct {
   bool debug;
+  int port;
 } Option;
 
 typedef struct {
@@ -17,6 +23,7 @@ typedef struct {
 
 Option *parse(int, char **);
 void server_start(Option *);
-int sv_listen(Option *);
-int sv_accept(int, struct sockaddr_in *);
-void worker_start(int, Option *);
+Socket *create_server_socket(int);
+int sv_accept(Socket *, struct sockaddr_in *);
+void socket_close(Socket *);
+void worker_start(int, struct sockaddr_in *, Option *);

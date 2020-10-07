@@ -12,13 +12,17 @@ int main(int argc, char **argv) {
 }
 
 Option *parse(int argvc, char **argv) {
-  return NULL;
+  Option *opts = malloc(sizeof(Option));
+  opts->port = 8088;
+
+  return opts;
 }
 
 void server_start(Option *opt) {
-
-  int sv_sock = sv_listen(opt);
-
+  Socket *sv_sock = create_server_socket(opt->port);
+  printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
+	 ntohs(sv_sock->addr->sin_port));
+  
   while (true) {
     struct sockaddr_in *client_addr = malloc(sizeof(struct sockaddr_in));
     int sock = sv_accept(sv_sock, client_addr);
@@ -31,39 +35,39 @@ void server_start(Option *opt) {
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock, opt);
+      worker_start(sock, client_addr, opt);
       close(sock);
       _exit(0);
     default: // parent
-             ;
+      ;
     }
   }
 
-  close(sv_sock);
+  socket_close(sv_sock);
 }
 
-int sv_listen(Option *opt) {
-  int sv_sock;
+Socket *create_server_socket(int port) {
+  Socket *sv_sock = malloc(sizeof(Socket));
+  sv_sock->addr = malloc(sizeof(struct sockaddr_in));
 
   /* create a socket, endpoint of connection */
-  if ((sv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+  if ((sv_sock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket");
     exit(1);
   }
 
   /* bind */
-  struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(8088);
-  addr.sin_addr.s_addr = INADDR_ANY;
-  if (bind(sv_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  struct sockaddr_in *addr = sv_sock->addr;
+  addr->sin_family = AF_INET;
+  addr->sin_port = htons(8088);
+  addr->sin_addr.s_addr = INADDR_ANY;
+  if (bind(sv_sock->fd, (struct sockaddr *)addr, sizeof(*addr)) < 0) {
     perror("bind");
     exit(1);
   }
-  printf("listen port: %d\n", ntohs(addr.sin_port));
 
   /* listen */
-  if (listen(sv_sock, 5) == -1) {
+  if (listen(sv_sock->fd, 5) == -1) {
     perror("listen");
     exit(1);
   }
@@ -71,14 +75,18 @@ int sv_listen(Option *opt) {
   return sv_sock;
 }
 
-int sv_accept(int sv_sock, struct sockaddr_in *client) {
+int sv_accept(Socket *sv_sock, struct sockaddr_in *client) {
   int sock;
   socklen_t len = sizeof(client);
 
-  if ((sock = accept(sv_sock, (struct sockaddr *)client, &len)) < 0) {
+  if ((sock = accept(sv_sock->fd, (struct sockaddr *)client, &len)) < 0) {
     perror("accept");
     exit(1);
   }
 
   return sock;
+}
+
+void  socket_close(Socket *sock) {
+  close(sock->fd);
 }
