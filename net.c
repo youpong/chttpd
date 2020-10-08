@@ -1,8 +1,11 @@
 #include "net.h"
+#include "util.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+
+#include <string.h> // strdup(3)
 
 Socket *new_socket() {
   Socket *sock = malloc(sizeof(Socket));
@@ -58,13 +61,108 @@ Socket *server_accept(Socket *sv_sock) {
   return sock;
 }
 
+static void consum(FILE *f, char c);
+static void request_line(FILE *f, HttpRequest *req);
+static void message_header(FILE *f, HttpRequest *req);
+
+/**
+ * @return a pointer to HttpRequest object.
+ * @return NULL when read null request.
+ */
 HttpRequest *http_request_parse(int fd, bool debug) {
   HttpRequest *req = malloc(sizeof(HttpRequest));
   req->header_map = new_map();
 
   FILE *f = fdopen(fd, "r");
 
+  request_line(f, req);
+  message_header(f, req);
+
   return req;
+}
+
+static void request_line(FILE *f, HttpRequest *req) {
+  char buf[256];
+  char *p;
+  int c;
+
+  p = buf;
+  while ((c = fgetc(f)) != EOF) {
+    if (c == ' ')
+      break;
+    *p++ = c;
+  }
+  *p = '\0';
+  req->method = strdup(buf);
+
+  p = buf;
+  while ((c = fgetc(f)) != EOF) {
+    if (c == ' ')
+      break;
+    *p++ = c;
+  }
+  *p = '\0';
+  req->request_uri = strdup(buf);
+
+  p = buf;
+  while ((c = fgetc(f)) != EOF) {
+    if (c == '\r') {
+      consum(f, '\n');
+      break;
+    }
+    *p++ = c;
+  }
+  *p = '\0';
+  req->http_version = strdup(buf);
+}
+
+static void message_header(FILE *f, HttpRequest *req) {
+  char buf[256];
+  char *p, *key, *value;
+  int c;
+
+  while ((c = fgetc(f)) != EOF) {
+    if (c == '\r') {
+      consum(f, '\n');
+      break;
+    }
+    ungetc(c, f);
+
+    // key
+    p = buf;
+    while ((c = fgetc(f)) != EOF) {
+      if (c == ':')
+        break;
+      *p++ = c;
+    }
+    *p = '\0';
+    key = strdup(buf);
+
+    // SP
+    consum(f, ' ');
+
+    // value
+    p = buf;
+    while ((c = fgetc(f)) != EOF) {
+      if (c == '\r') {
+        consum(f, '\n');
+        break;
+      }
+      *p++ = c;
+    }
+    *p = '\0';
+    value = strdup(buf);
+
+    map_put(req->header_map, key, value);
+  }
+}
+
+static void consum(FILE *f, char expected) {
+  int c;
+
+  c = fgetc(f);
+  if (c != expected)
+    error("unexpected character: %c\n", c);
 }
 
 HttpResponse *create_http_response(HttpRequest *req) {
@@ -76,4 +174,3 @@ void write_http_response(int fd, HttpResponse *res) {
 
 void write_log(FILE *out, Socket *sock, HttpRequest *req, HttpResponse *res) {
 }
-

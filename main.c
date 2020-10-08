@@ -1,8 +1,8 @@
 #include "main.h"
 
-#include <sys/socket.h> // inet_ntoa()
+#include <arpa/inet.h>  // inet_ntoa()
 #include <netinet/in.h> // inet_ntoa()
-#include <arpa/inet.h> // inet_ntoa()
+#include <sys/socket.h> // inet_ntoa()
 
 #include <stdio.h>
 #include <stdlib.h>
