@@ -16,7 +16,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 clean:
-	- rm -f a.out *.o $(TARGET) test
+	- rm -f a.out $(TARGET) $(OBJS) *~ test
 
 format:
 	clang-format -i *.c
