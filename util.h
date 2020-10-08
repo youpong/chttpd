@@ -1,5 +1,7 @@
-#ifndef UTIL_H
-#define UTIL_H
+#pragma once
+
+#include <stdnoreturn.h>
+
 /* util.c */
 typedef struct {
   void **data;
@@ -23,8 +25,8 @@ void *map_get(Map *, char *);
 
 int *intdup(int);
 
-_Noreturn void error(char *, ...);
+noreturn void error(char *, ...);
 
 /* util_test.c */
 void run_utiltest();
-#endif
+

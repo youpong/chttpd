@@ -1,5 +1,9 @@
-#include "httpd.h"
-#include <netinet/in.h>
+#include "main.h"
+
+#include <sys/socket.h> // inet_ntoa()
+#include <netinet/in.h> // inet_ntoa()
+#include <arpa/inet.h> // inet_ntoa()
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -43,58 +47,4 @@ void server_start(Option *opt) {
   }
 
   delete_socket(sv_sock);
-}
-
-Socket *create_server_socket(int port) {
-  Socket *sv_sock = new_socket();
-
-  /* create a socket, endpoint of connection */
-  if ((sv_sock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket");
-    exit(1);
-  }
-
-  /* bind */
-  struct sockaddr_in *addr = sv_sock->addr;
-  addr->sin_family = AF_INET;
-  addr->sin_port = htons(8088);
-  addr->sin_addr.s_addr = INADDR_ANY;
-  if (bind(sv_sock->fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
-    perror("bind");
-    exit(1);
-  }
-
-  /* listen */
-  if (listen(sv_sock->fd, 5) == -1) {
-    perror("listen");
-    exit(1);
-  }
-
-  return sv_sock;
-}
-
-Socket *server_accept(Socket *sv_sock) {
-  Socket *sock = new_socket();
-
-  if ((sock->fd = accept(sv_sock->fd, (struct sockaddr *)sock->addr,
-                         &sock->addr_len)) < 0) {
-    perror("accept");
-    exit(1);
-  }
-
-  return sock;
-}
-
-Socket *new_socket() {
-  Socket *sock = malloc(sizeof(Socket));
-  sock->addr = malloc(sizeof(struct sockaddr_in));
-  sock->addr_len = sizeof(*sock->addr);
-
-  return sock;
-}
-
-void delete_socket(Socket *sock) {
-  close(sock->fd);
-  free(sock->addr);
-  free(sock);
 }

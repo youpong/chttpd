@@ -1,4 +1,3 @@
-#include "9cc.h"
 #include "util.h"
 #include <stdint.h>
 #include <stdio.h>

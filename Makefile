@@ -1,8 +1,14 @@
-CC = clang
-CFLAGS = -g -Wall -std=c18
+#CC = clang
+
+# _POSIX_C_SOURCE: fdopen(3)
+CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L
+# refer to feature_test_macros(7)
+
+# libc: fdopen(3)
+LIBS = -lc
 
 TARGET = httpd
-SRCS = main.c worker.c
+SRCS = main.c worker.c net.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean format check 
@@ -19,9 +25,10 @@ check: all test client
 	./test
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LIBS)
 
 # following doesn't work... why?
 # $(OJBS): httpd.h
-main.o: httpd.h
-worker.o: httpd.h
+main.o: main.h
+worker.o: main.h net.h
+net.o: net.h
