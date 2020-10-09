@@ -36,4 +36,4 @@ typedef struct {
 
 HttpRequest *http_request_parse(int, bool);
 void write_http_response(int, HttpResponse *);
-void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
+

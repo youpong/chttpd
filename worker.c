@@ -1,10 +1,13 @@
 #include "main.h"
 #include "net.h"
-#include <stdlib.h> // malloc()
-#include <string.h> // strcmp()
-#include <unistd.h> // write()
+#include <arpa/inet.h> // inet_ntoa()
+#include <stdlib.h>    // malloc()
+#include <string.h>    // strcmp()
+#include <time.h>      // time()
+#include <unistd.h>    // write()
 
 static HttpResponse *create_http_response(HttpRequest *);
+static void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
 
 void worker_start(Socket *sock, Option *opt) {
 
@@ -47,4 +50,34 @@ static HttpResponse *create_http_response(HttpRequest *req) {
   }
 
   return res;
+}
+
+static char *default_val(char *val, char *dval);
+static char *formatted_time(time_t *t);
+
+static void write_log(FILE *out, Socket *sock, HttpRequest *req,
+                      HttpResponse *res) {
+  time_t req_time;
+  time(&req_time);
+
+  // clang-format off
+  fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
+      inet_ntoa(sock->addr->sin_addr),
+      // date [09/Oct/2020:13:17:45 +0900]
+      formatted_time(&req_time),
+      // request-line
+      req->method, req->request_uri, req->http_version,
+      res->status_code,
+      default_val((char *)map_get(res->header_map, "Content-Length"), "\"-\""),
+      default_val((char *)map_get(req->header_map, "Refer"), "-"),
+      default_val((char *)map_get(req->header_map, "User-Agent"), "-"));
+  // clang-format on
+}
+
+static char *formatted_time(time_t *t) {
+  return strdup("09/Oct/2020:13:17:45 +0900");
+}
+
+static char *default_val(char *val, char *dval) {
+  return val ? val : dval;
 }

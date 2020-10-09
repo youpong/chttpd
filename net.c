@@ -33,7 +33,7 @@ Socket *create_server_socket(int port) {
   /* bind */
   struct sockaddr_in *addr = sv_sock->addr;
   addr->sin_family = AF_INET;
-  addr->sin_port = htons(8088);
+  addr->sin_port = htons(port);
   addr->sin_addr.s_addr = INADDR_ANY;
   if (bind(sv_sock->fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
     perror("bind");
@@ -189,7 +189,4 @@ void write_http_response(int fd, HttpResponse *res) {
     p++;
   }
   fflush(f);
-}
-
-void write_log(FILE *out, Socket *sock, HttpRequest *req, HttpResponse *res) {
 }
