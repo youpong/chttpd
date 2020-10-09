@@ -1,7 +1,7 @@
 #CC = clang
 
 # _POSIX_C_SOURCE: fdopen(3)
-CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L
+CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 # refer to feature_test_macros(7)
 
 # libc: fdopen(3)

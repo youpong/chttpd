@@ -9,13 +9,13 @@
 static HttpResponse *create_http_response(HttpRequest *);
 static void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
 
-void worker_start(Socket *sock, Option *opt) {
+void worker_start(Socket *sock, FILE *log, Option *opt) {
 
   while (true) {
     HttpRequest *req = http_request_parse(sock->fd, opt->debug);
     HttpResponse *res = create_http_response(req);
     write_http_response(sock->fd, res);
-    write_log(stdout, sock, req, res);
+    write_log(log, sock, req, res);
 
     if (strcmp("close", map_get(req->header_map, "Connection")) == 0)
       break;
@@ -72,12 +72,39 @@ static void write_log(FILE *out, Socket *sock, HttpRequest *req,
       default_val((char *)map_get(req->header_map, "Refer"), "-"),
       default_val((char *)map_get(req->header_map, "User-Agent"), "-"));
   // clang-format on
+  fflush(out);
 }
 
+/**
+ * 09/Oct/2020:17:34:23 +0900
+ */
 static char *formatted_time(time_t *t) {
-  return strdup("09/Oct/2020:13:17:45 +0900");
+  char buf[256];
+  char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+  struct tm *t_tm = malloc(sizeof(struct tm));
+
+  tzset();
+  localtime_r(t, t_tm);
+
+  sprintf(buf, "%02d/%s/%d:%02d:%02d:%02d %+03d%02d", t_tm->tm_mday,
+          month[t_tm->tm_mon], t_tm->tm_year + 1900, t_tm->tm_hour,
+          t_tm->tm_min, t_tm->tm_sec, (int)-timezone / 60 / 60,
+          (int)-timezone % (60 * 60));
+
+  return strdup(buf);
 }
 
 static char *default_val(char *val, char *dval) {
   return val ? val : dval;
+}
+
+/**
+ * timezone -0900, 0500
+ */
+void test_formatted_time() {
+  time_t t;
+  time(&t);
+  printf("%s\n", formatted_time(&t));
 }

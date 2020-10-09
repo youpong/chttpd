@@ -7,8 +7,18 @@
 #include <sys/socket.h> // inet_ntoa()
 #include <unistd.h>
 
+// test begin
+void test_formatted_time();
+// test end
+
 int main(int argc, char **argv) {
   Option *opt = parse(argc, argv);
+
+  if (opt->test) {
+    test_formatted_time();
+    return 0;
+  }
+
   server_start(opt);
 
   return 0;
@@ -17,11 +27,18 @@ int main(int argc, char **argv) {
 Option *parse(int argvc, char **argv) {
   Option *opts = malloc(sizeof(Option));
   opts->port = 8088;
+  opts->test = false;
 
   return opts;
 }
 
 void server_start(Option *opt) {
+  FILE *log = fopen("access.log", "a");
+  if (log == NULL) {
+    perror("fopen");
+    exit(1);
+  }
+
   Socket *sv_sock = create_server_socket(opt->port);
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
@@ -37,7 +54,7 @@ void server_start(Option *opt) {
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock, opt);
+      worker_start(sock, log, opt);
       delete_socket(sock);
       _exit(0);
     default: // parent
