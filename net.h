@@ -14,11 +14,9 @@ typedef struct {
   int fd;
 } Socket;
 
-Socket *new_socket();
-void delete_socket(Socket *);
-
 Socket *create_server_socket(int);
 Socket *server_accept(Socket *);
+void delete_socket(Socket *);
 
 /* http lib */
 typedef struct {

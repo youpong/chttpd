@@ -7,7 +7,7 @@
 
 #include <string.h> // strdup(3)
 
-Socket *new_socket() {
+static Socket *new_socket() {
   Socket *sock = malloc(sizeof(Socket));
   sock->addr = malloc(sizeof(struct sockaddr_in));
   sock->addr_len = sizeof(*sock->addr);
