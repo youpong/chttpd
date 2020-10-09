@@ -13,7 +13,7 @@ void test_formatted_time();
 // test end
 
 static Option *parse_args(int argc, char **argv);
-void print_usage();
+static void print_usage();
 
 char *PROG_NAME;
 
@@ -56,41 +56,8 @@ static Option *parse_args(int argc, char **argv) {
   return opts;
 }
 
-void print_usage() {
+static void print_usage() {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "%s [port]\n", PROG_NAME);
   fprintf(stderr, "%s -test\n", PROG_NAME);
-}
-
-void server_start(Option *opt) {
-  FILE *log = fopen("access.log", "a");
-  if (log == NULL) {
-    perror("fopen");
-    exit(1);
-  }
-
-  Socket *sv_sock = create_server_socket(opt->port);
-  printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
-         ntohs(sv_sock->addr->sin_port));
-
-  while (true) {
-    Socket *sock = server_accept(sv_sock);
-    printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
-           ntohs(sock->addr->sin_port));
-
-    pid_t pid = fork();
-    switch (pid) {
-    case -1: // error
-      perror("fork");
-      exit(1);
-    case 0: // child
-      worker_start(sock, log, opt);
-      delete_socket(sock);
-      _exit(0);
-    default: // parent
-             ;
-    }
-  }
-
-  delete_socket(sv_sock);
 }

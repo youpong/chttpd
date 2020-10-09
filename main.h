@@ -3,7 +3,7 @@
 #include "net.h"
 
 #define HTTP_VERSION "HTTP/1.1"
-#define SERVER_NAME "Dali"
+#define SERVER_NAME "Dali/0.1"
 
 typedef struct {
   bool debug;
@@ -12,4 +12,3 @@ typedef struct {
 } Option;
 
 void server_start(Option *);
-void worker_start(Socket *, FILE *, Option *);

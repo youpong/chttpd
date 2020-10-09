@@ -6,10 +6,44 @@
 #include <time.h>      // time()
 #include <unistd.h>    // write()
 
+static void worker_start(Socket *sock, FILE *log, Option *opt);
 static HttpResponse *create_http_response(HttpRequest *);
 static void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
 
-void worker_start(Socket *sock, FILE *log, Option *opt) {
+void server_start(Option *opt) {
+  FILE *log = fopen("access.log", "a");
+  if (log == NULL) {
+    perror("fopen");
+    exit(1);
+  }
+
+  Socket *sv_sock = create_server_socket(opt->port);
+  printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
+         ntohs(sv_sock->addr->sin_port));
+
+  while (true) {
+    Socket *sock = server_accept(sv_sock);
+    printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
+           ntohs(sock->addr->sin_port));
+
+    pid_t pid = fork();
+    switch (pid) {
+    case -1: // error
+      perror("fork");
+      exit(1);
+    case 0: // child
+      worker_start(sock, log, opt);
+      delete_socket(sock);
+      _exit(0);
+    default: // parent
+             ;
+    }
+  }
+
+  delete_socket(sv_sock);
+}
+
+static void worker_start(Socket *sock, FILE *log, Option *opt) {
 
   while (true) {
     HttpRequest *req = http_request_parse(sock->fd, opt->debug);
