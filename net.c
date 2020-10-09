@@ -165,11 +165,30 @@ static void consum(FILE *f, char expected) {
     error("unexpected character: %c\n", c);
 }
 
-HttpResponse *create_http_response(HttpRequest *req) {
-  return NULL;
-}
-
 void write_http_response(int fd, HttpResponse *res) {
+
+  FILE *f = fdopen(fd, "w");
+
+  // status_line
+  fprintf(f, "%s %s %s\r\n", res->http_version, res->status_code,
+          res->reason_phrase);
+
+  // headers
+  Map *map = res->header_map;
+  for (int i = 0; i < map->keys->len; i++) {
+    fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
+            (char *)map->vals->data[i]);
+  }
+
+  fprintf(f, "\r\n");
+
+  // body
+  char *p = res->body;
+  while (*p != '\0') {
+    fputc(*p, f);
+    p++;
+  }
+  fflush(f);
 }
 
 void write_log(FILE *out, Socket *sock, HttpRequest *req, HttpResponse *res) {

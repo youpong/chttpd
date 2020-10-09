@@ -37,6 +37,5 @@ typedef struct {
 } HttpResponse;
 
 HttpRequest *http_request_parse(int, bool);
-HttpResponse *create_http_response(HttpRequest *);
 void write_http_response(int, HttpResponse *);
 void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
