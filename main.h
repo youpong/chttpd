@@ -11,7 +11,5 @@ typedef struct {
   int port;
 } Option;
 
-Option *parse(int, char **);
-
 void server_start(Option *);
 void worker_start(Socket *, FILE *, Option *);
