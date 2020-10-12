@@ -1,11 +1,13 @@
 #include "net.h"
 #include "util.h"
 
+#include <fcntl.h> // open(2)
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>    // strdup(3)
+#include <sys/stat.h>  // oepn(2)
+#include <sys/types.h> // open(2)
 #include <unistd.h>
-
-#include <string.h> // strdup(3)
 
 static Socket *new_socket() {
   Socket *sock = malloc(sizeof(Socket));
@@ -74,7 +76,10 @@ HttpRequest *http_request_parse(int fd, bool debug) {
   req->header_map = new_map();
 
   FILE *f = fdopen(fd, "r");
-
+  if (f == NULL) {
+    perror("fdopen");
+    exit(1);
+  }
   request_line(f, req);
   message_header(f, req);
 
@@ -189,4 +194,17 @@ void write_http_response(int fd, HttpResponse *res) {
     p++;
   }
   fflush(f);
+}
+
+void test_http_request_parse() {
+  int fd = open("sample2.req", O_RDONLY);
+  if (fd == -1) {
+    perror("open");
+    exit(1);
+  }
+  HttpRequest *req = http_request_parse(fd, false);
+  printf("method: %s\n", req->method);
+  printf("request_uri: %s\n", req->request_uri);
+  printf("http_version: %s\n", req->http_version);
+  printf("Host: %s\n", (char *)map_get(req->header_map, "Host"));
 }

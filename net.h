@@ -34,6 +34,22 @@ typedef struct {
   char *body;
 } HttpResponse;
 
+typedef struct {
+  /* Http Request */
+  /* Request Line: method request_uir http_version */
+  /* Http REsponse */
+  /* Status Line: http_version status_code reason_phrase */
+  char *method;
+  char *request_uri;
+  char *http_version;
+  char *status_code;
+  char *reason_phrase;
+
+  Map *header_map;
+
+  char *body;
+} HttpMessage;
+
 HttpRequest *http_request_parse(int, bool);
 void write_http_response(int, HttpResponse *);
 

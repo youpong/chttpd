@@ -1,13 +1,15 @@
 #include "main.h"
 #include "net.h"
 #include <arpa/inet.h> // inet_ntoa()
+#include <dirent.h>    // opendir()
 #include <stdlib.h>    // malloc()
 #include <string.h>    // strcmp()
+#include <sys/types.h> // opendir()
 #include <time.h>      // time()
 #include <unistd.h>    // write()
 
 static void worker_start(Socket *sock, FILE *log, Option *opt);
-static HttpResponse *create_http_response(HttpRequest *);
+static HttpResponse *create_http_response(HttpRequest *, Option *);
 static void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
 
 void server_start(Option *opt) {
@@ -47,7 +49,7 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
 
   while (true) {
     HttpRequest *req = http_request_parse(sock->fd, opt->debug);
-    HttpResponse *res = create_http_response(req);
+    HttpResponse *res = create_http_response(req, opt);
     write_http_response(sock->fd, res);
     write_log(log, sock, req, res);
 
@@ -56,19 +58,29 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
   }
 }
 
-static HttpResponse *create_http_response(HttpRequest *req) {
+static void set_file(char *dest, FILE *f);
+
+static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
   HttpResponse *res = malloc(sizeof(HttpResponse));
   res->header_map = new_map();
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
+    char target_path[256];
+    strcpy(target_path, opts->document_root);
+    strcat(target_path, req->request_uri);
+    FILE *target = fopen(target_path, "r");
+    DIR *d = opendir(req->request_uri);
+    if (target == NULL || d != NULL) {
+      target = fopen("error.html", "r");
+      res->status_code = strdup("404");
+      res->reason_phrase = strdup("Not Found");
+    } else {
+      res->status_code = strdup("200");
+      res->reason_phrase = strdup("OK");
+    }
+
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
-
-    // Status Code
-    res->status_code = strdup("200");
-
-    // Reason Phrase
-    res->reason_phrase = strdup("OK");
 
     // Server
     map_put(res->header_map, "Server", SERVER_NAME);
@@ -77,13 +89,28 @@ static HttpResponse *create_http_response(HttpRequest *req) {
     map_put(res->header_map, "Content-Type", "text/html");
 
     // Body
-    res->body = strdup("<html>hello</html>");
+    res->body = malloc(1024 * 4);
+    set_file(res->body, target);
 
     // Content-Length: TODO
-    map_put(res->header_map, "Content-Length", "18");
+    char *buf = malloc(5);
+    sprintf(buf, "%ld", strlen(res->body));
+    map_put(res->header_map, "Content-Length", buf);
+  } else {
+    printf("Unknown method: %s", req->method);
   }
 
   return res;
+}
+
+static void set_file(char *dest, FILE *f) {
+  int c;
+  char *p = dest;
+
+  while ((c = fgetc(f)) != EOF) {
+    *p++ = c;
+  }
+  *p = '\0';
 }
 
 static char *default_val(char *val, char *dval);
@@ -141,4 +168,15 @@ void test_formatted_time() {
   time_t t;
   time(&t);
   printf("%s\n", formatted_time(&t));
+}
+
+void test_create_http_response() {
+  HttpRequest *req = malloc(sizeof(HttpResponse));
+  req->header_map = new_map();
+  Option *opt = malloc(sizeof(Option));
+
+  req->method = strdup("GET");
+  req->request_uri = strdup("main.h");
+  HttpResponse *res = create_http_response(req, opt);
+  write_http_response(1, res);
 }

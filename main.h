@@ -8,6 +8,7 @@
 typedef struct {
   bool debug;
   bool test;
+  char *document_root;
   int port;
 } Option;
 

@@ -10,6 +10,8 @@
 
 // test begin
 void test_formatted_time();
+void test_create_http_response();
+void test_http_request_parse();
 // test end
 
 static Option *parse_args(int argc, char **argv);
@@ -22,6 +24,8 @@ int main(int argc, char **argv) {
 
   if (opt->test) {
     test_formatted_time();
+    test_create_http_response();
+    test_http_request_parse();
     return 0;
   }
 
@@ -34,6 +38,8 @@ static Option *parse_args(int argc, char **argv) {
   Option *opts = malloc(sizeof(Option));
   opts->port = 8088;
   opts->test = false;
+  opts->debug = false;
+  opts->document_root = strdup("www");
 
   PROG_NAME = strdup(argv[0]);
 
