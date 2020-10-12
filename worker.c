@@ -89,11 +89,11 @@ static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
     map_put(res->header_map, "Content-Type", "text/html");
 
     // Body
-    res->body = malloc(1024 * 4);
+    res->body = malloc(1024 * 64);
     set_file(res->body, target);
 
     // Content-Length: TODO
-    char *buf = malloc(5);
+    char *buf = malloc(6);
     sprintf(buf, "%ld", strlen(res->body));
     map_put(res->header_map, "Content-Length", buf);
   } else {
@@ -130,7 +130,7 @@ static void write_log(FILE *out, Socket *sock, HttpRequest *req,
       req->method, req->request_uri, req->http_version,
       res->status_code,
       default_val((char *)map_get(res->header_map, "Content-Length"), "\"-\""),
-      default_val((char *)map_get(req->header_map, "Refer"), "-"),
+      default_val((char *)map_get(req->header_map, "Referer"), "-"),
       default_val((char *)map_get(req->header_map, "User-Agent"), "-"));
   // clang-format on
   fflush(out);
