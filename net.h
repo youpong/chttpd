@@ -52,4 +52,3 @@ typedef struct {
 
 HttpRequest *http_request_parse(int, bool);
 void write_http_response(int, HttpResponse *);
-

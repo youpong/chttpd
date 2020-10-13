@@ -9,9 +9,12 @@
 #include <unistd.h>
 
 // test begin
+void test_parse_args();
 void test_formatted_time();
 void test_create_http_response();
+void test_write_http_request();
 void test_http_request_parse();
+void test_set_file();
 // test end
 
 static Option *parse_args(int argc, char **argv);
@@ -23,9 +26,12 @@ int main(int argc, char **argv) {
   Option *opt = parse_args(argc, argv);
 
   if (opt->test) {
+    test_parse_args();
     test_formatted_time();
     test_create_http_response();
+    test_write_http_request();
     test_http_request_parse();
+    test_set_file();
     return 0;
   }
 
@@ -66,4 +72,21 @@ static void print_usage() {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "%s [port]\n", PROG_NAME);
   fprintf(stderr, "%s -test\n", PROG_NAME);
+}
+
+void test_parse_args() {
+  Option *opt;
+  char *minimum[] = {"./httpd"};
+
+  opt = parse_args(1, minimum);
+  expect(__LINE__, opt->port, 8088);
+  expect_str(__LINE__, opt->document_root, "www");
+
+  char *test_opt[] = {"./httpd", "-test"};
+  opt = parse_args(2, test_opt);
+  expect_bool(__LINE__, true, opt->test);
+
+  char *arg_port[] = {"./httpd", "80"};
+  opt = parse_args(2, arg_port);
+  expect(__LINE__, 80, opt->port);
 }

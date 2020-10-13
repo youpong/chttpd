@@ -208,3 +208,6 @@ void test_http_request_parse() {
   printf("http_version: %s\n", req->http_version);
   printf("Host: %s\n", (char *)map_get(req->header_map, "Host"));
 }
+
+void test_write_http_request() {
+}

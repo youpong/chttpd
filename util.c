@@ -62,3 +62,34 @@ noreturn void error(char *fmt, ...) {
   fprintf(stderr, "\n");
   exit(1);
 }
+
+void expect(int line, int expected, int actual) {
+  if (expected == actual)
+    return;
+  error("%d: %d expected, but got %d", line, expected, actual);
+}
+
+void expect_str(int line, char *expected, char *actual) {
+  if (expected == NULL)
+    error("%d: non-NULL is expected, but \"expected\" is NULL", line);
+  if (actual == NULL)
+    error("%d: non-NULL is expected, but \"actual\" is NULL", line);
+  if (strcmp(expected, actual) != 0)
+    error("%d: %s expected, but got %s", line, expected, actual);
+  return;
+}
+
+void expect_ptr(int line, void *expected, void *actual) {
+  if (expected == actual)
+    return;
+  error("%d: %d expected, but got %d", line, expected, actual);
+}
+
+void expect_bool(int line, bool expected, bool actual) {
+  if (expected == actual)
+    return;
+  if (actual == true)
+    error("%d: 'false' expected, but got 'true'", line);
+  else
+    error("%d: 'true' expected, but got 'false'", line);
+}

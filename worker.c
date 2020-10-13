@@ -149,11 +149,18 @@ static char *formatted_time(time_t *t) {
   tzset();
   localtime_r(t, t_tm);
 
-  sprintf(buf, "%02d/%s/%d:%02d:%02d:%02d %+03d%02d", t_tm->tm_mday,
-          month[t_tm->tm_mon], t_tm->tm_year + 1900, t_tm->tm_hour,
-          t_tm->tm_min, t_tm->tm_sec, (int)-timezone / 60 / 60,
+  // clang-format off
+  sprintf(buf, "%02d/%s/%d:%02d:%02d:%02d %+03d%02d",
+          t_tm->tm_mday,
+          month[t_tm->tm_mon],
+          t_tm->tm_year + 1900,
+          t_tm->tm_hour,
+          t_tm->tm_min,
+          t_tm->tm_sec,	  
+          (int)-timezone / 60 / 60,
           (int)-timezone % (60 * 60));
-
+  // clang-format off
+  
   return strdup(buf);
 }
 
@@ -179,4 +186,7 @@ void test_create_http_response() {
   req->request_uri = strdup("main.h");
   HttpResponse *res = create_http_response(req, opt);
   write_http_response(1, res);
+}
+
+void test_set_file() {
 }
