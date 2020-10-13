@@ -70,18 +70,14 @@ static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
     strcat(target_path, req->request_uri);
     FILE *target = fopen(target_path, "r");
     DIR *d = opendir(req->request_uri);
-    if (target == NULL || d != NULL) {
-      target = fopen("/error.html", "r");
-      if (target == NULL) {
-        perror("fopen");
-        exit(1);
-      }
-      res->status_code = strdup("404");
-      res->reason_phrase = strdup("Not Found");
-    } else {
+    if (target != NULL && d == NULL) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
-    }
+    } else {      
+      res->status_code = strdup("404");
+      res->reason_phrase = strdup("Not Found");
+      return res;
+    } 
 
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
@@ -101,7 +97,9 @@ static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
     sprintf(buf, "%ld", strlen(res->body));
     map_put(res->header_map, "Content-Length", buf);
   } else {
-    printf("Unknown method: %s", req->method);
+    // Not Allowed
+    res->status_code = strdup("405");
+    res->reason_phrase = strdup("Not Allowed");
   }
 
   return res;
@@ -199,15 +197,25 @@ void test_formatted_time() {
 }
 
 void test_create_http_response() {
+  HttpResponse *res;
   HttpRequest *req = malloc(sizeof(HttpResponse));
   req->header_map = new_map();
   Option *opt = malloc(sizeof(Option));
   opt->document_root = strdup("www");
 
+  req->method = strdup("FOO");
+  res = create_http_response(req, opt);
+  expect_str(__LINE__, "405", res->status_code);
+
   req->method = strdup("GET");
+  req->request_uri = strdup("/not_exist");
+  res = create_http_response(req, opt);
+  expect_str(__LINE__, "404", res->status_code);
+
+  req->method = strdup("GET");  
   req->request_uri = strdup("/hello.html");
-  HttpResponse *res = create_http_response(req, opt);
-  write_http_response(1, res);
+  res = create_http_response(req, opt);
+  expect_str(__LINE__, "200", res->status_code);
 }
 
 void test_set_file() {
