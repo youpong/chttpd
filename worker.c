@@ -71,7 +71,11 @@ static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
     FILE *target = fopen(target_path, "r");
     DIR *d = opendir(req->request_uri);
     if (target == NULL || d != NULL) {
-      target = fopen("error.html", "r");
+      target = fopen("/error.html", "r");
+      if (target == NULL) {
+        perror("fopen");
+        exit(1);
+      }
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
     } else {
@@ -114,18 +118,21 @@ static void set_file(char *dest, FILE *f) {
 }
 
 static char *default_val(char *val, char *dval);
-static char *formatted_time(time_t *t);
+static char *formatted_time(struct tm *, long);
 
 static void write_log(FILE *out, Socket *sock, HttpRequest *req,
                       HttpResponse *res) {
   time_t req_time;
+  struct tm req_tm;
+
   time(&req_time);
+  localtime_r(&req_time, &req_tm);
 
   // clang-format off
   fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
       inet_ntoa(sock->addr->sin_addr),
       // date [09/Oct/2020:13:17:45 +0900]
-      formatted_time(&req_time),
+      formatted_time(&req_tm, timezone),
       // request-line
       req->method, req->request_uri, req->http_version,
       res->status_code,
@@ -137,17 +144,13 @@ static void write_log(FILE *out, Socket *sock, HttpRequest *req,
 }
 
 /**
+ * e.g.
  * 09/Oct/2020:17:34:23 +0900
  */
-static char *formatted_time(time_t *t) {
-  char buf[256];
+static char *formatted_time(struct tm *t_tm, long timezone) {
+  char buf[26 + 1];
   char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-  struct tm *t_tm = malloc(sizeof(struct tm));
-
-  tzset();
-  localtime_r(t, t_tm);
 
   // clang-format off
   sprintf(buf, "%02d/%s/%d:%02d:%02d:%02d %+03d%02d",
@@ -157,10 +160,10 @@ static char *formatted_time(time_t *t) {
           t_tm->tm_hour,
           t_tm->tm_min,
           t_tm->tm_sec,	  
-          (int)-timezone / 60 / 60,
-          (int)-timezone % (60 * 60));
-  // clang-format off
-  
+          (int)-timezone / (60 * 60),
+          abs(timezone) % (60 * 60) / 60);
+  // clang-format on
+
   return strdup(buf);
 }
 
@@ -168,22 +171,41 @@ static char *default_val(char *val, char *dval) {
   return val ? val : dval;
 }
 
-/**
- * timezone -0900, 0500
- */
 void test_formatted_time() {
-  time_t t;
-  time(&t);
-  printf("%s\n", formatted_time(&t));
+  time_t t = 0; // Epoch 1970.01.01 00:00:00 +0000(UTC)
+  struct tm t_tm;
+
+  gmtime_r(&t, &t_tm);
+
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0000", formatted_time(&t_tm, 0));
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0000", formatted_time(&t_tm, 59));
+
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 -0930",
+             formatted_time(&t_tm, 9 * 60 * 60 + 30 * 60));
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0930",
+             formatted_time(&t_tm, -(9 * 60 * 60 + 30 * 60)));
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0829",
+             formatted_time(&t_tm, -(9 * 60 * 60 - 30 * 60) + 1));
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0830",
+             formatted_time(&t_tm, -(9 * 60 * 60 - 30 * 60)));
+  expect_str(__LINE__, "01/Jan/1970:00:00:00 +0830",
+             formatted_time(&t_tm, -(9 * 60 * 60 - 30 * 60) - 1));
+
+  // t = 2,147,483,647;
+  t = 1602589880;
+  gmtime_r(&t, &t_tm);
+  expect_str(__LINE__, "13/Oct/2020:11:51:20 +0900",
+             formatted_time(&t_tm, -(9 * 60 * 60)));
 }
 
 void test_create_http_response() {
   HttpRequest *req = malloc(sizeof(HttpResponse));
   req->header_map = new_map();
   Option *opt = malloc(sizeof(Option));
+  opt->document_root = strdup("www");
 
   req->method = strdup("GET");
-  req->request_uri = strdup("main.h");
+  req->request_uri = strdup("/hello.html");
   HttpResponse *res = create_http_response(req, opt);
   write_http_response(1, res);
 }

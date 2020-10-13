@@ -12,7 +12,7 @@ TARGET = httpd
 SRCS = main.c worker.c net.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean format check 
+.PHONY: all clean format check tags
 
 all: $(TARGET)
 
@@ -22,8 +22,11 @@ clean:
 format:
 	clang-format -i *.c
 
-check: all test client
-	./test
+tags:
+	etags $(SRCS) *.h
+
+check: $(TARGET)
+	./$(TARGET) -test
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)
