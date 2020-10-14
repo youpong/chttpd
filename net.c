@@ -204,7 +204,7 @@ void test_http_request_parse() {
   fprintf(f, "Host: localhost\r\n");
   fprintf(f, "\r\n");
   fclose(f);
-  
+
   fd = open(tmp_file, O_RDONLY);
   HttpRequest *req = http_request_parse(fd, false);
 

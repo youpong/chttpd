@@ -219,4 +219,11 @@ void test_create_http_response() {
 }
 
 void test_set_file() {
+  char buf[2048];
+  FILE *f = fopen("LICENSE", "r");
+  set_file(buf, f);
+  fclose(f);
+
+  expect(__LINE__, 'M', buf[0]);
+  expect(__LINE__, 1064, strlen(buf));
 }

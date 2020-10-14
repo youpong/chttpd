@@ -31,7 +31,6 @@ int main(int argc, char **argv) {
     test_create_http_response();
     test_http_request_parse();
     test_write_http_response();
-    return 0;    
     test_set_file();
     return 0;
   }
