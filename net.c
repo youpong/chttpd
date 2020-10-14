@@ -209,5 +209,37 @@ void test_http_request_parse() {
   printf("Host: %s\n", (char *)map_get(req->header_map, "Host"));
 }
 
-void test_write_http_request() {
+void test_write_http_response() {
+  HttpResponse *res = malloc(sizeof(HttpResponse));
+  res->header_map = new_map();
+
+  res->http_version = strdup("HTTP/1.1");
+  res->status_code = strdup("200");
+  res->reason_phrase = strdup("OK");
+
+  map_put(res->header_map, "Server", "Dali/0.1");
+
+  res->body = strdup("body");
+
+  char *template = strdup("XXXXXX");
+  int fd = mkstemp(template);
+
+  write_http_response(fd, res);
+
+  char buf[1024];
+  FILE *f = fopen(template, "r");
+  char *p = buf;
+  int c;
+  while ((c = fgetc(f)) != EOF) {
+    *p++ = c;
+  }
+  *p = '\0';
+
+  expect_str(__LINE__,
+             "HTTP/1.1 200 OK\r\n"
+             "Server: Dali/0.1\r\n"
+             "\r\n"
+             "body",
+             buf);
+  unlink(template);
 }

@@ -73,11 +73,11 @@ static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
     if (target != NULL && d == NULL) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
-    } else {      
+    } else {
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
       return res;
-    } 
+    }
 
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
@@ -212,7 +212,7 @@ void test_create_http_response() {
   res = create_http_response(req, opt);
   expect_str(__LINE__, "404", res->status_code);
 
-  req->method = strdup("GET");  
+  req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   res = create_http_response(req, opt);
   expect_str(__LINE__, "200", res->status_code);
