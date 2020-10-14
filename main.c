@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
     test_parse_args();
     test_formatted_time();
     test_create_http_response();
-    test_write_http_response();
-    return 0;
     test_http_request_parse();
+    test_write_http_response();
+    return 0;    
     test_set_file();
     return 0;
   }

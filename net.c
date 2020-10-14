@@ -197,16 +197,24 @@ void write_http_response(int fd, HttpResponse *res) {
 }
 
 void test_http_request_parse() {
-  int fd = open("sample2.req", O_RDONLY);
-  if (fd == -1) {
-    perror("open");
-    exit(1);
-  }
+  char tmp_file[] = "XXXXXX";
+  int fd = mkstemp(tmp_file);
+  FILE *f = fdopen(fd, "w");
+  fprintf(f, "GET /hello.html HTTP/1.1\r\n");
+  fprintf(f, "Host: localhost\r\n");
+  fprintf(f, "\r\n");
+  fclose(f);
+  
+  fd = open(tmp_file, O_RDONLY);
   HttpRequest *req = http_request_parse(fd, false);
-  printf("method: %s\n", req->method);
-  printf("request_uri: %s\n", req->request_uri);
-  printf("http_version: %s\n", req->http_version);
-  printf("Host: %s\n", (char *)map_get(req->header_map, "Host"));
+
+  expect_str(__LINE__, "GET", req->method);
+  expect_str(__LINE__, "/hello.html", req->request_uri);
+  expect_str(__LINE__, "HTTP/1.1", req->http_version);
+  expect_str(__LINE__, "localhost", (char *)map_get(req->header_map, "Host"));
+
+  close(fd);
+  unlink(tmp_file);
 }
 
 void test_write_http_response() {

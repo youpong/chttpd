@@ -75,7 +75,7 @@ void expect_str(int line, char *expected, char *actual) {
   if (actual == NULL)
     error("%d: non-NULL is expected, but \"actual\" is NULL", line);
   if (strcmp(expected, actual) != 0)
-    error("%d: %s expected, but got %s", line, expected, actual);
+    error("%d: \"%s\" expected, but got \"%s\"", line, expected, actual);
   return;
 }
 
