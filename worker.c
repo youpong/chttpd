@@ -2,8 +2,10 @@
 #include "net.h"
 #include <arpa/inet.h> // inet_ntoa()
 #include <dirent.h>    // opendir()
+#include <fcntl.h>     // open()
 #include <stdlib.h>    // malloc()
 #include <string.h>    // strcmp()
+#include <sys/stat.h>  // open()
 #include <sys/types.h> // opendir()
 #include <time.h>      // time()
 #include <unistd.h>    // write()
@@ -117,6 +119,9 @@ static void set_file(char *dest, FILE *f) {
 
 static char *default_val(char *val, char *dval);
 static char *formatted_time(struct tm *, long);
+static bool is_locked();
+static int lock();
+static void unlock();
 
 static void write_log(FILE *out, Socket *sock, HttpRequest *req,
                       HttpResponse *res) {
@@ -125,6 +130,12 @@ static void write_log(FILE *out, Socket *sock, HttpRequest *req,
 
   time(&req_time);
   localtime_r(&req_time, &req_tm);
+
+  do {
+    while (is_locked()) {
+      sleep(1);
+    }
+  } while (lock() == -1);
 
   // clang-format off
   fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
@@ -139,6 +150,8 @@ static void write_log(FILE *out, Socket *sock, HttpRequest *req,
       default_val((char *)map_get(req->header_map, "User-Agent"), "-"));
   // clang-format on
   fflush(out);
+
+  unlock();
 }
 
 /**
@@ -163,6 +176,20 @@ static char *formatted_time(struct tm *t_tm, long timezone) {
   // clang-format on
 
   return strdup(buf);
+}
+
+static bool is_locked() {
+  FILE *f = fopen("/var/lock/dali.pid", "r");
+  return f != NULL;
+}
+
+static int lock() {
+  int fd = open("/var/lock/dali.pid", O_CREAT | O_EXCL);
+  return fd;
+}
+
+static void unlock() {
+  unlink("/var/lock/dali.pid");
 }
 
 static char *default_val(char *val, char *dval) {
@@ -226,4 +253,22 @@ void test_set_file() {
 
   expect(__LINE__, 'M', buf[0]);
   expect(__LINE__, 1064, strlen(buf));
+}
+
+void test_write_log() {
+  FILE *log = fopen("log", "w");
+  Socket *sock = create_server_socket(8081);
+  HttpRequest *req = malloc(sizeof(HttpRequest));
+  req->header_map = new_map();
+  req->method = strdup("GET");
+  req->request_uri = strdup("/hello.html");
+  req->http_version = strdup("HTTP/1.1");
+  map_put(req->header_map, "Referer", "http://localhost:8080/hello2.html");
+  map_put(req->header_map, "User-Agent", "Dali/0.1");
+  HttpResponse *res = malloc(sizeof(HttpResponse));
+  res->header_map = new_map();
+  res->status_code = strdup("200");
+  map_put(res->header_map, "Content-Length", "199");
+
+  write_log(log, sock, req, res);
 }
