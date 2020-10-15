@@ -65,10 +65,8 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
 static void set_file(char *dest, FILE *f);
 
 static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
-  HttpMessage *res = malloc(sizeof(HttpMessage));
-  res->ty = HM_RES;
-  res->header_map = new_map();
-
+  HttpMessage *res = new_HttpMessage(HM_RES);
+  
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
     char target_path[256];
     strcpy(target_path, opts->document_root);
@@ -225,9 +223,7 @@ void test_formatted_time() {
 
 void test_create_http_response() {
   HttpMessage *res;
-  HttpMessage *req = malloc(sizeof(HttpMessage));
-  req->ty = HM_REQ;
-  req->header_map = new_map();
+  HttpMessage *req = new_HttpMessage(HM_REQ);
   Option *opt = malloc(sizeof(Option));
   opt->document_root = strdup("www");
 
@@ -261,17 +257,13 @@ void test_write_log() {
   time_t req_time = 1602737916;
   FILE *log = fopen("log", "w");
   Socket *sock = create_server_socket(8081);
-  HttpMessage *req = malloc(sizeof(HttpMessage));
-  req->ty = HM_REQ;
-  req->header_map = new_map();
+  HttpMessage *req = new_HttpMessage(HM_REQ);
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->http_version = strdup("HTTP/1.1");
   map_put(req->header_map, "Referer", "http://localhost:8080/hello2.html");
   map_put(req->header_map, "User-Agent", "Dali/0.1");
-  HttpMessage *res = malloc(sizeof(HttpMessage));
-  res->ty = HM_RES;
-  res->header_map = new_map();
+  HttpMessage *res = new_HttpMessage(HM_RES);
   res->status_code = strdup("200");
   map_put(res->header_map, "Content-Length", "199");
 

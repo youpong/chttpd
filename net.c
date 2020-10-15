@@ -67,14 +67,19 @@ static void consum(FILE *f, char c);
 static void request_line(FILE *f, HttpMessage *req);
 static void message_header(FILE *f, HttpMessage *req);
 
+HttpMessage *new_HttpMessage(int ty) {
+  HttpMessage *result = malloc(sizeof(HttpMessage));
+  result->ty = ty;
+  result->header_map = new_map();
+  return result;
+}
+
 /**
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
 HttpMessage *http_request_parse(int fd, bool debug) {
-  HttpMessage *req = malloc(sizeof(HttpMessage));
-  req->ty = HM_REQ;
-  req->header_map = new_map();
+  HttpMessage *req = new_HttpMessage(HM_REQ);
 
   FILE *f = fdopen(fd, "r");
   if (f == NULL) {
@@ -220,9 +225,7 @@ void test_http_request_parse() {
 }
 
 void test_write_http_response() {
-  HttpMessage *res = malloc(sizeof(HttpMessage));
-  res->ty = HM_RES;
-  res->header_map = new_map();
+  HttpMessage *res = new_HttpMessage(HM_RES);
 
   res->http_version = strdup("HTTP/1.1");
   res->status_code = strdup("200");
