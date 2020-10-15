@@ -12,7 +12,7 @@
 void test_parse_args();
 void test_formatted_time();
 void test_create_http_response();
-void test_write_http_response();
+void test_write_http_message();
 void test_http_request_parse();
 void test_set_file();
 void test_write_log();
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     test_formatted_time();
     test_create_http_response();
     test_http_request_parse();
-    test_write_http_response();
+    test_write_http_message();
     test_set_file();
     test_write_log();
     return 0;

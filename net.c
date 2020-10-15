@@ -1,6 +1,7 @@
 #include "net.h"
 #include "util.h"
 
+#include <assert.h>
 #include <fcntl.h> // open(2)
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,6 +98,8 @@ static void request_line(FILE *f, HttpMessage *req) {
   char *p;
   int c;
 
+  assert(req->ty == HM_REQ);
+
   p = buf;
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
@@ -176,16 +179,22 @@ static void consum(FILE *f, char expected) {
     error("unexpected character: %c\n", c);
 }
 
-void write_http_response(int fd, HttpMessage *res) {
+void write_http_message(int fd, HttpMessage *msg) {
+  assert(msg->ty == HM_RES); // HM_REQ not implemented yet.
 
   FILE *f = fdopen(fd, "w");
 
-  // status_line
-  fprintf(f, "%s %s %s\r\n", res->http_version, res->status_code,
-          res->reason_phrase);
+  switch (msg->ty) {
+  case HM_REQ:
+    break;
+  case HM_RES:
+    // status_line
+    fprintf(f, "%s %s %s\r\n", msg->http_version, msg->status_code,
+            msg->reason_phrase);
+  }
 
   // headers
-  Map *map = res->header_map;
+  Map *map = msg->header_map;
   for (int i = 0; i < map->keys->len; i++) {
     fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
             (char *)map->vals->data[i]);
@@ -194,7 +203,7 @@ void write_http_response(int fd, HttpMessage *res) {
   fprintf(f, "\r\n");
 
   // body
-  char *p = res->body;
+  char *p = msg->body;
   while (*p != '\0') {
     fputc(*p, f);
     p++;
@@ -224,7 +233,7 @@ void test_http_request_parse() {
   unlink(tmp_file);
 }
 
-void test_write_http_response() {
+void test_write_http_message() {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   res->http_version = strdup("HTTP/1.1");
@@ -238,7 +247,7 @@ void test_write_http_response() {
   char *template = strdup("XXXXXX");
   int fd = mkstemp(template);
 
-  write_http_response(fd, res);
+  write_http_message(fd, res);
 
   char buf[1024];
   FILE *f = fopen(template, "r");

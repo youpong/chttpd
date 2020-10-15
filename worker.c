@@ -54,7 +54,7 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
     time(&req_time);
     HttpMessage *req = http_request_parse(sock->fd, opt->debug);
     HttpMessage *res = create_http_response(req, opt);
-    write_http_response(sock->fd, res);
+    write_http_message(sock->fd, res);
     write_log(log, sock, &req_time, req, res);
 
     if (strcmp("close", map_get(req->header_map, "Connection")) == 0)
@@ -66,7 +66,7 @@ static void set_file(char *dest, FILE *f);
 
 static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
-  
+
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
     char target_path[256];
     strcpy(target_path, opts->document_root);
