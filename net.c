@@ -69,36 +69,72 @@ static void request_line(FILE *f, HttpMessage *req);
 static void message_header(FILE *f, HttpMessage *req);
 
 HttpMessage *new_HttpMessage(int ty) {
-  HttpMessage *result = malloc(sizeof(HttpMessage));
+  HttpMessage *result = calloc(1, sizeof(HttpMessage));
   result->ty = ty;
   result->header_map = new_map();
   return result;
+}
+
+void delete_HttpMessage(HttpMessage *msg) {
+  switch (msg->ty) {
+  case HM_REQ:
+    free(msg->method);
+    free(msg->request_uri);
+    free(msg->http_version);
+    break;
+  case HM_RES:
+    free(msg->http_version);
+    free(msg->status_code);
+    free(msg->reason_phrase);
+    break;
+  default:
+    error("Unknown HttpMessage type: %d", msg->ty);
+  }
+
+  delete_map(msg->header_map);
+
+  if (msg->body != NULL)
+    free(msg->body);
+
+  free(msg);
 }
 
 /**
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
-HttpMessage *http_request_parse(int fd, bool debug) {
-  HttpMessage *req = new_HttpMessage(HM_REQ);
+HttpMessage *http_message_parse(int fd, int ty, bool debug) {
+  assert(ty == HM_REQ); // not implemented HM_RES yet.
 
   FILE *f = fdopen(fd, "r");
   if (f == NULL) {
     perror("fdopen");
     exit(1);
   }
-  request_line(f, req);
-  message_header(f, req);
 
-  return req;
+  HttpMessage *msg = new_HttpMessage(ty);
+  switch (ty) {
+  case HM_REQ:
+    request_line(f, msg);
+    break;
+  case HM_RES:
+    // TODO: implement
+    // status_line(f, msg);
+    break;
+  }
+
+  message_header(f, msg);
+  // message_body(f, msg);
+
+  return msg;
 }
 
-static void request_line(FILE *f, HttpMessage *req) {
+static void request_line(FILE *f, HttpMessage *msg) {
   char buf[256];
   char *p;
   int c;
 
-  assert(req->ty == HM_REQ);
+  assert(msg->ty == HM_REQ);
 
   p = buf;
   while ((c = fgetc(f)) != EOF) {
@@ -107,7 +143,7 @@ static void request_line(FILE *f, HttpMessage *req) {
     *p++ = c;
   }
   *p = '\0';
-  req->method = strdup(buf);
+  msg->method = strdup(buf);
 
   p = buf;
   while ((c = fgetc(f)) != EOF) {
@@ -116,7 +152,7 @@ static void request_line(FILE *f, HttpMessage *req) {
     *p++ = c;
   }
   *p = '\0';
-  req->request_uri = strdup(buf);
+  msg->request_uri = strdup(buf);
 
   p = buf;
   while ((c = fgetc(f)) != EOF) {
@@ -127,10 +163,10 @@ static void request_line(FILE *f, HttpMessage *req) {
     *p++ = c;
   }
   *p = '\0';
-  req->http_version = strdup(buf);
+  msg->http_version = strdup(buf);
 }
 
-static void message_header(FILE *f, HttpMessage *req) {
+static void message_header(FILE *f, HttpMessage *msg) {
   char buf[256];
   char *p, *key, *value;
   int c;
@@ -167,7 +203,7 @@ static void message_header(FILE *f, HttpMessage *req) {
     *p = '\0';
     value = strdup(buf);
 
-    map_put(req->header_map, key, value);
+    map_put(msg->header_map, key, value);
   }
 }
 
@@ -211,7 +247,7 @@ void write_http_message(int fd, HttpMessage *msg) {
   fflush(f);
 }
 
-void test_http_request_parse() {
+void test_http_message_parse() {
   char tmp_file[] = "XXXXXX";
   int fd = mkstemp(tmp_file);
   FILE *f = fdopen(fd, "w");
@@ -221,7 +257,7 @@ void test_http_request_parse() {
   fclose(f);
 
   fd = open(tmp_file, O_RDONLY);
-  HttpMessage *req = http_request_parse(fd, false);
+  HttpMessage *req = http_message_parse(fd, HM_REQ, false);
 
   expect(__LINE__, HM_REQ, req->ty);
   expect_str(__LINE__, "GET", req->method);

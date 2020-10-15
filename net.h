@@ -46,5 +46,6 @@ typedef struct {
 } HttpMessage;
 
 HttpMessage *new_HttpMessage(int ty);
-HttpMessage *http_request_parse(int, bool);
+void delete_HttpMessage(HttpMessage *);
+HttpMessage *http_message_parse(int, int, bool);
 void write_http_message(int, HttpMessage *);

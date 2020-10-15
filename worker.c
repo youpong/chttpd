@@ -44,6 +44,7 @@ void server_start(Option *opt) {
     }
   }
 
+  fclose(log);
   delete_socket(sv_sock);
 }
 
@@ -52,13 +53,18 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
   while (true) {
     time_t req_time;
     time(&req_time);
-    HttpMessage *req = http_request_parse(sock->fd, opt->debug);
+    HttpMessage *req = http_message_parse(sock->fd, HM_REQ, opt->debug);
     HttpMessage *res = create_http_response(req, opt);
     write_http_message(sock->fd, res);
     write_log(log, sock, &req_time, req, res);
 
-    if (strcmp("close", map_get(req->header_map, "Connection")) == 0)
+    char *connection = strdup(map_get(req->header_map, "Connection"));
+    delete_HttpMessage(req);
+    delete_HttpMessage(res);
+    if (strcmp(connection, "close") == 0) {
+      free(connection);
       break;
+    }
   }
 }
 
@@ -81,6 +87,7 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
       res->reason_phrase = strdup("Not Found");
       return res;
     }
+    closedir(d);
 
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
@@ -99,6 +106,8 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     char *buf = malloc(6);
     sprintf(buf, "%ld", strlen(res->body));
     map_put(res->header_map, "Content-Length", buf);
+
+    fclose(target);
   } else {
     // Not Allowed
     res->status_code = strdup("405");

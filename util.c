@@ -12,6 +12,11 @@ Vector *new_vector() {
   return vec;
 }
 
+void delete_vector(Vector *vec) {
+  free(vec->data);
+  free(vec);
+}
+
 void vec_push(Vector *vec, void *elem) {
   if (vec->capacity == vec->len) {
     vec->capacity *= 2;
@@ -33,6 +38,12 @@ Map *new_map() {
   map->keys = new_vector();
   map->vals = new_vector();
   return map;
+}
+
+void delete_map(Map *map) {
+  delete_vector(map->vals);
+  delete_vector(map->keys);
+  free(map);
 }
 
 void map_put(Map *map, char *key, void *val) {

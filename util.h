@@ -11,6 +11,7 @@ typedef struct {
 } Vector;
 
 Vector *new_vector();
+void delete_vector(Vector *);
 void vec_push(Vector *, void *);
 void *vec_pop(Vector *);
 void *vec_last(Vector *);
@@ -21,6 +22,7 @@ typedef struct {
 } Map;
 
 Map *new_map();
+void delete_map(Map *);
 void map_put(Map *, char *, void *);
 void *map_get(Map *, char *);
 
