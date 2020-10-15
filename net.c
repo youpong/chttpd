@@ -64,15 +64,16 @@ Socket *server_accept(Socket *sv_sock) {
 }
 
 static void consum(FILE *f, char c);
-static void request_line(FILE *f, HttpRequest *req);
-static void message_header(FILE *f, HttpRequest *req);
+static void request_line(FILE *f, HttpMessage *req);
+static void message_header(FILE *f, HttpMessage *req);
 
 /**
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
-HttpRequest *http_request_parse(int fd, bool debug) {
-  HttpRequest *req = malloc(sizeof(HttpRequest));
+HttpMessage *http_request_parse(int fd, bool debug) {
+  HttpMessage *req = malloc(sizeof(HttpMessage));
+  req->ty = HM_REQ;
   req->header_map = new_map();
 
   FILE *f = fdopen(fd, "r");
@@ -86,7 +87,7 @@ HttpRequest *http_request_parse(int fd, bool debug) {
   return req;
 }
 
-static void request_line(FILE *f, HttpRequest *req) {
+static void request_line(FILE *f, HttpMessage *req) {
   char buf[256];
   char *p;
   int c;
@@ -121,7 +122,7 @@ static void request_line(FILE *f, HttpRequest *req) {
   req->http_version = strdup(buf);
 }
 
-static void message_header(FILE *f, HttpRequest *req) {
+static void message_header(FILE *f, HttpMessage *req) {
   char buf[256];
   char *p, *key, *value;
   int c;
@@ -170,7 +171,7 @@ static void consum(FILE *f, char expected) {
     error("unexpected character: %c\n", c);
 }
 
-void write_http_response(int fd, HttpResponse *res) {
+void write_http_response(int fd, HttpMessage *res) {
 
   FILE *f = fdopen(fd, "w");
 
@@ -206,8 +207,9 @@ void test_http_request_parse() {
   fclose(f);
 
   fd = open(tmp_file, O_RDONLY);
-  HttpRequest *req = http_request_parse(fd, false);
+  HttpMessage *req = http_request_parse(fd, false);
 
+  expect(__LINE__, HM_REQ, req->ty);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
@@ -218,7 +220,8 @@ void test_http_request_parse() {
 }
 
 void test_write_http_response() {
-  HttpResponse *res = malloc(sizeof(HttpResponse));
+  HttpMessage *res = malloc(sizeof(HttpMessage));
+  res->ty = HM_RES;
   res->header_map = new_map();
 
   res->http_version = strdup("HTTP/1.1");

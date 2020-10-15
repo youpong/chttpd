@@ -11,9 +11,8 @@
 #include <unistd.h>    // write()
 
 static void worker_start(Socket *sock, FILE *log, Option *opt);
-static HttpResponse *create_http_response(HttpRequest *, Option *);
-static void write_log(FILE *, Socket *, time_t *, HttpRequest *,
-                      HttpResponse *);
+static HttpMessage *create_http_response(HttpMessage *, Option *);
+static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
   FILE *log = fopen("access.log", "a");
@@ -53,8 +52,8 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
   while (true) {
     time_t req_time;
     time(&req_time);
-    HttpRequest *req = http_request_parse(sock->fd, opt->debug);
-    HttpResponse *res = create_http_response(req, opt);
+    HttpMessage *req = http_request_parse(sock->fd, opt->debug);
+    HttpMessage *res = create_http_response(req, opt);
     write_http_response(sock->fd, res);
     write_log(log, sock, &req_time, req, res);
 
@@ -65,8 +64,9 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
 
 static void set_file(char *dest, FILE *f);
 
-static HttpResponse *create_http_response(HttpRequest *req, Option *opts) {
-  HttpResponse *res = malloc(sizeof(HttpResponse));
+static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
+  HttpMessage *res = malloc(sizeof(HttpMessage));
+  res->ty = HM_RES;
   res->header_map = new_map();
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
@@ -127,7 +127,7 @@ static int lock();
 static void unlock();
 
 static void write_log(FILE *out, Socket *sock, time_t *req_time,
-                      HttpRequest *req, HttpResponse *res) {
+                      HttpMessage *req, HttpMessage *res) {
   struct tm req_tm;
   localtime_r(req_time, &req_tm);
 
@@ -224,14 +224,16 @@ void test_formatted_time() {
 }
 
 void test_create_http_response() {
-  HttpResponse *res;
-  HttpRequest *req = malloc(sizeof(HttpResponse));
+  HttpMessage *res;
+  HttpMessage *req = malloc(sizeof(HttpMessage));
+  req->ty = HM_REQ;
   req->header_map = new_map();
   Option *opt = malloc(sizeof(Option));
   opt->document_root = strdup("www");
 
   req->method = strdup("FOO");
   res = create_http_response(req, opt);
+  expect(__LINE__, HM_RES, res->ty);
   expect_str(__LINE__, "405", res->status_code);
 
   req->method = strdup("GET");
@@ -259,14 +261,16 @@ void test_write_log() {
   time_t req_time = 1602737916;
   FILE *log = fopen("log", "w");
   Socket *sock = create_server_socket(8081);
-  HttpRequest *req = malloc(sizeof(HttpRequest));
+  HttpMessage *req = malloc(sizeof(HttpMessage));
+  req->ty = HM_REQ;
   req->header_map = new_map();
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->http_version = strdup("HTTP/1.1");
   map_put(req->header_map, "Referer", "http://localhost:8080/hello2.html");
   map_put(req->header_map, "User-Agent", "Dali/0.1");
-  HttpResponse *res = malloc(sizeof(HttpResponse));
+  HttpMessage *res = malloc(sizeof(HttpMessage));
+  res->ty = HM_RES;
   res->header_map = new_map();
   res->status_code = strdup("200");
   map_put(res->header_map, "Content-Length", "199");
@@ -285,4 +289,5 @@ void test_write_log() {
       buf);
   // clang-format on  
   fclose(log);
+  unlink("log");
 }

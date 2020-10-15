@@ -19,26 +19,21 @@ Socket *server_accept(Socket *);
 void delete_socket(Socket *);
 
 /* http lib */
-typedef struct {
-  char *method;
-  char *request_uri;
-  char *http_version;
-  Map *header_map;
-} HttpRequest;
+enum HttpMessage_type {
+  HM_REQ, // Http Request		       
+  HM_RES, // Http Response
+};
 
+/**
+ * HttpMessage
+ * - Http Request 
+ *   Request Line: method request_uir http_version 
+ * - Http REsponse 
+ *   Status Line: http_version status_code reason_phrase 
+ */
 typedef struct {
-  char *http_version;
-  char *status_code;
-  char *reason_phrase;
-  Map *header_map;
-  char *body;
-} HttpResponse;
-
-typedef struct {
-  /* Http Request */
-  /* Request Line: method request_uir http_version */
-  /* Http REsponse */
-  /* Status Line: http_version status_code reason_phrase */
+  int ty; // type of http message(request/response)
+  
   char *method;
   char *request_uri;
   char *http_version;
@@ -50,5 +45,5 @@ typedef struct {
   char *body;
 } HttpMessage;
 
-HttpRequest *http_request_parse(int, bool);
-void write_http_response(int, HttpResponse *);
+HttpMessage *http_request_parse(int, bool);
+void write_http_response(int, HttpMessage *);
