@@ -12,7 +12,8 @@
 
 static void worker_start(Socket *sock, FILE *log, Option *opt);
 static HttpResponse *create_http_response(HttpRequest *, Option *);
-static void write_log(FILE *, Socket *, HttpRequest *, HttpResponse *);
+static void write_log(FILE *, Socket *, time_t *, HttpRequest *,
+                      HttpResponse *);
 
 void server_start(Option *opt) {
   FILE *log = fopen("access.log", "a");
@@ -50,10 +51,12 @@ void server_start(Option *opt) {
 static void worker_start(Socket *sock, FILE *log, Option *opt) {
 
   while (true) {
+    time_t req_time;
+    time(&req_time);
     HttpRequest *req = http_request_parse(sock->fd, opt->debug);
     HttpResponse *res = create_http_response(req, opt);
     write_http_response(sock->fd, res);
-    write_log(log, sock, req, res);
+    write_log(log, sock, &req_time, req, res);
 
     if (strcmp("close", map_get(req->header_map, "Connection")) == 0)
       break;
@@ -123,13 +126,10 @@ static bool is_locked();
 static int lock();
 static void unlock();
 
-static void write_log(FILE *out, Socket *sock, HttpRequest *req,
-                      HttpResponse *res) {
-  time_t req_time;
+static void write_log(FILE *out, Socket *sock, time_t *req_time,
+                      HttpRequest *req, HttpResponse *res) {
   struct tm req_tm;
-
-  time(&req_time);
-  localtime_r(&req_time, &req_tm);
+  localtime_r(req_time, &req_tm);
 
   do {
     while (is_locked()) {
@@ -256,6 +256,7 @@ void test_set_file() {
 }
 
 void test_write_log() {
+  time_t req_time = 1602737916;
   FILE *log = fopen("log", "w");
   Socket *sock = create_server_socket(8081);
   HttpRequest *req = malloc(sizeof(HttpRequest));
@@ -270,5 +271,18 @@ void test_write_log() {
   res->status_code = strdup("200");
   map_put(res->header_map, "Content-Length", "199");
 
-  write_log(log, sock, req, res);
+  write_log(log, sock, &req_time, req, res);
+  fclose(log);
+
+  char buf[1048];
+  log = fopen("log", "r");
+  set_file(buf, log);
+
+  // clang-format off
+  expect_str(__LINE__,
+      "0.0.0.0 - - [15/Oct/2020:13:58:36 +0900] \"GET /hello.html HTTP/1.1\" "
+      "200 199 \"http://localhost:8080/hello2.html\" \"Dali/0.1\"\n",
+      buf);
+  // clang-format on  
+  fclose(log);
 }
