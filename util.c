@@ -5,14 +5,16 @@
 #include <string.h>
 
 Vector *new_vector() {
-  Vector *vec = malloc(sizeof(Vector));
+  Vector *vec = calloc(1, sizeof(Vector));
   vec->capacity = 16;
-  vec->data = malloc(sizeof(void *) * vec->capacity);
+  vec->data = calloc(vec->capacity, sizeof(void *));
   vec->len = 0;
   return vec;
 }
 
 void delete_vector(Vector *vec) {
+  for(int i = 0; i < vec->len; i++) 
+    free(vec->data[i]);
   free(vec->data);
   free(vec);
 }
