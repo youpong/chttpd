@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
     test_write_http_message();
     test_set_file();
     test_write_log();
+    run_utiltest();
     return 0;
   }
 

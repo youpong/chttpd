@@ -105,12 +105,17 @@ void delete_HttpMessage(HttpMessage *msg) {
  */
 HttpMessage *http_message_parse(int fd, int ty, bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
+  int c;
 
   FILE *f = fdopen(fd, "r");
   if (f == NULL) {
     perror("fdopen");
     exit(1);
   }
+
+  if ((c = fgetc(f)) == EOF)
+    return NULL;
+  ungetc(c, f);
 
   HttpMessage *msg = new_HttpMessage(ty);
   switch (ty) {
@@ -276,7 +281,7 @@ void test_write_http_message() {
   res->status_code = strdup("200");
   res->reason_phrase = strdup("OK");
 
-  map_put(res->header_map, "Server", "Dali/0.1");
+  map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
 
   res->body = strdup("body");
 
@@ -301,4 +306,6 @@ void test_write_http_message() {
              "body",
              buf);
   unlink(template);
+
+  delete_HttpMessage(res);
 }

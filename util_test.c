@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> // strdup()
 
 static void test_vector() {
   Vector *vec = new_vector();
@@ -24,18 +25,19 @@ static void test_map() {
 
   expect_ptr(__LINE__, NULL, map_get(map, "foo"));
 
-  map_put(map, "foo", intdup(2));
+  map_put(map, strdup("foo"), intdup(2));
   expect(__LINE__, 2, *(int *)map_get(map, "foo"));
 
-  map_put(map, "bar", intdup(4));
+  map_put(map, strdup("bar"), intdup(4));
   expect(__LINE__, 4, *(int *)map_get(map, "bar"));
 
-  map_put(map, "foo", intdup(6));
+  map_put(map, strdup("foo"), intdup(6));
   expect(__LINE__, 6, *(int *)map_get(map, "foo"));
+
+  delete_map(map);
 }
 
 void run_utiltest() {
   test_vector();
   test_map();
-  printf("OK\n");
 }

@@ -54,15 +54,21 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
     time_t req_time;
     time(&req_time);
     HttpMessage *req = http_message_parse(sock->fd, HM_REQ, opt->debug);
+    if (req == NULL)
+      break;
     HttpMessage *res = create_http_response(req, opt);
     write_http_message(sock->fd, res);
     write_log(log, sock, &req_time, req, res);
 
-    char *connection = strdup(map_get(req->header_map, "Connection"));
+    char *conn;
+    if (map_get(req->header_map, "Connection") != NULL)
+      conn = strdup(map_get(req->header_map, "Connection"));
+
     delete_HttpMessage(req);
     delete_HttpMessage(res);
-    if (strcmp(connection, "close") == 0) {
-      free(connection);
+
+    if (conn != NULL && strcmp(conn, "close") == 0) {
+      free(conn);
       break;
     }
   }
@@ -93,10 +99,10 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     res->http_version = strdup(HTTP_VERSION);
 
     // Server
-    map_put(res->header_map, "Server", SERVER_NAME);
+    map_put(res->header_map, strdup("Server"), strdup(SERVER_NAME));
 
     // Content-Type
-    map_put(res->header_map, "Content-Type", "text/html");
+    map_put(res->header_map, strdup("Content-Type"), strdup("text/html"));
 
     // Body
     res->body = malloc(1024 * 64);
@@ -105,7 +111,7 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     // Content-Length: TODO
     char *buf = malloc(6);
     sprintf(buf, "%ld", strlen(res->body));
-    map_put(res->header_map, "Content-Length", buf);
+    map_put(res->header_map, strdup("Content-Length"), buf);
 
     fclose(target);
   } else {
@@ -270,11 +276,12 @@ void test_write_log() {
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->http_version = strdup("HTTP/1.1");
-  map_put(req->header_map, "Referer", "http://localhost:8080/hello2.html");
-  map_put(req->header_map, "User-Agent", "Dali/0.1");
+  map_put(req->header_map, strdup("Referer"),
+          strdup("http://localhost:8080/hello2.html"));
+  map_put(req->header_map, strdup("User-Agent"), strdup("Dali/0.1"));
   HttpMessage *res = new_HttpMessage(HM_RES);
   res->status_code = strdup("200");
-  map_put(res->header_map, "Content-Length", "199");
+  map_put(res->header_map, strdup("Content-Length"), strdup("199"));
 
   write_log(log, sock, &req_time, req, res);
   fclose(log);
@@ -291,4 +298,6 @@ void test_write_log() {
   // clang-format on  
   fclose(log);
   unlink("log");
+  delete_HttpMessage(req);
+  delete_HttpMessage(res);  
 }

@@ -13,7 +13,7 @@ Vector *new_vector() {
 }
 
 void delete_vector(Vector *vec) {
-  for(int i = 0; i < vec->len; i++) 
+  for (int i = 0; i < vec->len; i++)
     free(vec->data[i]);
   free(vec->data);
   free(vec);
