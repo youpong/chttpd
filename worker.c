@@ -25,24 +25,27 @@ void server_start(Option *opt) {
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
 
-  while (true) {
-    Socket *sock = server_accept(sv_sock);
-    printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
-           ntohs(sock->addr->sin_port));
-
+  for (int i = 0; i < LISTEN_QUEUE; i++) {
     pid_t pid = fork();
     switch (pid) {
     case -1: // error
       perror("fork");
       exit(1);
     case 0: // child
-      worker_start(sock, log, opt);
-      delete_socket(sock);
-      _exit(0);
+      while (true) {
+        Socket *sock = server_accept(sv_sock);
+        printf("address: %s, port: %d, fd: %d\n",
+               inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port),
+               sock->fd);
+        worker_start(sock, log, opt);
+        delete_socket(sock);
+      }
     default: // parent
-             ;
+      ;
     }
   }
+
+  pause();
 
   fclose(log);
   delete_socket(sv_sock);

@@ -44,7 +44,7 @@ Socket *create_server_socket(int port) {
   }
 
   /* listen */
-  if (listen(sv_sock->fd, 5) == -1) {
+  if (listen(sv_sock->fd, LISTEN_QUEUE) == -1) {
     perror("listen");
     exit(1);
   }

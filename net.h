@@ -8,6 +8,9 @@
 #include <stdio.h> // FILE
 
 /* general net lib */
+
+#define LISTEN_QUEUE 5
+
 typedef struct {
   struct sockaddr_in *addr;
   socklen_t addr_len;
