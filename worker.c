@@ -34,9 +34,8 @@ void server_start(Option *opt) {
     case 0: // child
       while (true) {
         Socket *sock = server_accept(sv_sock);
-        printf("address: %s, port: %d, fd: %d\n",
-               inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port),
-               sock->fd);
+        printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
+               ntohs(sock->addr->sin_port));
         worker_start(sock, log, opt);
         delete_socket(sock);
       }
@@ -56,11 +55,11 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
   while (true) {
     time_t req_time;
     time(&req_time);
-    HttpMessage *req = http_message_parse(sock->fd, HM_REQ, opt->debug);
+    HttpMessage *req = http_message_parse(sock->ips, HM_REQ, opt->debug);
     if (req == NULL)
       break;
     HttpMessage *res = create_http_response(req, opt);
-    write_http_message(sock->fd, res);
+    write_http_message(sock->ops, res);
     write_log(log, sock, &req_time, req, res);
 
     char *conn;
@@ -256,7 +255,7 @@ void test_create_http_response() {
 
   req->method = strdup("FOO");
   res = create_http_response(req, opt);
-  expect(__LINE__, HM_RES, res->ty);
+  expect(__LINE__, HM_RES, res->_ty);
   expect_str(__LINE__, "405", res->status_code);
 
   req->method = strdup("GET");

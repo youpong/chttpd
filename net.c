@@ -10,8 +10,9 @@
 #include <sys/types.h> // open(2)
 #include <unistd.h>
 
-static Socket *new_socket() {
-  Socket *sock = malloc(sizeof(Socket));
+static Socket *new_socket(SocketType ty) {
+  Socket *sock = calloc(1, sizeof(Socket));
+  sock->_ty = ty;
   sock->addr = malloc(sizeof(struct sockaddr_in));
   sock->addr_len = sizeof(*sock->addr);
 
@@ -19,16 +20,21 @@ static Socket *new_socket() {
 }
 
 void delete_socket(Socket *sock) {
-  close(sock->fd);
+  if (sock->_ty == S_CLT) {
+    fclose(sock->ips);
+    fclose(sock->ops);
+  }
+  close(sock->_fd);
+
   free(sock->addr);
   free(sock);
 }
 
 Socket *create_server_socket(int port) {
-  Socket *sv_sock = new_socket();
+  Socket *sv_sock = new_socket(S_SRV);
 
   /* create a socket, endpoint of connection */
-  if ((sv_sock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+  if ((sv_sock->_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket");
     exit(1);
   }
@@ -38,13 +44,13 @@ Socket *create_server_socket(int port) {
   addr->sin_family = AF_INET;
   addr->sin_port = htons(port);
   addr->sin_addr.s_addr = INADDR_ANY;
-  if (bind(sv_sock->fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
+  if (bind(sv_sock->_fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
     perror("bind");
     exit(1);
   }
 
   /* listen */
-  if (listen(sv_sock->fd, LISTEN_QUEUE) == -1) {
+  if (listen(sv_sock->_fd, LISTEN_QUEUE) == -1) {
     perror("listen");
     exit(1);
   }
@@ -53,11 +59,19 @@ Socket *create_server_socket(int port) {
 }
 
 Socket *server_accept(Socket *sv_sock) {
-  Socket *sock = new_socket();
+  Socket *sock = new_socket(S_CLT);
 
-  if ((sock->fd = accept(sv_sock->fd, (struct sockaddr *)sock->addr,
-                         &sock->addr_len)) < 0) {
+  if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
+                          &sock->addr_len)) < 0) {
     perror("accept");
+    exit(1);
+  }
+  if ((sock->ips = fdopen(sock->_fd, "r")) == NULL) {
+    perror("fdopen");
+    exit(1);
+  }
+  if ((sock->ops = fdopen(sock->_fd, "w")) == NULL) {
+    perror("fdopen");
     exit(1);
   }
 
@@ -70,13 +84,13 @@ static void message_header(FILE *f, HttpMessage *req);
 
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
-  result->ty = ty;
+  result->_ty = ty;
   result->header_map = new_map();
   return result;
 }
 
 void delete_HttpMessage(HttpMessage *msg) {
-  switch (msg->ty) {
+  switch (msg->_ty) {
   case HM_REQ:
     free(msg->method);
     free(msg->request_uri);
@@ -88,7 +102,7 @@ void delete_HttpMessage(HttpMessage *msg) {
     free(msg->reason_phrase);
     break;
   default:
-    error("Unknown HttpMessage type: %d", msg->ty);
+    error("Unknown HttpMessage type: %d", msg->_ty);
   }
 
   delete_map(msg->header_map);
@@ -103,15 +117,9 @@ void delete_HttpMessage(HttpMessage *msg) {
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
-HttpMessage *http_message_parse(int fd, HttpMessageType ty, bool debug) {
+HttpMessage *http_message_parse(FILE *f, HttpMessageType ty, bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
   int c;
-
-  FILE *f = fdopen(fd, "r");
-  if (f == NULL) {
-    perror("fdopen");
-    exit(1);
-  }
 
   if ((c = fgetc(f)) == EOF)
     return NULL;
@@ -139,7 +147,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
   char *p;
   int c;
 
-  assert(msg->ty == HM_REQ);
+  assert(msg->_ty == HM_REQ);
 
   p = buf;
   while ((c = fgetc(f)) != EOF) {
@@ -220,12 +228,10 @@ static void consum(FILE *f, char expected) {
     error("unexpected character: %c\n", c);
 }
 
-void write_http_message(int fd, HttpMessage *msg) {
-  assert(msg->ty == HM_RES); // HM_REQ not implemented yet.
+void write_http_message(FILE *f, HttpMessage *msg) {
+  assert(msg->_ty == HM_RES); // HM_REQ not implemented yet.
 
-  FILE *f = fdopen(fd, "w");
-
-  switch (msg->ty) {
+  switch (msg->_ty) {
   case HM_REQ:
     break;
   case HM_RES:
@@ -262,9 +268,10 @@ void test_http_message_parse() {
   fclose(f);
 
   fd = open(tmp_file, O_RDONLY);
-  HttpMessage *req = http_message_parse(fd, HM_REQ, false);
 
-  expect(__LINE__, HM_REQ, req->ty);
+  HttpMessage *req = http_message_parse(fdopen(fd, "r"), HM_REQ, false);
+
+  expect(__LINE__, HM_REQ, req->_ty);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
@@ -288,7 +295,7 @@ void test_write_http_message() {
   char *template = strdup("XXXXXX");
   int fd = mkstemp(template);
 
-  write_http_message(fd, res);
+  write_http_message(fdopen(fd, "w"), res);
 
   char buf[1024];
   FILE *f = fopen(template, "r");

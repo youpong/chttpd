@@ -11,10 +11,21 @@
 
 #define LISTEN_QUEUE 5
 
+typedef enum {
+  S_SRV, // server socket
+  S_CLT, // client socket
+} SocketType;
+
 typedef struct {
+  SocketType _ty; // for internal: type of socket(Server/Client)
+
   struct sockaddr_in *addr;
   socklen_t addr_len;
-  int fd;
+  
+  int _fd;   // for internal: file descriptor
+  
+  FILE *ips; // Input Stream
+  FILE *ops; // Output Stream
 } Socket;
 
 Socket *create_server_socket(int);
@@ -35,7 +46,7 @@ typedef enum {
  *   Status Line: http_version status_code reason_phrase 
  */
 typedef struct {
-  HttpMessageType ty; // type of http message(request/response)
+  HttpMessageType _ty; // for internal: type of message(request/response)
   
   char *method;
   char *request_uri;
@@ -50,5 +61,5 @@ typedef struct {
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);
 void delete_HttpMessage(HttpMessage *);
-HttpMessage *http_message_parse(int, HttpMessageType, bool);
-void write_http_message(int, HttpMessage *);
+HttpMessage *http_message_parse(FILE *, HttpMessageType, bool);
+void write_http_message(FILE *, HttpMessage *);
