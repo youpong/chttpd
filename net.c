@@ -68,7 +68,7 @@ static void consum(FILE *f, char c);
 static void request_line(FILE *f, HttpMessage *req);
 static void message_header(FILE *f, HttpMessage *req);
 
-HttpMessage *new_HttpMessage(int ty) {
+HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
   result->ty = ty;
   result->header_map = new_map();
@@ -103,7 +103,7 @@ void delete_HttpMessage(HttpMessage *msg) {
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
-HttpMessage *http_message_parse(int fd, int ty, bool debug) {
+HttpMessage *http_message_parse(int fd, HttpMessageType ty, bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
   int c;
 

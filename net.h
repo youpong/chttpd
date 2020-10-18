@@ -22,10 +22,10 @@ Socket *server_accept(Socket *);
 void delete_socket(Socket *);
 
 /* http lib */
-enum HttpMessage_type {
+typedef enum {
   HM_REQ, // Http Request		       
   HM_RES, // Http Response
-};
+} HttpMessageType;
 
 /**
  * HttpMessage
@@ -35,7 +35,7 @@ enum HttpMessage_type {
  *   Status Line: http_version status_code reason_phrase 
  */
 typedef struct {
-  int ty; // type of http message(request/response)
+  HttpMessageType ty; // type of http message(request/response)
   
   char *method;
   char *request_uri;
@@ -48,7 +48,7 @@ typedef struct {
   char *body;
 } HttpMessage;
 
-HttpMessage *new_HttpMessage(int ty);
+HttpMessage *new_HttpMessage(HttpMessageType ty);
 void delete_HttpMessage(HttpMessage *);
-HttpMessage *http_message_parse(int, int, bool);
+HttpMessage *http_message_parse(int, HttpMessageType, bool);
 void write_http_message(int, HttpMessage *);
