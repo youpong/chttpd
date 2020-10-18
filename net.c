@@ -298,6 +298,7 @@ void test_write_http_message() {
     *p++ = c;
   }
   *p = '\0';
+  fclose(f);
 
   expect_str(__LINE__,
              "HTTP/1.1 200 OK\r\n"

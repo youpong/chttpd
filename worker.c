@@ -41,7 +41,7 @@ void server_start(Option *opt) {
         delete_socket(sock);
       }
     default: // parent
-      ;
+             ;
     }
   }
 
@@ -195,12 +195,21 @@ static char *formatted_time(struct tm *t_tm, long timezone) {
 }
 
 static bool is_locked() {
-  FILE *f = fopen("/var/lock/dali.pid", "r");
-  return f != NULL;
+  bool ret;
+  FILE *f;
+
+  if ((f = fopen("/var/lock/dali.pid", "r")) != NULL) {
+    fclose(f);
+    ret = true;
+  } else
+    ret = false;
+
+  return ret;
 }
 
 static int lock() {
   int fd = open("/var/lock/dali.pid", O_CREAT | O_EXCL);
+  close(fd);
   return fd;
 }
 
