@@ -76,7 +76,7 @@ static Option *parse_args(Args *args) {
         ErrorMsg = strdup("option require an argument -- 'l'");
         return NULL;
       }
-      opts->access_log = strdup(args_next(args));      
+      opts->access_log = strdup(args_next(args));
     } else {
       if (opts->port < 0) {
         if (atoi(arg) < 0) {
@@ -107,8 +107,7 @@ static Option *parse_args(Args *args) {
 
 static void print_usage(char *prog_name) {
   fprintf(stderr, "Usage:\n");
-  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [PORT]\n",
-	  prog_name);
+  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [PORT]\n", prog_name);
   fprintf(stderr, "%s -test\n", prog_name);
 }
 
@@ -124,14 +123,14 @@ void test_parse_args() {
   expect(__LINE__, opt->port, 8088);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
-  expect_str(__LINE__, opt->access_log, "access.log");  
+  expect_str(__LINE__, opt->access_log, "access.log");
 
   char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
   opt = parse_args(new_args(6, arg_full));
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
-  expect_str(__LINE__, opt->access_log, "Access.log");    
+  expect_str(__LINE__, opt->access_log, "Access.log");
 
   char *test_opt[] = {"./httpd", "-test"};
   opt = parse_args(new_args(2, test_opt));
