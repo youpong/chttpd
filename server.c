@@ -16,7 +16,7 @@ static HttpMessage *create_http_response(HttpMessage *, Option *);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
-  FILE *log = fopen("access.log", "a");
+  FILE *log = fopen(opt->access_log, "a");
   if (log == NULL) {
     perror("fopen");
     exit(1);

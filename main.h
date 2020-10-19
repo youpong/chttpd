@@ -11,6 +11,7 @@ typedef struct {
   bool debug;
   bool test;
   char *document_root;
+  char *access_log;
   int port;
 } Option;
 
