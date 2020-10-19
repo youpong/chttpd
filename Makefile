@@ -9,7 +9,7 @@ CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 LIBS = -lc
 
 TARGET = httpd
-SRCS = main.c worker.c net.c util.c util_test.c
+SRCS = main.c server.c net.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean format check tags
@@ -17,7 +17,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 clean:
-	- rm -f a.out $(TARGET) $(OBJS) *~ test
+	- rm -f *~ a.out $(TARGET) $(OBJS) 
 
 format:
 	clang-format -i *.c
@@ -31,8 +31,8 @@ check: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)
 
-# following doesn't work... why?
-# $(OJBS): httpd.h
-main.o: main.h
-worker.o: main.h net.h
-net.o: net.h
+main.o:      main.h       util.h
+server.o:    main.h net.h util.h
+net.o:              net.h util.h
+util.o:                   util.h
+util_test.o:              util.h

@@ -1,5 +1,6 @@
 #include "main.h"
 #include "net.h"
+#include "util.h"
 #include <arpa/inet.h> // inet_ntoa()
 #include <dirent.h>    // opendir()
 #include <fcntl.h>     // open()

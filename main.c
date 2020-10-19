@@ -1,4 +1,5 @@
 #include "main.h"
+#include "util.h"
 
 #include <arpa/inet.h>  // inet_ntoa()
 #include <netinet/in.h> // inet_ntoa()
