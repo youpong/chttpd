@@ -4,6 +4,29 @@
 #include <stdlib.h>
 #include <string.h>
 
+Args *new_args(int argc, char **argv) {
+  Args *args = malloc(sizeof(Args));
+  args->argc = argc;
+  args->argv = argv;
+  return args;
+}
+
+void delete_args(Args *args) {
+  free(args);
+}
+
+bool args_has_next(Args *args) {
+  return args->argc > 0;
+}
+
+char *args_next(Args *args) {
+  char *ret = *(args->argv);
+  args->argc--;
+  args->argv++;
+
+  return ret;
+}
+
 Vector *new_vector() {
   Vector *vec = calloc(1, sizeof(Vector));
   vec->capacity = 16;

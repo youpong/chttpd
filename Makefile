@@ -26,7 +26,7 @@ tags:
 	etags $(SRCS) *.h
 
 check: $(TARGET)
-	./$(TARGET) -test && echo "Okay"
+	./$(TARGET) -test
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)

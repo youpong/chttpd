@@ -5,6 +5,16 @@
 
 /* util.c */
 typedef struct {
+  int argc;
+  char **argv;
+} Args;
+
+Args *new_args(int, char **);
+void delete_args(Args *);
+bool args_has_next(Args *);
+char *args_next(Args *);
+
+typedef struct {
   void **data;
   int capacity;
   int len;

@@ -21,8 +21,6 @@ void test_write_log();
 static Option *parse_args(int argc, char **argv);
 static void print_usage();
 
-char *PROG_NAME;
-
 int main(int argc, char **argv) {
   Option *opt = parse_args(argc, argv);
 
@@ -35,6 +33,11 @@ int main(int argc, char **argv) {
     test_set_file();
     test_write_log();
     run_utiltest();
+
+    printf("========================\n");
+    printf(" All unit tests passed.\n");
+    printf("========================\n");
+
     return 0;
   }
 
@@ -44,37 +47,48 @@ int main(int argc, char **argv) {
 }
 
 static Option *parse_args(int argc, char **argv) {
-  Option *opts = malloc(sizeof(Option));
-  opts->port = 8088;
-  opts->test = false;
-  opts->debug = false;
-  opts->document_root = strdup("www");
+  Args *args = new_args(argc, argv);
+  Option *opts = calloc(1, sizeof(Option));
 
-  PROG_NAME = strdup(argv[0]);
+  opts->prog_name = strdup(*argv);
 
-  if (argc == 2 && strcmp(argv[1], "-test") == 0) {
-    opts->test = true;
-    return opts;
+  argc--;
+  argv++;
+  while (argc > 0) {
+    // char *arg = *argv;
+    if (strcmp(*argv, "-test") == 0) {
+      opts->test = true;
+    } else if (strcmp(*argv, "-r") == 0) {
+      // TODO: no arg exception
+      argc--;
+      argv++;
+      opts->document_root = strdup(*argv);
+    } else {
+      if (opts->port == 0)
+        opts->port = atoi(*argv);
+      else
+        print_usage();
+    }
+
+    argc--;
+    argv++;
   }
 
-  // process options
-  // ...
-
-  // process args
-  if (argc > 2) {
-    print_usage();
-    exit(1);
-  } else if (argc == 2) {
-    opts->port = atoi(argv[1]);
+  // set default values...
+  if (opts->port == 0) {
+    opts->port = DEFAULT_PORT;
+  }
+  if (opts->document_root == NULL) {
+    opts->document_root = strdup("www");
   }
 
   return opts;
 }
 
-static void print_usage() {
+static void print_usage(Option *opts) {
   fprintf(stderr, "Usage:\n");
-  fprintf(stderr, "%s [port]\n", PROG_NAME);
-  fprintf(stderr, "%s -test\n", PROG_NAME);
+  fprintf(stderr, "%s [-d DOCUMENT_ROOT] [PORT]\n", opts->prog_name);
+  fprintf(stderr, "%s -test\n", opts->prog_name);
 }
 
 void test_parse_args() {
@@ -83,13 +97,16 @@ void test_parse_args() {
 
   opt = parse_args(1, minimum);
   expect(__LINE__, opt->port, 8088);
+  expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
 
   char *test_opt[] = {"./httpd", "-test"};
   opt = parse_args(2, test_opt);
+  expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
 
   char *arg_port[] = {"./httpd", "80"};
   opt = parse_args(2, arg_port);
+  expect_str(__LINE__, opt->prog_name, "./httpd");
   expect(__LINE__, 80, opt->port);
 }
