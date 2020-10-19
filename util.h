@@ -10,7 +10,7 @@ typedef struct {
 } Args;
 
 Args *new_args(int, char **);
-void delete_args(Args *);
+//void delete_args(Args *);  
 bool args_has_next(Args *);
 char *args_next(Args *);
 

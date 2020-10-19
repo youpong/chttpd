@@ -10,11 +10,11 @@ Args *new_args(int argc, char **argv) {
   args->argv = argv;
   return args;
 }
-
+/*
 void delete_args(Args *args) {
   free(args);
 }
-
+*/
 bool args_has_next(Args *args) {
   return args->argc > 0;
 }
