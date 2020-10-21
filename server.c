@@ -35,8 +35,9 @@ void server_start(Option *opt) {
     case 0: // child
       while (true) {
         Socket *sock = server_accept(sv_sock);
-        printf("address: %s, port: %d\n", inet_ntoa(sock->addr->sin_addr),
-               ntohs(sock->addr->sin_port));
+        printf("open pid: %d, address: %s, port: %d\n", getpid(),
+               inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
+        fflush(stdout);
         worker_start(sock, log, opt);
         delete_socket(sock);
       }
@@ -92,11 +93,17 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
     } else {
+      if (target != NULL)
+        fclose(target);
+      strcpy(target_path, opts->document_root);
+      strcat(target_path, "/error.html");
+      target = fopen(target_path, "r");
+
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
-      return res;
     }
-    closedir(d);
+    if (d != NULL)
+      closedir(d);
 
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
