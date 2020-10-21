@@ -34,10 +34,25 @@ static void test_map() {
   map_put(map, strdup("foo"), intdup(6));
   expect(__LINE__, 6, *(int *)map_get(map, "foo"));
 
+  // put empty string at key
+  expect_ptr(__LINE__, NULL, map_get(map, ""));
+  map_put(map, strdup(""), strdup("value"));
+  expect_str(__LINE__, "value", map_get(map, ""));
+
   delete_map(map);
 }
 
-void run_utiltest() {
+static void test_strcmp() {
+  // compare empty string
+  // clang-format off
+  expect(__LINE__,  true, strcmp("",  "") == 0);
+  expect(__LINE__, false, strcmp("A", "") == 0);
+  expect(__LINE__, false, strcmp("", "A") == 0);
+  // clang-format on
+}
+
+void run_all_test_util() {
   test_vector();
   test_map();
+  test_strcmp();
 }

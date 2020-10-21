@@ -5,7 +5,7 @@
 #include <dirent.h>    // opendir()
 #include <fcntl.h>     // open()
 #include <stdlib.h>    // malloc()
-#include <string.h>    // strcmp()
+#include <string.h>    // strcmp(), strrchr()
 #include <sys/stat.h>  // open()
 #include <sys/types.h> // opendir()
 #include <time.h>      // time()
@@ -79,6 +79,7 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
 }
 
 static void set_file(char *dest, FILE *f);
+static char *get_mime_type(char *fname);
 
 static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
@@ -112,7 +113,8 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     map_put(res->header_map, strdup("Server"), strdup(SERVER_NAME));
 
     // Content-Type
-    map_put(res->header_map, strdup("Content-Type"), strdup("text/html"));
+    map_put(res->header_map, strdup("Content-Type"),
+            strdup(get_mime_type(target_path)));
 
     // Body
     res->body = malloc(1024 * 64);
@@ -131,6 +133,18 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   }
 
   return res;
+}
+
+static char *get_mime_type(char *fname) {
+  char *ext = strrchr(fname, '.');
+  if (ext == NULL)
+    return "text/plain";
+
+  char *mime = map_get(Mime_map, ext + 1);
+  if (mime == NULL)
+    return "text/plain";
+
+  return mime;
 }
 
 static void set_file(char *dest, FILE *f) {
@@ -228,7 +242,7 @@ static char *default_val(char *val, char *dval) {
   return val ? val : dval;
 }
 
-void test_formatted_time() {
+static void test_formatted_time() {
   time_t t = 0; // Epoch 1970.01.01 00:00:00 +0000(UTC)
   struct tm t_tm;
 
@@ -255,7 +269,7 @@ void test_formatted_time() {
              formatted_time(&t_tm, -(9 * 60 * 60)));
 }
 
-void test_create_http_response() {
+static void test_create_http_response() {
   HttpMessage *res;
   HttpMessage *req = new_HttpMessage(HM_REQ);
   Option *opt = malloc(sizeof(Option));
@@ -277,7 +291,7 @@ void test_create_http_response() {
   expect_str(__LINE__, "200", res->status_code);
 }
 
-void test_set_file() {
+static void test_set_file() {
   char buf[2048];
   FILE *f = fopen("LICENSE", "r");
   set_file(buf, f);
@@ -287,7 +301,7 @@ void test_set_file() {
   expect(__LINE__, 1064, strlen(buf));
 }
 
-void test_write_log() {
+static void test_write_log() {
   time_t req_time = 1602737916;
   FILE *log = fopen("log", "w");
   Socket *sock = create_server_socket(8081);
@@ -319,4 +333,19 @@ void test_write_log() {
   unlink("log");
   delete_HttpMessage(req);
   delete_HttpMessage(res);  
+}
+
+static void test_get_mime_type() {
+  expect_str(__LINE__, "text/html", get_mime_type("index.html"));
+  expect_str(__LINE__, "text/plain", get_mime_type("extless"));
+  expect_str(__LINE__, "text/plain", get_mime_type("a.unknownext"));
+  expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));    
+}
+
+void run_all_test_server() {
+  test_get_mime_type();
+  test_formatted_time();
+  test_create_http_response();
+  test_set_file();
+  test_write_log();
 }

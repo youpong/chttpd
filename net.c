@@ -258,7 +258,7 @@ void write_http_message(FILE *f, HttpMessage *msg) {
   fflush(f);
 }
 
-void test_http_message_parse() {
+static void test_http_message_parse() {
   char tmp_file[] = "XXXXXX";
   int fd = mkstemp(tmp_file);
   FILE *f = fdopen(fd, "w");
@@ -281,7 +281,7 @@ void test_http_message_parse() {
   unlink(tmp_file);
 }
 
-void test_write_http_message() {
+static void test_write_http_message() {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   res->http_version = strdup("HTTP/1.1");
@@ -316,4 +316,9 @@ void test_write_http_message() {
   unlink(template);
 
   delete_HttpMessage(res);
+}
+
+void run_all_test_net() {
+  test_http_message_parse();
+  test_write_http_message();
 }

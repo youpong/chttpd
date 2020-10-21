@@ -63,3 +63,5 @@ HttpMessage *new_HttpMessage(HttpMessageType ty);
 void delete_HttpMessage(HttpMessage *);
 HttpMessage *http_message_parse(FILE *, HttpMessageType, bool);
 void write_http_message(FILE *, HttpMessage *);
+
+void run_all_test_net();

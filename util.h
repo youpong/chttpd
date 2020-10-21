@@ -48,5 +48,4 @@ void expect_ptr(int line, void *expected, void *actual);
 void expect_bool(int line, bool expected, bool actual);
   
 /* util_test.c */
-void run_utiltest();
-
+void run_all_test_util();

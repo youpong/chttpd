@@ -16,3 +16,5 @@ typedef struct {
 } Option;
 
 void server_start(Option *);
+
+extern Map *Mime_map;

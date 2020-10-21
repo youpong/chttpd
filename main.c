@@ -9,22 +9,19 @@
 #include <sys/socket.h> // inet_ntoa()
 #include <unistd.h>
 
-// test begin
-void test_parse_args();
-void test_formatted_time();
-void test_create_http_response();
-void test_write_http_message();
-void test_http_message_parse();
-void test_set_file();
-void test_write_log();
-// test end
+Map *Mime_map;
 
+void run_all_test_main();
+void run_all_test_server();
+
+static void init_mime_map();
 static Option *parse_args(int, char **);
 static void print_usage(char *);
 
 char *ErrorMsg;
 
 int main(int argc, char **argv) {
+
   Option *opt = parse_args(argc, argv);
   if (opt == NULL) {
     fprintf(stderr, "%s\n", ErrorMsg);
@@ -32,15 +29,13 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  init_mime_map();
+
   if (opt->test) {
-    test_parse_args();
-    test_formatted_time();
-    test_create_http_response();
-    test_http_message_parse();
-    test_write_http_message();
-    test_set_file();
-    test_write_log();
-    run_utiltest();
+    run_all_test_main();
+    run_all_test_server();
+    run_all_test_net();
+    run_all_test_util();
 
     printf("========================\n");
     printf(" All unit tests passed.\n");
@@ -52,6 +47,17 @@ int main(int argc, char **argv) {
   server_start(opt);
 
   return EXIT_SUCCESS;
+}
+
+static void init_mime_map() {
+  Mime_map = new_map();
+
+  // clang-format off
+  map_put(Mime_map, "css" , "text/css" );
+  map_put(Mime_map, "gif" , "image/gif");
+  map_put(Mime_map, "html", "text/html");
+  map_put(Mime_map, "png" , "image/png");
+  // clang-format on  
 }
 
 static Option *parse_args(int argc, char **argv) {
@@ -112,7 +118,7 @@ static void print_usage(char *prog_name) {
   fprintf(stderr, "%s -test\n", prog_name);
 }
 
-void test_parse_args() {
+static void test_parse_args() {
   Option *opt;
 
   //
@@ -161,4 +167,8 @@ void test_parse_args() {
   opt = parse_args(3, arg_many);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "too many arguments", ErrorMsg);
+}
+
+void run_all_test_main() {
+  test_parse_args();
 }
