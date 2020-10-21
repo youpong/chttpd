@@ -19,13 +19,13 @@ void test_set_file();
 void test_write_log();
 // test end
 
-static Option *parse_args(Args *);
+static Option *parse_args(int, char **);
 static void print_usage(char *);
 
 char *ErrorMsg;
 
 int main(int argc, char **argv) {
-  Option *opt = parse_args(new_args(argc, argv));
+  Option *opt = parse_args(argc, argv);
   if (opt == NULL) {
     fprintf(stderr, "%s\n", ErrorMsg);
     print_usage(argv[0]);
@@ -54,7 +54,8 @@ int main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-static Option *parse_args(Args *args) {
+static Option *parse_args(int argc, char **argv) {
+  Args *args = new_args(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
   opts->port = -1; // -1: not setted
 
@@ -119,26 +120,26 @@ void test_parse_args() {
   //
 
   char *arg_min[] = {"./httpd"};
-  opt = parse_args(new_args(1, arg_min));
+  opt = parse_args(1, arg_min);
   expect(__LINE__, opt->port, 8088);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
   expect_str(__LINE__, opt->access_log, "access.log");
 
   char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
-  opt = parse_args(new_args(6, arg_full));
+  opt = parse_args(6, arg_full);
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
   expect_str(__LINE__, opt->access_log, "Access.log");
 
   char *test_opt[] = {"./httpd", "-test"};
-  opt = parse_args(new_args(2, test_opt));
+  opt = parse_args(2, test_opt);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
 
   char *arg_port[] = {"./httpd", "80"};
-  opt = parse_args(new_args(2, arg_port));
+  opt = parse_args(2, arg_port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect(__LINE__, 80, opt->port);
 
@@ -147,17 +148,17 @@ void test_parse_args() {
   //
 
   char *arg_omit[] = {"./httpd", "-r"};
-  opt = parse_args(new_args(2, arg_omit));
+  opt = parse_args(2, arg_omit);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "option require an argument -- 'r'", ErrorMsg);
 
   char *arg_neg[] = {"./httpd", "-1"};
-  opt = parse_args(new_args(2, arg_neg));
+  opt = parse_args(2, arg_neg);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "PORT must be non-negative", ErrorMsg);
 
   char *arg_many[] = {"./httpd", "80", "80"};
-  opt = parse_args(new_args(3, arg_many));
+  opt = parse_args(3, arg_many);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "too many arguments", ErrorMsg);
 }
