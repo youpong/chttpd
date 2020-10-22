@@ -78,7 +78,7 @@ static void worker_start(Socket *sock, FILE *log, Option *opt) {
   }
 }
 
-static void set_file(char *dest, FILE *f);
+static int set_file(char *dest, FILE *f);
 static char *get_mime_type(char *fname);
 
 static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
@@ -118,11 +118,11 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
 
     // Body
     res->body = malloc(1024 * 64);
-    set_file(res->body, target);
+    int len = set_file(res->body, target);
 
     // Content-Length: TODO
     char *buf = malloc(6);
-    sprintf(buf, "%ld", strlen(res->body));
+    sprintf(buf, "%d", len);
     map_put(res->header_map, strdup("Content-Length"), buf);
 
     if (target != NULL)
@@ -148,17 +148,20 @@ static char *get_mime_type(char *fname) {
   return mime;
 }
 
-static void set_file(char *dest, FILE *f) {
-  int c;
+static int set_file(char *dest, FILE *f) {
+  int c, len = 0;
   char *p = dest;
 
   if (f == NULL)
-    return;
+    return len;
 
   while ((c = fgetc(f)) != EOF) {
     *p++ = c;
+    len++;
   }
   *p = '\0';
+
+  return len;
 }
 
 static char *default_val(char *val, char *dval);
@@ -298,11 +301,11 @@ static void test_create_http_response() {
 static void test_set_file() {
   char buf[2048];
   FILE *f = fopen("LICENSE", "r");
-  set_file(buf, f);
+  int len = set_file(buf, f);
   fclose(f);
 
   expect(__LINE__, 'M', buf[0]);
-  expect(__LINE__, 1064, strlen(buf));
+  expect(__LINE__, 1064, len);
 }
 
 static void test_write_log() {

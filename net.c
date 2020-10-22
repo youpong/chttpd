@@ -231,6 +231,8 @@ static void consum(FILE *f, char expected) {
 void write_http_message(FILE *f, HttpMessage *msg) {
   assert(msg->_ty == HM_RES); // HM_REQ not implemented yet.
 
+  Map *map = msg->header_map;
+
   switch (msg->_ty) {
   case HM_REQ:
     break;
@@ -241,7 +243,6 @@ void write_http_message(FILE *f, HttpMessage *msg) {
   }
 
   // headers
-  Map *map = msg->header_map;
   for (int i = 0; i < map->keys->len; i++) {
     fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
             (char *)map->vals->data[i]);
@@ -250,10 +251,17 @@ void write_http_message(FILE *f, HttpMessage *msg) {
   fprintf(f, "\r\n");
 
   // body
-  char *p = msg->body;
-  while (*p != '\0') {
-    fputc(*p, f);
-    p++;
+  char *len_str = map_get(map, "Content-Length");
+  if (len_str != NULL) {
+    for (int i = 0; i < atoi(len_str); i++) {
+      fputc(msg->body[i], f);
+    }
+  } else {
+    char *p = msg->body;
+    while (*p != '\0') {
+      fputc(*p, f);
+      p++;
+    }
   }
   fflush(f);
 }
