@@ -125,7 +125,8 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     sprintf(buf, "%ld", strlen(res->body));
     map_put(res->header_map, strdup("Content-Length"), buf);
 
-    fclose(target);
+    if (target != NULL)
+      fclose(target);
   } else {
     // Not Allowed
     res->status_code = strdup("405");
@@ -150,6 +151,9 @@ static char *get_mime_type(char *fname) {
 static void set_file(char *dest, FILE *f) {
   int c;
   char *p = dest;
+
+  if (f == NULL)
+    return;
 
   while ((c = fgetc(f)) != EOF) {
     *p++ = c;
