@@ -32,6 +32,8 @@ Socket *create_server_socket(int);
 Socket *server_accept(Socket *);
 void delete_socket(Socket *);
 
+void url_decode(char *dest, char *src);
+
 /* http lib */
 typedef enum {
   HM_REQ, // Http Request		       

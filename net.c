@@ -10,6 +10,10 @@
 #include <sys/types.h> // open(2)
 #include <unistd.h>
 
+//
+// general net
+//
+
 static Socket *new_socket(SocketType ty) {
   Socket *sock = calloc(1, sizeof(Socket));
   sock->_ty = ty;
@@ -77,6 +81,49 @@ Socket *server_accept(Socket *sv_sock) {
 
   return sock;
 }
+
+void url_decode(char *dest, char *src) {
+  char *p = src;
+
+  while (*p) {
+    if (*p == '+') {
+      *dest++ = ' ';
+      p++;
+      continue;
+    }
+    if (*p != '%') {
+      *dest++ = *p++;
+      continue;
+    }
+
+    /*
+    char buf[3] = { 0 };
+    memcpy(buf, ++p, 2);
+    *dest++ = strtol(buf, NULL, 16);
+    p += 2;
+    */
+    int n = 0;
+    p++;
+    for (int i = 0; i < 2; i++) {
+      int d;
+      if ('0' <= *p && *p <= '9')
+        d = *p - '0';
+      if ('A' <= *p && *p <= 'F')
+        d = *p - 'A' + 10;
+      if ('a' <= *p && *p <= 'f')
+        d = *p - 'a' + 10;
+      n = 16 * n + d;
+      p++;
+    }
+    *dest++ = n;
+  }
+
+  *dest = '\0';
+}
+
+//
+// http
+//
 
 static void consum(FILE *f, char c);
 static void request_line(FILE *f, HttpMessage *req);
@@ -266,6 +313,28 @@ void write_http_message(FILE *f, HttpMessage *msg) {
   fflush(f);
 }
 
+static void test_url_decode() {
+  char buf[10];
+
+  url_decode(buf, "abc");
+  expect_str(__LINE__, "abc", buf);
+
+  url_decode(buf, "a");
+  expect_str(__LINE__, "a", buf);
+
+  url_decode(buf, "");
+  expect_str(__LINE__, "", buf);
+
+  url_decode(buf, "%40%3A%3b");
+  expect_str(__LINE__, "@:;", buf);
+
+  url_decode(buf, "-_.*");
+  expect_str(__LINE__, "-_.*", buf);
+
+  url_decode(buf, "+");
+  expect_str(__LINE__, " ", buf);
+}
+
 static void test_http_message_parse() {
   char tmp_file[] = "XXXXXX";
   int fd = mkstemp(tmp_file);
@@ -327,6 +396,7 @@ static void test_write_http_message() {
 }
 
 void run_all_test_net() {
+  test_url_decode();
   test_http_message_parse();
   test_write_http_message();
 }
