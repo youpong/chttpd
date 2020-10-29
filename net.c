@@ -96,26 +96,30 @@ void url_decode(char *dest, char *src) {
       continue;
     }
 
-    /*
-    char buf[3] = { 0 };
-    memcpy(buf, ++p, 2);
-    *dest++ = strtol(buf, NULL, 16);
-    p += 2;
-    */
+    // decode 2 bytes after '%' as hex num.
     int n = 0;
-    p++;
-    for (int i = 0; i < 2; i++) {
+    for (char *q = p + 1; q - p < 3; q++) {
       int d;
-      if ('0' <= *p && *p <= '9')
-        d = *p - '0';
-      if ('A' <= *p && *p <= 'F')
-        d = *p - 'A' + 10;
-      if ('a' <= *p && *p <= 'f')
-        d = *p - 'a' + 10;
+      if ('0' <= *q && *q <= '9')
+        d = *q - '0';
+      else if ('A' <= *q && *q <= 'F')
+        d = *q - 'A' + 10;
+      else if ('a' <= *q && *q <= 'f')
+        d = *q - 'a' + 10;
+      else {
+        n = -1;
+        break;
+      }
       n = 16 * n + d;
-      p++;
     }
-    *dest++ = n;
+
+    if (n != -1)
+      *dest++ = n;
+    else {
+      memcpy(dest, p, 3);
+      dest += 3;
+    }
+    p += 3;
   }
 
   *dest = '\0';
@@ -212,7 +216,8 @@ static void request_line(FILE *f, HttpMessage *msg) {
     *p++ = c;
   }
   *p = '\0';
-  msg->request_uri = strdup(buf);
+  msg->request_uri = malloc(strlen(buf) + 1);
+  url_decode(msg->request_uri, buf);
 
   p = buf;
   while ((c = fgetc(f)) != EOF) {
@@ -333,6 +338,9 @@ static void test_url_decode() {
 
   url_decode(buf, "+");
   expect_str(__LINE__, " ", buf);
+
+  url_decode(buf, "%3G");
+  expect_str(__LINE__, "%3G", buf);
 }
 
 static void test_http_message_parse() {
