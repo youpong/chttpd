@@ -82,6 +82,12 @@ Socket *server_accept(Socket *sv_sock) {
   return sock;
 }
 
+/*
+ * ReferTo:
+ * -
+ * https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
+ * - https://url.spec.whatwg.org/
+ */
 void url_decode(char *dest, char *src) {
   char *p = src;
 
@@ -96,7 +102,10 @@ void url_decode(char *dest, char *src) {
       continue;
     }
 
-    // decode 2 bytes after '%' as hex num.
+    //
+    // decode sequence of form "%xy".
+    //
+
     int n = 0;
     char *q;
     for (q = p + 1; q - p < 3; q++) {
@@ -108,24 +117,25 @@ void url_decode(char *dest, char *src) {
       else if ('a' <= *q && *q <= 'f')
         d = *q - 'a' + 10;
       else { // include *q == '\0'
-        n = -1;
-        break;
+        goto IllegalByteSequence;
       }
       n = 16 * n + d;
     }
 
-    if (n != -1) {
-      *dest++ = n;
-      p += 3;
-    } else { // 3, 2, 1
-      int len = q - p + 1;
-      if (*q == '\0')
-        len--;
+    *dest++ = n;
+    p += 3;
+    continue;
 
-      memcpy(dest, p, len);
-      dest += len;
-      p += len;
-    }
+  IllegalByteSequence : {
+    // append to dest '%' and trailing 2..0 bytes
+    int len = q - p + 1;
+    if (*q == '\0') // not copy '\0'
+      len--;
+
+    memcpy(dest, p, len);
+    dest += len;
+    p += len;
+  }
   }
 
   *dest = '\0';
@@ -325,38 +335,47 @@ void write_http_message(FILE *f, HttpMessage *msg) {
 }
 
 static void test_url_decode() {
-  char buf[10];
+  char buf[100];
 
+  // normal case 1
   url_decode(buf, "abc");
   expect_str(__LINE__, "abc", buf);
 
+  // normal case 2
+  url_decode(buf, "a+%40%3A%3bz");
+  expect_str(__LINE__, "a @:;z", buf);
+
+  // minimal case
   url_decode(buf, "a");
   expect_str(__LINE__, "a", buf);
 
+  // empty case
   url_decode(buf, "");
   expect_str(__LINE__, "", buf);
 
-  url_decode(buf, "%40%3A%3b");
-  expect_str(__LINE__, "@:;", buf);
-
+  // special characters remain the same
   url_decode(buf, "-_.*");
   expect_str(__LINE__, "-_.*", buf);
 
+  // '+' is converted into a space characer
   url_decode(buf, "+");
   expect_str(__LINE__, " ", buf);
 
-  url_decode(buf, "%3G");
-  expect_str(__LINE__, "%3G", buf);
+  //
+  // leave illegal byte sequence alone.
+  //
 
+  // invalid hex
+  url_decode(buf, "%3G%G3");
+  expect_str(__LINE__, "%3G%G3", buf);
+
+  // empty trailing
   url_decode(buf, "%");
   expect_str(__LINE__, "%", buf);
 
+  // shortage trailing
   url_decode(buf, "%3");
   expect_str(__LINE__, "%3", buf);
-
-  url_decode(buf, "%G");
-  expect_str(__LINE__, "%G", buf);
-  
 }
 
 static void test_http_message_parse() {
