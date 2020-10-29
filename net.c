@@ -98,7 +98,8 @@ void url_decode(char *dest, char *src) {
 
     // decode 2 bytes after '%' as hex num.
     int n = 0;
-    for (char *q = p + 1; q - p < 3; q++) {
+    char *q;
+    for (q = p + 1; q - p < 3; q++) {
       int d;
       if ('0' <= *q && *q <= '9')
         d = *q - '0';
@@ -106,20 +107,25 @@ void url_decode(char *dest, char *src) {
         d = *q - 'A' + 10;
       else if ('a' <= *q && *q <= 'f')
         d = *q - 'a' + 10;
-      else {
+      else { // include *q == '\0'
         n = -1;
         break;
       }
       n = 16 * n + d;
     }
 
-    if (n != -1)
+    if (n != -1) {
       *dest++ = n;
-    else {
-      memcpy(dest, p, 3);
-      dest += 3;
+      p += 3;
+    } else { // 3, 2, 1
+      int len = q - p + 1;
+      if (*q == '\0')
+        len--;
+
+      memcpy(dest, p, len);
+      dest += len;
+      p += len;
     }
-    p += 3;
   }
 
   *dest = '\0';
@@ -341,6 +347,16 @@ static void test_url_decode() {
 
   url_decode(buf, "%3G");
   expect_str(__LINE__, "%3G", buf);
+
+  url_decode(buf, "%");
+  expect_str(__LINE__, "%", buf);
+
+  url_decode(buf, "%3");
+  expect_str(__LINE__, "%3", buf);
+
+  url_decode(buf, "%G");
+  expect_str(__LINE__, "%G", buf);
+  
 }
 
 static void test_http_message_parse() {
