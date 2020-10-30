@@ -9,7 +9,7 @@
 
 /* general net lib */
 
-#define LISTEN_QUEUE 5
+#define LISTEN_QUEUE 6
 
 typedef enum {
   S_SRV, // server socket

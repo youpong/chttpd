@@ -11,7 +11,7 @@
 #include <time.h>      // time()
 #include <unistd.h>    // write()
 
-static void worker_start(Socket *sock, FILE *log, Option *opt);
+static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *create_http_response(HttpMessage *, Option *);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
@@ -37,12 +37,12 @@ void server_start(Option *opt) {
         Socket *sock = server_accept(sv_sock);
         printf("open pid: %d, address: %s, port: %d\n", getpid(),
                inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
-        fflush(stdout);
-        worker_start(sock, log, opt);
+        handle_connection(sock, log, opt);
         delete_socket(sock);
       }
+      break;
     default: // parent
-             ;
+             /* no-op */;
     }
   }
 
@@ -52,29 +52,28 @@ void server_start(Option *opt) {
   delete_socket(sv_sock);
 }
 
-static void worker_start(Socket *sock, FILE *log, Option *opt) {
+static void handle_connection(Socket *sock, FILE *log, Option *opt) {
+  time_t req_time;
+  bool conn_keep_alive = true;
 
-  while (true) {
-    time_t req_time;
+  while (conn_keep_alive) {
     time(&req_time);
+
     HttpMessage *req = http_message_parse(sock->ips, HM_REQ, opt->debug);
     if (req == NULL)
       break;
+
     HttpMessage *res = create_http_response(req, opt);
+
     write_http_message(sock->ops, res);
     write_log(log, sock, &req_time, req, res);
 
-    char *conn;
-    if (map_get(req->header_map, "Connection") != NULL)
-      conn = strdup(map_get(req->header_map, "Connection"));
+    char *conn = map_get(req->header_map, "Connection");
+    if (conn != NULL && strcmp(conn, "close") == 0)
+      conn_keep_alive = false;
 
     delete_HttpMessage(req);
     delete_HttpMessage(res);
-
-    if (conn != NULL && strcmp(conn, "close") == 0) {
-      free(conn);
-      break;
-    }
   }
 }
 
