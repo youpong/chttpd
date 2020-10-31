@@ -1,48 +1,42 @@
 #include "file.h"
 #include "util.h"
 
-#include <dirent.h> // readdir(3)
-#include <stdlib.h> // malloc(3)
-#include <string.h> // strdup(3)
+#include <stdlib.h>    // malloc(3)
+#include <string.h>    // strdup(3)
+#include <sys/stat.h>  // stat(2)
+#include <sys/types.h> // stat(2)
+#include <unistd.h>    // stat(2)
 
 // TODO: publish ?
 char *parent_path(char *path);
 char *filename(char *path);
 
-File *open_file(char *path, char *mode) {
+File *new_file(char *path) {
+
+  struct stat st;
+  if (stat(path, &st) == -1) {
+    return NULL;
+  }
+
   File *file = malloc(sizeof(File));
 
+  // File.path
   file->path = strdup(path);
 
-  //
-  // set file type
-  //
-
-  struct dirent *ent;
-  char *dir = parent_path(path);
-  if (strcmp(dir, "") == 0)
-    dir = ".";
-  DIR *d = opendir(dir);
-  // TODO: catch error
-
-  while ((ent = readdir(d)) != NULL) {
-    if (strcmp(ent->d_name, filename(path)) == 0)
-      break;
+  // File.ty
+  switch (st.st_mode & S_IFMT) {
+  case S_IFDIR:
+    file->ty = F_DIR;
+    break;
+  case S_IFREG:
+    file->ty = F_FILE;
+    break;
+  default:
+    file->ty = F_OTHER;
   }
 
-  if (ent != NULL) {
-    switch (ent->d_type) {
-    case DT_DIR:
-      file->ty = F_DIR;
-    case DT_REG:
-      file->ty = F_FILE;
-    default:
-      file->ty = F_OTHER;
-    }
-    file->len = ent->d_reclen;
-  }
-
-  file->f = fopen(path, mode);
+  // File.len
+  file->len = st.st_size;
 
   return file;
 }
@@ -72,7 +66,9 @@ char *filename(char *path) {
   return strdup(p + 1);
 }
 
-void close_file(File *file) {
+void delete_file(File *file) {
+  free(file->path);
+  free(file);
 }
 
 void test_parent_path() {
@@ -93,14 +89,33 @@ void test_filename() {
   expect_str(__LINE__, "", filename(""));
 }
 
-static void test_open_file() {
-  File *file = open_file("file.c", "r");
-  expect(__LINE__, 15, file->len);
+static void test_new_file() {
+  File *file = new_file("LICENSE");
+  expect(__LINE__, 1064, file->len);
   expect(__LINE__, F_FILE, file->ty);
+  expect_str(__LINE__, "LICENSE", file->path);
+  delete_file(file);
+
+  file = new_file("LICENSE.");
+  expect_ptr(__LINE__, NULL, file);
 }
 
 void run_all_test_file() {
   test_parent_path();
   test_filename();
-  test_open_file();
+  test_new_file();
+}
+
+void foo() {
+  File *file = new_file("path");
+  //  file->len;
+  //  file->path;
+  //  file->ty;
+
+  FILE *f = fopen(file->path, "r");
+  fclose(f);
+  DIR *d = opendir(file->path);
+  closedir(d);
+
+  delete_file(file);
 }

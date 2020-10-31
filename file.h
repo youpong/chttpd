@@ -10,13 +10,13 @@ typedef enum {
 
 typedef struct {
   FileType ty;  
-  FILE *f;
+  //FILE *f;
   //DIR *d;
   char *path;
   int len;
 } File;
 
-File *open_file(char *path, char *mode);
-void close_file(File *file);
+File *new_file(char *path);
+void delete_file(File *file);
 
 void run_all_test_file();
