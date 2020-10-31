@@ -1,3 +1,4 @@
+#include "file.h"
 #include "main.h"
 #include "net.h"
 #include "util.h"
@@ -84,11 +85,13 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
-    char target_path[256];
+    char *target_path =
+        malloc(strlen(opts->document_root) + strlen(req->filename) + 1);
     strcpy(target_path, opts->document_root);
-    strcat(target_path, req->request_uri);
+    strcat(target_path, req->filename);
     FILE *target = fopen(target_path, "r");
-    DIR *d = opendir(req->request_uri);
+    //    struct dirent *ent = get_dirent(target_path);
+    DIR *d = opendir(target_path);
     if (target != NULL && d == NULL) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
@@ -288,11 +291,13 @@ static void test_create_http_response() {
 
   req->method = strdup("GET");
   req->request_uri = strdup("/not_exist");
+  req->filename = strdup("/not_exist");
   res = create_http_response(req, opt);
   expect_str(__LINE__, "404", res->status_code);
 
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
+  req->filename = strdup("/hello.html");
   res = create_http_response(req, opt);
   expect_str(__LINE__, "200", res->status_code);
 }

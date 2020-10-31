@@ -216,6 +216,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
 
   assert(msg->_ty == HM_REQ);
 
+  // method
   p = buf;
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
@@ -225,6 +226,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
   *p = '\0';
   msg->method = strdup(buf);
 
+  // request_uri
   p = buf;
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
@@ -235,6 +237,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
   msg->request_uri = malloc(strlen(buf) + 1);
   url_decode(msg->request_uri, buf);
 
+  // http_version
   p = buf;
   while ((c = fgetc(f)) != EOF) {
     if (c == '\r') {
@@ -245,6 +248,14 @@ static void request_line(FILE *f, HttpMessage *msg) {
   }
   *p = '\0';
   msg->http_version = strdup(buf);
+
+  // filename
+  msg->filename = malloc(strlen(msg->request_uri) + 1);
+  p = msg->filename;
+  char *q = msg->request_uri;
+  while (*q != '\0' && *q != '?')
+    *p++ = *q++;
+  *p = '\0';
 }
 
 static void message_header(FILE *f, HttpMessage *msg) {
@@ -395,6 +406,7 @@ static void test_http_message_parse() {
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
+  expect_str(__LINE__, "/hello.html", req->filename);
   expect_str(__LINE__, "localhost", (char *)map_get(req->header_map, "Host"));
 
   close(fd);

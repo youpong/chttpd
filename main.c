@@ -13,6 +13,7 @@ Map *Mime_map;
 
 void run_all_test_main();
 void run_all_test_server();
+void run_all_test_file();
 
 static void init_mime_map();
 static Option *parse_args(int, char **);
@@ -36,6 +37,7 @@ int main(int argc, char **argv) {
     run_all_test_server();
     run_all_test_net();
     run_all_test_util();
+    run_all_test_file();
 
     printf("========================\n");
     printf(" All unit tests passed.\n");

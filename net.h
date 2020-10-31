@@ -56,6 +56,8 @@ typedef struct {
   char *status_code;
   char *reason_phrase;
 
+  char *filename; // pick out from request_uri
+
   Map *header_map;
 
   char *body;
