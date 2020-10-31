@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-
 typedef enum {
   F_DIR,  // directory 
   F_FILE, // regular file

@@ -1,8 +1,9 @@
 #include "util.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include <stdarg.h> // va_start(3)
+#include <stdio.h>  // fprintf(3)
+#include <stdlib.h> // free(3)
+#include <string.h> // strcmp(3)
 
 Args *new_args(int argc, char **argv) {
   Args *args = malloc(sizeof(Args));

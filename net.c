@@ -1,14 +1,12 @@
 #include "net.h"
-#include "util.h"
 
-#include <assert.h>
-#include <fcntl.h> // open(2)
-#include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>    // assert(3)
+#include <fcntl.h>     // open(2)
+#include <stdlib.h>    // malloc(3)
 #include <string.h>    // strdup(3)
 #include <sys/stat.h>  // oepn(2)
 #include <sys/types.h> // open(2)
-#include <unistd.h>
+#include <unistd.h>    // unlink(2)
 
 //
 // general net

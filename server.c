@@ -2,15 +2,14 @@
 #include "main.h"
 #include "net.h"
 #include "util.h"
-#include <arpa/inet.h> // inet_ntoa()
-#include <dirent.h>    // opendir()
-#include <fcntl.h>     // open()
-#include <stdlib.h>    // malloc()
-#include <string.h>    // strcmp(), strrchr()
-#include <sys/stat.h>  // open()
-#include <sys/types.h> // opendir()
-#include <time.h>      // time()
-#include <unistd.h>    // write()
+
+#include <arpa/inet.h> // inet_ntoa(3)
+#include <fcntl.h>     // open(2)
+#include <stdlib.h>    // malloc(3)
+#include <string.h>    // strcmp(3), strrchr(3)
+#include <sys/stat.h>  // open(2)
+#include <time.h>      // time(2)
+#include <unistd.h>    // unlink(2)
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *create_http_response(HttpMessage *, Option *);

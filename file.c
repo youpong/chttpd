@@ -50,6 +50,14 @@ File *new_file(char *path) {
   return file;
 }
 
+void delete_file(File *file) {
+  if (file == NULL)
+    return;
+
+  free(file->path);
+  free(file);
+}
+
 char *parent_path(char *path) {
   char *ret = strdup(path);
   char *p;
@@ -74,15 +82,7 @@ char *filename(char *path) {
   return strdup(p + 1);
 }
 
-void delete_file(File *file) {
-  if (file == NULL)
-    return;
-
-  free(file->path);
-  free(file);
-}
-
-void test_parent_path() {
+static void test_parent_path() {
   // absolute path
   expect_str(__LINE__, "/java/net", parent_path("/java/net/URL.java"));
   expect_str(__LINE__, "/java", parent_path("/java/net"));
@@ -94,7 +94,7 @@ void test_parent_path() {
   expect_str(__LINE__, "", parent_path(""));
 }
 
-void test_filename() {
+static void test_filename() {
   expect_str(__LINE__, "URL.java", filename("/java/net/URL.java"));
   expect_str(__LINE__, "index.html", filename("index.html"));
   expect_str(__LINE__, "", filename(""));

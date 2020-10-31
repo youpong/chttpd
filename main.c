@@ -1,17 +1,12 @@
 #include "main.h"
 #include "file.h"
 #include "net.h"
-#include "util.h"
 
-#include <arpa/inet.h>  // inet_ntoa()
-#include <netinet/in.h> // inet_ntoa()
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>     // strcmp()
-#include <sys/socket.h> // inet_ntoa()
-#include <unistd.h>
-
-Map *Mime_map;
+#include <arpa/inet.h>  // inet_ntoa(3)
+#include <netinet/in.h> // inet_ntoa(3)
+#include <stdlib.h>     // atoi(3)
+#include <string.h>     // strcmp(3)
+#include <sys/socket.h> // inet_ntoa(3)
 
 void run_all_test_main();
 void run_all_test_server();
@@ -20,6 +15,7 @@ static void init_mime_map();
 static Option *parse_args(int, char **);
 static void print_usage(char *);
 
+Map *Mime_map;
 char *ErrorMsg;
 
 int main(int argc, char **argv) {

@@ -1,8 +1,6 @@
 #include "util.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h> // strdup()
+
+#include <string.h> // strdup(3)
 
 static void test_vector() {
   Vector *vec = new_vector();

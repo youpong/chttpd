@@ -1,10 +1,9 @@
 #pragma once
 
 #include "util.h"
-#include <stdbool.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+
+#include <stdbool.h> // bool
+#include <netinet/in.h> // socklen_t
 #include <stdio.h> // FILE
 
 /* general net lib */

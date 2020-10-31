@@ -1,8 +1,8 @@
 // -*- mode: c -*-
 #pragma once
 
-#include <stdnoreturn.h>
-#include <stdbool.h>
+#include <stdnoreturn.h> // noreturn
+#include <stdbool.h> // bool
 
 /* util.c */
 typedef struct {
