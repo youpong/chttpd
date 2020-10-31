@@ -331,17 +331,14 @@ void write_http_message(FILE *f, HttpMessage *msg) {
 
   // body
   char *len_str = map_get(map, "Content-Length");
+  int len = 0;
   if (len_str != NULL) {
-    for (int i = 0; i < atoi(len_str); i++) {
-      fputc(msg->body[i], f);
-    }
-  } else {
-    char *p = msg->body;
-    while (*p != '\0') {
-      fputc(*p, f);
-      p++;
-    }
+    len = atoi(len_str);
   }
+  for (int i = 0; i < len; i++) {
+    fputc(msg->body[i], f);
+  }
+
   fflush(f);
 }
 
@@ -421,6 +418,7 @@ static void test_write_http_message() {
   res->reason_phrase = strdup("OK");
 
   map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
+  map_put(res->header_map, strdup("Content-Length"), strdup("4"));
 
   res->body = strdup("body");
 
@@ -442,6 +440,7 @@ static void test_write_http_message() {
   expect_str(__LINE__,
              "HTTP/1.1 200 OK\r\n"
              "Server: Dali/0.1\r\n"
+             "Content-Length: 4\r\n"
              "\r\n"
              "body",
              buf);

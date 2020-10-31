@@ -82,7 +82,7 @@ char *filename(char *path) {
 void delete_file(File *file) {
   if (file == NULL)
     return;
-  
+
   free(file->path);
   free(file);
 }

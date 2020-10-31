@@ -78,7 +78,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
   }
 }
 
-static int set_file(char *dest, FILE *f);
+static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
 static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
@@ -106,16 +106,15 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
     map_put(res->header_map, strdup("Content-Type"),
             strdup(get_mime_type(file->path)));
 
-    // Content-Length: TODO
-    char *buf = malloc(6);
+    // Content-Length
+    char *buf = malloc(20 + 1); // log10(ULONG_MAX) < 20
     sprintf(buf, "%d", file->len);
     map_put(res->header_map, strdup("Content-Length"), buf);
 
     // Body
     res->body = malloc(file->len + 1);
-    FILE *target = fopen(file->path, "r");
-    set_file(res->body, target);
-    fclose(target);
+    file_read(file, res->body);
+
     delete_file(file);
   } else {
     // Not Allowed Request method
@@ -138,18 +137,10 @@ static char *get_mime_type(char *fname) {
   return mime;
 }
 
-static int set_file(char *dest, FILE *f) {
-  int c, len = 0;
-  char *p = dest;
-
-  if (f == NULL)
-    return len;
-
-  while ((c = fgetc(f)) != EOF) {
-    *p++ = c;
-    len++;
-  }
-  *p = '\0';
+static int file_read(File *file, char *dest) {
+  int fd = open(file->path, O_RDONLY);
+  int len = read(fd, dest, file->len);
+  close(fd);
 
   return len;
 }
@@ -291,10 +282,10 @@ static void test_create_http_response() {
 }
 
 static void test_set_file() {
-  char buf[2048];
-  FILE *f = fopen("LICENSE", "r");
-  int len = set_file(buf, f);
-  fclose(f);
+  File *file = new_file("LICENSE");
+
+  char *buf = malloc(file->len);
+  int len = file_read(file, buf);
 
   expect(__LINE__, 'M', buf[0]);
   expect(__LINE__, 1064, len);
@@ -318,9 +309,10 @@ static void test_write_log() {
   write_log(log, sock, &req_time, req, res);
   fclose(log);
 
-  char buf[1048];
-  log = fopen("log", "r");
-  set_file(buf, log);
+  File *f = new_file("log");
+  char *buf = malloc(f->len);
+  file_read(f, buf);
+  delete_file(f);
 
   // clang-format off
   expect_str(__LINE__,
@@ -328,7 +320,6 @@ static void test_write_log() {
       "200 199 \"http://localhost:8080/hello2.html\" \"Dali/0.1\"\n",
       buf);
   // clang-format on  
-  fclose(log);
   unlink("log");
   delete_HttpMessage(req);
   delete_HttpMessage(res);  
