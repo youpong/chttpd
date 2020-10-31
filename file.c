@@ -12,6 +12,18 @@
 char *parent_path(char *path);
 char *filename(char *path);
 
+File *new_file2(char *parent_path, char *child_path) {
+  File *file;
+  char *path = malloc(strlen(parent_path) + strlen(child_path) + 1);
+  strcpy(path, parent_path);
+  strcat(path, child_path);
+
+  file = new_file(path);
+  free(path);
+
+  return file;
+}
+
 File *new_file(char *path) {
 
   struct stat st;
@@ -68,6 +80,9 @@ char *filename(char *path) {
 }
 
 void delete_file(File *file) {
+  if (file == NULL)
+    return;
+  
   free(file->path);
   free(file);
 }

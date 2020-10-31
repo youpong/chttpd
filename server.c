@@ -85,28 +85,16 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
-    char *target_path =
-        malloc(strlen(opts->document_root) + strlen(req->filename) + 1);
-    strcpy(target_path, opts->document_root);
-    strcat(target_path, req->filename);
-    FILE *target = fopen(target_path, "r");
-    //    struct dirent *ent = get_dirent(target_path);
-    DIR *d = opendir(target_path);
-    if (target != NULL && d == NULL) {
+
+    File *file = new_file2(opts->document_root, req->filename);
+    if (file != NULL && file->ty == F_FILE) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
     } else {
-      if (target != NULL)
-        fclose(target);
-      strcpy(target_path, opts->document_root);
-      strcat(target_path, "/error.html");
-      target = fopen(target_path, "r");
-
+      file = new_file2(opts->document_root, "/error.html");
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
     }
-    if (d != NULL)
-      closedir(d);
 
     // Http Version
     res->http_version = strdup(HTTP_VERSION);
@@ -116,21 +104,21 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
 
     // Content-Type
     map_put(res->header_map, strdup("Content-Type"),
-            strdup(get_mime_type(target_path)));
-
-    // Body
-    res->body = malloc(1024 * 64);
-    int len = set_file(res->body, target);
+            strdup(get_mime_type(file->path)));
 
     // Content-Length: TODO
     char *buf = malloc(6);
-    sprintf(buf, "%d", len);
+    sprintf(buf, "%d", file->len);
     map_put(res->header_map, strdup("Content-Length"), buf);
 
-    if (target != NULL)
-      fclose(target);
+    // Body
+    res->body = malloc(file->len + 1);
+    FILE *target = fopen(file->path, "r");
+    set_file(res->body, target);
+    fclose(target);
+    delete_file(file);
   } else {
-    // Not Allowed
+    // Not Allowed Request method
     res->status_code = strdup("405");
     res->reason_phrase = strdup("Not Allowed");
   }

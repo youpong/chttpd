@@ -17,6 +17,7 @@ typedef struct {
 } File;
 
 File *new_file(char *path);
+File *new_file2(char *parent_path, char *child_path);
 void delete_file(File *file);
 
 void run_all_test_file();
