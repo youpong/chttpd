@@ -2,8 +2,8 @@
 
 # _POSIX_C_SOURCE: fdopen(3)
 # _DEFAULT_SOURCE: timezone
-CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 # refer to feature_test_macros(7)
+CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 
 # libc: fdopen(3)
 LIBS = -lc

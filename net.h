@@ -40,26 +40,37 @@ typedef enum {
 } HttpMessageType;
 
 /**
- * HttpMessage
- * - Http Request 
- *   Request Line: method request_uir http_version 
- * - Http REsponse 
- *   Status Line: http_version status_code reason_phrase 
+ * HTTP-message    = Request | Response
+ *
+ * generic-message = start-line
+ *                   *(message-header CRLF)
+ *                   [ message-body ] 
+ * start-line      = Request-Line | Status-Line
+ *
+ * Request-Line = Method       SP Request-URI SP HTTP-Version  CRLF
+ * Status-Line  = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+ * 
  */
 typedef struct {
   HttpMessageType _ty; // for internal: type of message(request/response)
-  
+
+  // start-line (Request-Line|Status-Line)
   char *method;
   char *request_uri;
   char *http_version;
   char *status_code;
   char *reason_phrase;
 
-  char *filename; // pick out from request_uri
-
+  // message-header
   Map *header_map;
 
+  // message-body
   char *body;
+  int body_len;
+
+  // utilities
+  char *filename; // pick out from request_uri
+  
 } HttpMessage;
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);

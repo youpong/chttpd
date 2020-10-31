@@ -77,6 +77,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
   }
 }
 
+static void header_put(HttpMessage *msg, char *key, char *value);
 static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
@@ -84,7 +85,10 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
+    // HTTP-Version
+    res->http_version = strdup(HTTP_VERSION);
 
+    // Status-Code, Reason-Phrase
     File *file = new_file2(opts->document_root, req->filename);
     if (file != NULL && file->ty == F_FILE) {
       res->status_code = strdup("200");
@@ -95,24 +99,22 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
       res->reason_phrase = strdup("Not Found");
     }
 
-    // Http Version
-    res->http_version = strdup(HTTP_VERSION);
-
     // Server
-    map_put(res->header_map, strdup("Server"), strdup(SERVER_NAME));
+    header_put(res, "Server", SERVER_NAME);
 
     // Content-Type
-    map_put(res->header_map, strdup("Content-Type"),
-            strdup(get_mime_type(file->path)));
+    header_put(res, "Content-Type", get_mime_type(file->path));
 
     // Content-Length
-    char *buf = malloc(20 + 1); // log10(ULONG_MAX) < 20
+    char buf[20 + 1]; // log10(ULONG_MAX) < 20
     sprintf(buf, "%d", file->len);
-    map_put(res->header_map, strdup("Content-Length"), buf);
+    header_put(res, "Content-Length", buf);
 
-    // Body
-    res->body = malloc(file->len + 1);
-    file_read(file, res->body);
+    // Body (omit if POST method)
+    if (strcmp(req->method, "GET") == 0) {
+      res->body = malloc(file->len + 1);
+      res->body_len = file_read(file, res->body);
+    }
 
     delete_file(file);
   } else {
@@ -122,6 +124,10 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   }
 
   return res;
+}
+
+static void header_put(HttpMessage *msg, char *key, char *value) {
+  map_put(msg->header_map, strdup(key), strdup(value));
 }
 
 static char *get_mime_type(char *fname) {
@@ -262,25 +268,50 @@ static void test_create_http_response() {
   Option *opt = malloc(sizeof(Option));
   opt->document_root = strdup("www");
 
+  // Not Allowed Request method
   req->method = strdup("FOO");
   res = create_http_response(req, opt);
   expect(__LINE__, HM_RES, res->_ty);
   expect_str(__LINE__, "405", res->status_code);
 
+  // GET not exist filename
   req->method = strdup("GET");
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
   res = create_http_response(req, opt);
   expect_str(__LINE__, "404", res->status_code);
+  expect_bool(__LINE__, true,
+              res->body_len ==
+                  atoi(map_get(res->header_map, "Content-Length")));
 
+  // HEAD not exist filename
+  req->method = strdup("HEAD");
+  req->request_uri = strdup("/not_exist");
+  req->filename = strdup("/not_exist");
+  res = create_http_response(req, opt);
+  expect_str(__LINE__, "404", res->status_code);
+  expect_ptr(__LINE__, NULL, res->body);
+
+  // GET
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
   res = create_http_response(req, opt);
   expect_str(__LINE__, "200", res->status_code);
+  expect_bool(__LINE__, true,
+              res->body_len ==
+                  atoi(map_get(res->header_map, "Content-Length")));
+
+  // HEAD
+  req->method = strdup("HEAD");
+  req->request_uri = strdup("/hello.html");
+  req->filename = strdup("/hello.html");
+  res = create_http_response(req, opt);
+  expect_str(__LINE__, "200", res->status_code);
+  expect_ptr(__LINE__, NULL, res->body);
 }
 
-static void test_set_file() {
+static void test_file_read() {
   File *file = new_file("LICENSE");
 
   char *buf = malloc(file->len);
@@ -291,50 +322,69 @@ static void test_set_file() {
 }
 
 static void test_write_log() {
-  time_t req_time = 1602737916;
-  FILE *log = fopen("log", "w");
+  //
+  // write log
+  //
   Socket *sock = create_server_socket(8081);
+
   HttpMessage *req = new_HttpMessage(HM_REQ);
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->http_version = strdup("HTTP/1.1");
-  map_put(req->header_map, strdup("Referer"),
-          strdup("http://localhost:8080/hello2.html"));
-  map_put(req->header_map, strdup("User-Agent"), strdup("Dali/0.1"));
+  header_put(req, "Referer", "http://localhost:8080/hello2.html");
+  header_put(req, "User-Agent", "Dali/0.1");
+
   HttpMessage *res = new_HttpMessage(HM_RES);
   res->status_code = strdup("200");
-  map_put(res->header_map, strdup("Content-Length"), strdup("199"));
+  header_put(res, "Content-Length", "199");
 
+  time_t req_time = 1602737916;
+  FILE *log = fopen("log", "w");
   write_log(log, sock, &req_time, req, res);
   fclose(log);
+  delete_HttpMessage(req);
+  delete_HttpMessage(res);
+
+  //
+  // read log
+  //
 
   File *f = new_file("log");
   char *buf = malloc(f->len);
   file_read(f, buf);
   delete_file(f);
+  unlink("log");
+
+  //
+  // check
+  //
 
   // clang-format off
   expect_str(__LINE__,
-      "0.0.0.0 - - [15/Oct/2020:13:58:36 +0900] \"GET /hello.html HTTP/1.1\" "
-      "200 199 \"http://localhost:8080/hello2.html\" \"Dali/0.1\"\n",
-      buf);
-  // clang-format on  
-  unlink("log");
-  delete_HttpMessage(req);
-  delete_HttpMessage(res);  
+    "0.0.0.0 "                      // client ip addr
+    "- "                            // client identity(identd)
+    "- "                            // user id
+    "[15/Oct/2020:13:58:36 +0900] " // request accept time
+    "\"GET /hello.html HTTP/1.1\" " // request-line
+    "200 "                          // Status-Code
+    "199 "                          // content length
+    "\"http://localhost:8080/hello2.html\" " // Referer
+    "\"Dali/0.1\"\n",               // User-Agent
+    buf);
+  // clang-format on
 }
 
 static void test_get_mime_type() {
   expect_str(__LINE__, "text/html", get_mime_type("index.html"));
   expect_str(__LINE__, "text/plain", get_mime_type("extless"));
   expect_str(__LINE__, "text/plain", get_mime_type("a.unknownext"));
-  expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));    
+  expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));
 }
 
 void run_all_test_server() {
   test_get_mime_type();
   test_formatted_time();
   test_create_http_response();
-  test_set_file();
+  test_file_read();
   test_write_log();
 }

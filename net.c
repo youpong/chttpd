@@ -124,16 +124,17 @@ void url_decode(char *dest, char *src) {
     p += 3;
     continue;
 
-  IllegalByteSequence : {
-    // append to dest '%' and trailing 2..0 bytes
-    int len = q - p + 1;
-    if (*q == '\0') // not copy '\0'
-      len--;
+  IllegalByteSequence : { // clang-format off
+      // append to dest '%' and trailing 2..0 bytes
+      int len = q - p + 1;
+      if (*q == '\0') // not copy '\0'
+	len--;
 
-    memcpy(dest, p, len);
-    dest += len;
-    p += len;
-  }
+      memcpy(dest, p, len);
+      dest += len;
+      p += len;
+    }
+    // clang-format on
   }
 
   *dest = '\0';
@@ -143,7 +144,7 @@ void url_decode(char *dest, char *src) {
 // http
 //
 
-static void consum(FILE *f, char c);
+static void consume(FILE *f, char c);
 static void request_line(FILE *f, HttpMessage *req);
 static void message_header(FILE *f, HttpMessage *req);
 
@@ -155,26 +156,23 @@ HttpMessage *new_HttpMessage(HttpMessageType ty) {
 }
 
 void delete_HttpMessage(HttpMessage *msg) {
-  switch (msg->_ty) {
-  case HM_REQ:
-    free(msg->method);
-    free(msg->request_uri);
-    free(msg->http_version);
-    break;
-  case HM_RES:
-    free(msg->http_version);
-    free(msg->status_code);
-    free(msg->reason_phrase);
-    break;
-  default:
-    error("Unknown HttpMessage type: %d", msg->_ty);
-  }
+  // start-line(Request-Line|Status-Line)
+  free(msg->method);
+  free(msg->request_uri);
+  free(msg->http_version);
+  free(msg->status_code);
+  free(msg->reason_phrase);
 
+  // message-header
   delete_map(msg->header_map);
 
-  if (msg->body != NULL)
-    free(msg->body);
+  // message-body
+  free(msg->body);
 
+  // utilities
+  free(msg->filename);
+
+  // message
   free(msg);
 }
 
@@ -238,7 +236,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
   p = buf;
   while ((c = fgetc(f)) != EOF) {
     if (c == '\r') {
-      consum(f, '\n');
+      consume(f, '\n');
       break;
     }
     *p++ = c;
@@ -262,7 +260,7 @@ static void message_header(FILE *f, HttpMessage *msg) {
 
   while ((c = fgetc(f)) != EOF) {
     if (c == '\r') {
-      consum(f, '\n');
+      consume(f, '\n');
       break;
     }
     ungetc(c, f);
@@ -278,13 +276,13 @@ static void message_header(FILE *f, HttpMessage *msg) {
     key = strdup(buf);
 
     // SP
-    consum(f, ' ');
+    consume(f, ' ');
 
     // value
     p = buf;
     while ((c = fgetc(f)) != EOF) {
       if (c == '\r') {
-        consum(f, '\n');
+        consume(f, '\n');
         break;
       }
       *p++ = c;
@@ -296,7 +294,7 @@ static void message_header(FILE *f, HttpMessage *msg) {
   }
 }
 
-static void consum(FILE *f, char expected) {
+static void consume(FILE *f, char expected) {
   int c;
 
   c = fgetc(f);

@@ -60,8 +60,8 @@ void delete_file(File *file) {
 
 char *parent_path(char *path) {
   char *ret = strdup(path);
-  char *p;
-  for (p = ret + strlen(ret); p >= ret; p--) {
+
+  for (char *p = ret + strlen(ret); p >= ret; p--) {
     if (*p == '/') {
       *p = '\0';
       return ret;
@@ -101,14 +101,19 @@ static void test_filename() {
 }
 
 static void test_new_file() {
-  File *file = new_file("LICENSE");
+  File *file;
+
+  // normal case
+  file = new_file("LICENSE");
   expect(__LINE__, 1064, file->len);
   expect(__LINE__, F_FILE, file->ty);
   expect_str(__LINE__, "LICENSE", file->path);
   delete_file(file);
 
+  // file not found
   file = new_file("LICENSE.");
   expect_ptr(__LINE__, NULL, file);
+  delete_file(file);
 }
 
 void run_all_test_file() {
