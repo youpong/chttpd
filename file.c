@@ -1,6 +1,7 @@
 #include "file.h"
 #include "util.h"
 
+#include <dirent.h>    // opendir(3)
 #include <stdlib.h>    // malloc(3)
 #include <string.h>    // strdup(3)
 #include <sys/stat.h>  // stat(2)
