@@ -8,10 +8,6 @@
 #include <sys/types.h> // stat(2)
 #include <unistd.h>    // stat(2)
 
-// TODO: publish ?
-char *parent_path(char *path);
-char *filename(char *path);
-
 File *new_file2(char *parent_path, char *child_path) {
   File *file;
   char *path = malloc(strlen(parent_path) + strlen(child_path) + 1);
@@ -55,7 +51,6 @@ File *new_file(char *path) {
 }
 
 char *parent_path(char *path) {
-  // TODO: impl
   char *ret = strdup(path);
   char *p;
   for (p = ret + strlen(ret); p >= ret; p--) {
@@ -120,18 +115,4 @@ void run_all_test_file() {
   test_parent_path();
   test_filename();
   test_new_file();
-}
-
-void foo() {
-  File *file = new_file("path");
-  //  file->len;
-  //  file->path;
-  //  file->ty;
-
-  FILE *f = fopen(file->path, "r");
-  fclose(f);
-  DIR *d = opendir(file->path);
-  closedir(d);
-
-  delete_file(file);
 }

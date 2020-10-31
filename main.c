@@ -1,4 +1,6 @@
 #include "main.h"
+#include "file.h"
+#include "net.h"
 #include "util.h"
 
 #include <arpa/inet.h>  // inet_ntoa()
@@ -13,7 +15,6 @@ Map *Mime_map;
 
 void run_all_test_main();
 void run_all_test_server();
-void run_all_test_file();
 
 static void init_mime_map();
 static Option *parse_args(int, char **);

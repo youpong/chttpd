@@ -31,7 +31,7 @@ check: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)
 
-main.o:      util.h              main.h       
+main.o:      util.h file.h net.h main.h       
 server.o:    util.h file.h net.h main.h  
 file.o:      util.h file.h
 net.o:       util.h        net.h 

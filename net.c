@@ -198,7 +198,6 @@ HttpMessage *http_message_parse(FILE *f, HttpMessageType ty, bool debug) {
     request_line(f, msg);
     break;
   case HM_RES:
-    // TODO: implement
     // status_line(f, msg);
     break;
   }

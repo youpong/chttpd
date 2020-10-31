@@ -10,8 +10,6 @@ typedef enum {
 
 typedef struct {
   FileType ty;  
-  //FILE *f;
-  //DIR *d;
   char *path;
   int len;
 } File;
@@ -19,5 +17,8 @@ typedef struct {
 File *new_file(char *path);
 File *new_file2(char *parent_path, char *child_path);
 void delete_file(File *file);
+
+char *parent_path(char *path);
+char *filename(char *path);
 
 void run_all_test_file();
