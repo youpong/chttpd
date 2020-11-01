@@ -11,6 +11,9 @@
 #include <time.h>      // time(2)
 #include <unistd.h>    // unlink(2)
 
+static void header_put(HttpMessage *msg, char *key, char *value);
+static char *header_get(HttpMessage *msg, char *key, char *default_val);
+
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *create_http_response(HttpMessage *, Option *);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
@@ -68,8 +71,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
     write_http_message(sock->ops, res);
     write_log(log, sock, &req_time, req, res);
 
-    char *conn = map_get(req->header_map, "Connection");
-    if (conn != NULL && strcmp(conn, "close") == 0)
+    if (strcmp(header_get(req, "Connection", ""), "close") == 0)
       conn_keep_alive = false;
 
     delete_HttpMessage(req);
@@ -77,7 +79,6 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
   }
 }
 
-static void header_put(HttpMessage *msg, char *key, char *value);
 static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
@@ -132,6 +133,13 @@ static void header_put(HttpMessage *msg, char *key, char *value) {
   map_put(msg->header_map, strdup(key), strdup(value));
 }
 
+static char *header_get(HttpMessage *msg, char *key, char *default_val) {
+  char *val = map_get(msg->header_map, key);
+  if (val == NULL)
+    return default_val;
+  return val;
+}
+
 static char *get_mime_type(char *path) {
   char *ext = extension(path);
   if (ext == NULL)
@@ -139,7 +147,7 @@ static char *get_mime_type(char *path) {
 
   char *mime = map_get(Mime_map, ext);
   free(ext);
-  
+
   if (mime == NULL)
     return "text/plain";
 
@@ -154,7 +162,6 @@ static int file_read(File *file, char *dest) {
   return len;
 }
 
-static char *default_val(char *val, char *dval);
 static char *formatted_time(struct tm *, long);
 static bool is_locked();
 static int lock();
@@ -173,15 +180,13 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
 
   // clang-format off
   fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
-      inet_ntoa(sock->addr->sin_addr),
-      // date [09/Oct/2020:13:17:45 +0900]
-      formatted_time(&req_tm, timezone),
-      // request-line
-      req->method, req->request_uri, req->http_version,
-      res->status_code,
-      default_val((char *)map_get(res->header_map, "Content-Length"), "\"-\""),
-      default_val((char *)map_get(req->header_map, "Referer"), "-"),
-      default_val((char *)map_get(req->header_map, "User-Agent"), "-"));
+	  inet_ntoa(sock->addr->sin_addr),
+	  formatted_time(&req_tm, timezone),
+	  req->method, req->request_uri, req->http_version,
+	  res->status_code,
+	  header_get(res, "Content-Length", "\"-\""),	  
+	  header_get(req, "Referer", "-"),
+	  header_get(req, "User-Agent", "-"));
   // clang-format on
   fflush(out);
 
@@ -235,10 +240,6 @@ static void unlock() {
   unlink("/var/lock/dali.pid");
 }
 
-static char *default_val(char *val, char *dval) {
-  return val ? val : dval;
-}
-
 static void test_formatted_time() {
   time_t t = 0; // Epoch 1970.01.01 00:00:00 +0000(UTC)
   struct tm t_tm;
@@ -285,8 +286,7 @@ static void test_create_http_response() {
   res = create_http_response(req, opt);
   expect_str(__LINE__, "404", res->status_code);
   expect_bool(__LINE__, true,
-              res->body_len ==
-                  atoi(map_get(res->header_map, "Content-Length")));
+              res->body_len == atoi(header_get(res, "Content-Length", "")));
 
   // HEAD not exist filename
   req->method = strdup("HEAD");
@@ -303,8 +303,7 @@ static void test_create_http_response() {
   res = create_http_response(req, opt);
   expect_str(__LINE__, "200", res->status_code);
   expect_bool(__LINE__, true,
-              res->body_len ==
-                  atoi(map_get(res->header_map, "Content-Length")));
+              res->body_len == atoi(header_get(res, "Content-Length", "")));
 
   // HEAD
   req->method = strdup("HEAD");
