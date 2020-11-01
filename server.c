@@ -85,11 +85,13 @@ static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
+    File *file;
+
     // HTTP-Version
     res->http_version = strdup(HTTP_VERSION);
 
     // Status-Code, Reason-Phrase
-    File *file = new_file2(opts->document_root, req->filename);
+    file = new_file2(opts->document_root, req->filename);
     if (file != NULL && file->ty == F_FILE) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
@@ -130,8 +132,8 @@ static void header_put(HttpMessage *msg, char *key, char *value) {
   map_put(msg->header_map, strdup(key), strdup(value));
 }
 
-static char *get_mime_type(char *fname) {
-  char *ext = strrchr(fname, '.');
+static char *get_mime_type(char *path) {
+  char *ext = extension(path);
   if (ext == NULL)
     return "text/plain";
 

@@ -18,5 +18,6 @@ void delete_file(File *file);
 
 char *parent_path(char *path);
 char *filename(char *path);
-
+char *extension(char *path);
+  
 void run_all_test_file();

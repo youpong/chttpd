@@ -58,6 +58,7 @@ void delete_file(File *file) {
   free(file);
 }
 
+// duplicate
 char *parent_path(char *path) {
   char *ret = strdup(path);
 
@@ -72,14 +73,25 @@ char *parent_path(char *path) {
   return ret;
 }
 
+// duplicate
 char *filename(char *path) {
-  char *p;
-  for (p = path + strlen(path); p >= path; p--) {
-    if (*p == '/')
-      break;
-  }
+  char *p = strrchr(path, '/');
+  if (p == NULL)
+    return strdup(path);
 
   return strdup(p + 1);
+}
+
+// duplicate
+// dir.name/foo -> NULL
+// dir/foo.ext  -> ext
+char *extension(char *path) {
+  char *fname = filename(path);
+  char *p = strrchr(fname, '.');
+  if (p == NULL)
+    return NULL;
+
+  return strdup(p);
 }
 
 static void test_parent_path() {
