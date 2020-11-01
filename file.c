@@ -83,15 +83,13 @@ char *filename(char *path) {
 }
 
 // duplicate
-// dir.name/foo -> NULL
-// dir/foo.ext  -> ext
 char *extension(char *path) {
   char *fname = filename(path);
   char *p = strrchr(fname, '.');
   if (p == NULL)
     return NULL;
 
-  return strdup(p);
+  return strdup(p + 1);
 }
 
 static void test_parent_path() {
@@ -110,6 +108,14 @@ static void test_filename() {
   expect_str(__LINE__, "URL.java", filename("/java/net/URL.java"));
   expect_str(__LINE__, "index.html", filename("index.html"));
   expect_str(__LINE__, "", filename(""));
+}
+
+static void test_extension() {
+  // clang-format off
+  expect_str(__LINE__, "ext", extension("dir/foo.ext"));
+  expect_str(__LINE__, "",    extension("dir/foo."));        
+  expect_ptr(__LINE__, NULL,  extension("dir.name/foo"));
+  // clang-format on
 }
 
 static void test_new_file() {
@@ -131,5 +137,6 @@ static void test_new_file() {
 void run_all_test_file() {
   test_parent_path();
   test_filename();
+  test_extension();
   test_new_file();
 }

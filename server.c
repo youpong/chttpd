@@ -137,7 +137,9 @@ static char *get_mime_type(char *path) {
   if (ext == NULL)
     return "text/plain";
 
-  char *mime = map_get(Mime_map, ext + 1);
+  char *mime = map_get(Mime_map, ext);
+  free(ext);
+  
   if (mime == NULL)
     return "text/plain";
 
