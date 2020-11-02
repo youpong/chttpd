@@ -15,7 +15,7 @@ static void header_put(HttpMessage *msg, char *key, char *value);
 static char *header_get(HttpMessage *msg, char *key, char *default_val);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
-static HttpMessage *create_http_response(HttpMessage *, Option *);
+static HttpMessage *new_HttpResponse(HttpMessage *, Option *);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
@@ -66,7 +66,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
     if (req == NULL)
       break;
 
-    HttpMessage *res = create_http_response(req, opt);
+    HttpMessage *res = new_HttpResponse(req, opt);
 
     write_http_message(sock->ops, res);
     write_log(log, sock, &req_time, req, res);
@@ -82,7 +82,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
 static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
-static HttpMessage *create_http_response(HttpMessage *req, Option *opts) {
+static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
@@ -255,7 +255,7 @@ static void test_formatted_time() {
              formatted_time(&t_tm, -(9 * 60 * 60)));
 }
 
-static void test_create_http_response() {
+static void test_new_HttpResponse() {
   HttpMessage *res;
   HttpMessage *req = new_HttpMessage(HM_REQ);
   Option *opt = malloc(sizeof(Option));
@@ -263,7 +263,7 @@ static void test_create_http_response() {
 
   // Not Allowed Request method
   req->method = strdup("FOO");
-  res = create_http_response(req, opt);
+  res = new_HttpResponse(req, opt);
   expect(__LINE__, HM_RES, res->_ty);
   expect_str(__LINE__, "405", res->status_code);
 
@@ -271,7 +271,7 @@ static void test_create_http_response() {
   req->method = strdup("GET");
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
-  res = create_http_response(req, opt);
+  res = new_HttpResponse(req, opt);
   expect_str(__LINE__, "404", res->status_code);
   expect_bool(__LINE__, true,
               res->body_len == atoi(header_get(res, "Content-Length", "")));
@@ -280,7 +280,7 @@ static void test_create_http_response() {
   req->method = strdup("HEAD");
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
-  res = create_http_response(req, opt);
+  res = new_HttpResponse(req, opt);
   expect_str(__LINE__, "404", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
 
@@ -288,7 +288,7 @@ static void test_create_http_response() {
   req->method = strdup("GET");
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
-  res = create_http_response(req, opt);
+  res = new_HttpResponse(req, opt);
   expect_str(__LINE__, "200", res->status_code);
   expect_bool(__LINE__, true,
               res->body_len == atoi(header_get(res, "Content-Length", "")));
@@ -297,7 +297,7 @@ static void test_create_http_response() {
   req->method = strdup("HEAD");
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
-  res = create_http_response(req, opt);
+  res = new_HttpResponse(req, opt);
   expect_str(__LINE__, "200", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
 }
@@ -378,7 +378,7 @@ static void test_get_mime_type() {
 void run_all_test_server() {
   test_get_mime_type();
   test_formatted_time();
-  test_create_http_response();
+  test_new_HttpResponse();
   test_file_read();
   test_write_log();
 }
