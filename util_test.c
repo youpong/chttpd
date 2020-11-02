@@ -41,7 +41,9 @@ static void test_map() {
 }
 
 static void test_strcmp() {
+  //
   // compare empty string
+  //
   // clang-format off
   expect(__LINE__,  true, strcmp("",  "") == 0);
   expect(__LINE__, false, strcmp("A", "") == 0);

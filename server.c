@@ -195,26 +195,17 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
 
 /**
  * e.g.
- * 09/Oct/2020:17:34:23 +0900
+ * "09/Oct/2020:17:34:23 +0900"
  */
 static char *formatted_time(struct tm *t_tm, long timezone) {
-  char buf[26 + 1];
-  char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  char date[20 + 1];
+  char *buf = malloc(26 + 1);
 
-  // clang-format off
-  sprintf(buf, "%02d/%s/%d:%02d:%02d:%02d %+03d%02d",
-          t_tm->tm_mday,
-          month[t_tm->tm_mon],
-          t_tm->tm_year + 1900,
-          t_tm->tm_hour,
-          t_tm->tm_min,
-          t_tm->tm_sec,	  
-          (int)-timezone / (60 * 60),
-          abs(timezone) % (60 * 60) / 60);
-  // clang-format on
-
-  return strdup(buf);
+  strftime(date, 20 + 1, "%d/%b/%Y:%H:%M:%S", t_tm);
+  sprintf(buf, "%s %+03d%02d", date,
+          (int)-timezone / (60 * 60),      // hour of timezone
+          abs(timezone) % (60 * 60) / 60); // minute of timezone
+  return buf;
 }
 
 static bool is_locked() {
