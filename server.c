@@ -86,10 +86,10 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
   File *file;
   char buf[20 + 1]; // log10(ULONG_MAX) < 20
-    
+
   switch (req->method_ty) {
   case HMMT_GET:
-  case HMMT_HEAD:    
+  case HMMT_HEAD:
     // HTTP-Version
     res->http_version = strdup(HTTP_VERSION);
 
@@ -300,7 +300,7 @@ static void test_new_HttpResponse() {
 
   // HEAD
   req->method = strdup("HEAD");
-  req->method_ty = HMMT_HEAD;  
+  req->method_ty = HMMT_HEAD;
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
   res = new_HttpResponse(req, opt);

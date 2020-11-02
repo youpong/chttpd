@@ -64,7 +64,7 @@ typedef struct {
   char *method;
   HttpMessageMethodType method_ty;
   char *request_uri;
-  char *filename; // pick out from request_uri  
+  char *filename; // pick out from request_uri
   char *http_version;
   char *status_code;
   char *reason_phrase;
@@ -75,7 +75,7 @@ typedef struct {
   // message-body
   char *body;
   int body_len;
-  
+
 } HttpMessage;
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);
