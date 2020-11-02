@@ -8,19 +8,19 @@
 #include <sys/types.h> // stat(2)
 #include <unistd.h>    // stat(2)
 
-File *new_file2(char *parent_path, char *child_path) {
+File *new_File2(char *parent_path, char *child_path) {
   File *file;
   char *path = malloc(strlen(parent_path) + strlen(child_path) + 1);
   strcpy(path, parent_path);
   strcat(path, child_path);
 
-  file = new_file(path);
+  file = new_File(path);
   free(path);
 
   return file;
 }
 
-File *new_file(char *path) {
+File *new_File(char *path) {
 
   struct stat st;
   if (stat(path, &st) == -1) {
@@ -50,7 +50,7 @@ File *new_file(char *path) {
   return file;
 }
 
-void delete_file(File *file) {
+void delete_File(File *file) {
   if (file == NULL)
     return;
 
@@ -118,25 +118,25 @@ static void test_extension() {
   // clang-format on
 }
 
-static void test_new_file() {
+static void test_new_File() {
   File *file;
 
   // normal case
-  file = new_file("LICENSE");
+  file = new_File("LICENSE");
   expect(__LINE__, 1064, file->len);
   expect(__LINE__, F_FILE, file->ty);
   expect_str(__LINE__, "LICENSE", file->path);
-  delete_file(file);
+  delete_File(file);
 
   // file not found
-  file = new_file("LICENSE.");
+  file = new_File("LICENSE.");
   expect_ptr(__LINE__, NULL, file);
-  delete_file(file);
+  delete_File(file);
 }
 
 void run_all_test_file() {
   test_parent_path();
   test_filename();
   test_extension();
-  test_new_file();
+  test_new_File();
 }

@@ -12,9 +12,9 @@ typedef struct {
   int len;
 } File;
 
-File *new_file(char *path);
-File *new_file2(char *parent_path, char *child_path);
-void delete_file(File *file);
+File *new_File(char *path);
+File *new_File2(char *parent_path, char *child_path);
+void delete_File(File *file);
 
 char *parent_path(char *path);
 char *filename(char *path);

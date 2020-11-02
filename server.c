@@ -92,12 +92,12 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
     res->http_version = strdup(HTTP_VERSION);
 
     // Status-Code, Reason-Phrase
-    file = new_file2(opts->document_root, req->filename);
+    file = new_File2(opts->document_root, req->filename);
     if (file != NULL && file->ty == F_FILE) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
     } else {
-      file = new_file2(opts->document_root, "/error.html");
+      file = new_File2(opts->document_root, "/error.html");
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
     }
@@ -119,7 +119,7 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
       res->body_len = file_read(file, res->body);
     }
 
-    delete_file(file);
+    delete_File(file);
   } else {
     // Not Allowed Request method
     res->status_code = strdup("405");
@@ -303,13 +303,14 @@ static void test_new_HttpResponse() {
 }
 
 static void test_file_read() {
-  File *file = new_file("LICENSE");
+  File *file = new_File("LICENSE");
 
   char *buf = malloc(file->len);
   int len = file_read(file, buf);
 
   expect(__LINE__, 'M', buf[0]);
   expect(__LINE__, 1064, len);
+  delete_File(file);
 }
 
 static void test_write_log() {
@@ -340,10 +341,10 @@ static void test_write_log() {
   // read log
   //
 
-  File *f = new_file("log");
+  File *f = new_File("log");
   char *buf = malloc(f->len);
   file_read(f, buf);
-  delete_file(f);
+  delete_File(f);
   unlink("log");
 
   //
