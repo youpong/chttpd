@@ -29,7 +29,7 @@ void server_start(Option *opt) {
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
 
-  for (int i = 0; i < LISTEN_QUEUE; i++) {
+  for (int i = 0; i < MAX_SERVERS; i++) {
     pid_t pid = fork();
     switch (pid) {
     case -1: // error

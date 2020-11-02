@@ -21,6 +21,8 @@ options:
 
 - `-r DOCUMENT_ROOT` : set document root (default: www)
 
+- `-l ACCESS_LOG` : set access log (default: access.log)
+
 arguments:
 
 - `PORT` : listen port PORT (default: 8088)

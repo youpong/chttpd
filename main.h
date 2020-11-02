@@ -2,9 +2,12 @@
 
 #include "util.h"
 
+// clang-format off
 #define HTTP_VERSION "HTTP/1.1"
-#define SERVER_NAME "Dali/0.1"
+#define SERVER_NAME  "Dali/0.1"
 #define DEFAULT_PORT 8088
+#define MAX_SERVERS  5
+// clang-format on
 
 typedef struct {
   char *prog_name;
