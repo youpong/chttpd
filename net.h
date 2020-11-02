@@ -28,7 +28,7 @@ typedef struct {
 } Socket;
 
 Socket *new_ServerSocket(int);
-Socket *server_accept(Socket *);
+Socket *Server_accept(Socket *);
 void delete_socket(Socket *);
 
 void url_decode(char *dest, char *src);

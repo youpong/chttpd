@@ -11,23 +11,23 @@
 void run_all_test_main();
 void run_all_test_server();
 
-static void init_mime_map();
-static Option *parse_args(int, char **);
+static Map *new_MimeMap();
+static Option *Option_parse(int argc, char **argv);
 static void print_usage(char *);
 
-Map *Mime_map;
+Map *MimeMap;
 char *ErrorMsg;
 
 int main(int argc, char **argv) {
 
-  Option *opt = parse_args(argc, argv);
+  Option *opt = Option_parse(argc, argv);
   if (opt == NULL) {
     fprintf(stderr, "%s\n", ErrorMsg);
     print_usage(argv[0]);
     return EXIT_FAILURE;
   }
 
-  init_mime_map();
+  MimeMap = new_MimeMap();
 
   if (opt->test) {
     run_all_test_main();
@@ -45,44 +45,49 @@ int main(int argc, char **argv) {
 
   server_start(opt);
 
+  // System will delete bellow objects soon.
+  // - MimeMap, opt
+
   return EXIT_SUCCESS;
 }
 
-static void init_mime_map() {
-  Mime_map = new_map();
+static Map *new_MimeMap() {
+  Map *map = new_Map();
 
   // clang-format off
-  map_put(Mime_map, "css" , "text/css" );
-  map_put(Mime_map, "gif" , "image/gif");
-  map_put(Mime_map, "html", "text/html");
-  map_put(Mime_map, "png" , "image/png");
-  // clang-format on  
+  Map_put(map, "css" , "text/css" );
+  Map_put(map, "gif" , "image/gif");
+  Map_put(map, "html", "text/html");
+  Map_put(map, "png" , "image/png");
+  // clang-format on
+
+  return map;
 }
 
-static Option *parse_args(int argc, char **argv) {
-  Args *args = new_args(argc, argv);
+static Option *Option_parse(int argc, char **argv) {
+  Args *args = new_Args(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
   opts->port = -1; // -1: not setted
 
-  opts->prog_name = strdup(args_next(args));
+  opts->prog_name = strdup(Args_next(args));
 
-  while (args_has_next(args)) {
-    char *arg = args_next(args);
+  while (Args_hasNext(args)) {
+    char *arg = Args_next(args);
 
     if (strcmp(arg, "-test") == 0) {
       opts->test = true;
     } else if (strcmp(arg, "-r") == 0) {
-      if (!args_has_next(args)) {
+      if (!Args_hasNext(args)) {
         ErrorMsg = strdup("option require an argument -- 'r'");
         return NULL;
       }
-      opts->document_root = strdup(args_next(args));
+      opts->document_root = strdup(Args_next(args));
     } else if (strcmp(arg, "-l") == 0) {
-      if (!args_has_next(args)) {
+      if (!Args_hasNext(args)) {
         ErrorMsg = strdup("option require an argument -- 'l'");
         return NULL;
       }
-      opts->access_log = strdup(args_next(args));
+      opts->access_log = strdup(Args_next(args));
     } else {
       if (opts->port < 0) {
         if (atoi(arg) < 0) {
@@ -96,6 +101,7 @@ static Option *parse_args(int argc, char **argv) {
       }
     }
   }
+  delete_Args(args);
 
   // set default values...
   if (opts->port < 0) {
@@ -117,7 +123,7 @@ static void print_usage(char *prog_name) {
   fprintf(stderr, "%s -test\n", prog_name);
 }
 
-static void test_parse_args() {
+static void test_Option_parse() {
   Option *opt;
 
   //
@@ -125,26 +131,26 @@ static void test_parse_args() {
   //
 
   char *arg_min[] = {"./httpd"};
-  opt = parse_args(1, arg_min);
+  opt = Option_parse(1, arg_min);
   expect(__LINE__, opt->port, 8088);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
   expect_str(__LINE__, opt->access_log, "access.log");
 
   char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
-  opt = parse_args(6, arg_full);
+  opt = Option_parse(6, arg_full);
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
   expect_str(__LINE__, opt->access_log, "Access.log");
 
   char *test_opt[] = {"./httpd", "-test"};
-  opt = parse_args(2, test_opt);
+  opt = Option_parse(2, test_opt);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
 
   char *arg_port[] = {"./httpd", "80"};
-  opt = parse_args(2, arg_port);
+  opt = Option_parse(2, arg_port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect(__LINE__, 80, opt->port);
 
@@ -153,21 +159,21 @@ static void test_parse_args() {
   //
 
   char *arg_omit[] = {"./httpd", "-r"};
-  opt = parse_args(2, arg_omit);
+  opt = Option_parse(2, arg_omit);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "option require an argument -- 'r'", ErrorMsg);
 
   char *arg_neg[] = {"./httpd", "-1"};
-  opt = parse_args(2, arg_neg);
+  opt = Option_parse(2, arg_neg);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "PORT must be non-negative", ErrorMsg);
 
   char *arg_many[] = {"./httpd", "80", "80"};
-  opt = parse_args(3, arg_many);
+  opt = Option_parse(3, arg_many);
   expect_ptr(__LINE__, NULL, opt);
   expect_str(__LINE__, "too many arguments", ErrorMsg);
 }
 
 void run_all_test_main() {
-  test_parse_args();
+  test_Option_parse();
 }

@@ -12,7 +12,7 @@
 // general net
 //
 
-static Socket *new_socket(SocketType ty) {
+static Socket *new_Socket(SocketType ty) {
   Socket *sock = calloc(1, sizeof(Socket));
   sock->_ty = ty;
   sock->addr = malloc(sizeof(struct sockaddr_in));
@@ -33,7 +33,7 @@ void delete_socket(Socket *sock) {
 }
 
 Socket *new_ServerSocket(int port) {
-  Socket *sv_sock = new_socket(S_SRV);
+  Socket *sv_sock = new_Socket(S_SRV);
 
   /* create a socket, endpoint of connection */
   if ((sv_sock->_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -60,8 +60,8 @@ Socket *new_ServerSocket(int port) {
   return sv_sock;
 }
 
-Socket *server_accept(Socket *sv_sock) {
-  Socket *sock = new_socket(S_CLT);
+Socket *Server_accept(Socket *sv_sock) {
+  Socket *sock = new_Socket(S_CLT);
 
   if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
                           &sock->addr_len)) < 0) {
@@ -151,7 +151,7 @@ static void message_header(FILE *f, HttpMessage *req);
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
   result->_ty = ty;
-  result->header_map = new_map();
+  result->header_map = new_Map();
   return result;
 }
 
@@ -164,7 +164,7 @@ void delete_HttpMessage(HttpMessage *msg) {
   free(msg->reason_phrase);
 
   // message-header
-  delete_map(msg->header_map);
+  delete_Map(msg->header_map);
 
   // message-body
   free(msg->body);
@@ -290,7 +290,7 @@ static void message_header(FILE *f, HttpMessage *msg) {
     *p = '\0';
     value = strdup(buf);
 
-    map_put(msg->header_map, key, value);
+    Map_put(msg->header_map, key, value);
   }
 }
 
@@ -325,7 +325,7 @@ void HttpMessage_write(HttpMessage *msg, FILE *f) {
   fprintf(f, "\r\n");
 
   // body
-  char *len_str = map_get(map, "Content-Length");
+  char *len_str = Map_get(map, "Content-Length");
   int len = 0;
   if (len_str != NULL) {
     len = atoi(len_str);
@@ -399,7 +399,7 @@ static void test_HttpMessage_parse() {
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
   expect_str(__LINE__, "/hello.html", req->filename);
-  expect_str(__LINE__, "localhost", (char *)map_get(req->header_map, "Host"));
+  expect_str(__LINE__, "localhost", (char *)Map_get(req->header_map, "Host"));
 
   close(fd);
   unlink(tmp_file);
@@ -412,8 +412,8 @@ static void test_HttpMessage_write() {
   res->status_code = strdup("200");
   res->reason_phrase = strdup("OK");
 
-  map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
-  map_put(res->header_map, strdup("Content-Length"), strdup("4"));
+  Map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
+  Map_put(res->header_map, strdup("Content-Length"), strdup("4"));
 
   res->body = strdup("body");
 

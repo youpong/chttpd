@@ -10,10 +10,10 @@ typedef struct {
   char **argv;
 } Args;
 
-Args *new_args(int, char **);
-// void delete_args(Args *);
-bool args_has_next(Args *);
-char *args_next(Args *);
+Args *new_Args(int, char **);
+void delete_Args(Args *);
+bool Args_hasNext(Args *);
+char *Args_next(Args *);
 
 typedef struct {
   void **data;
@@ -21,21 +21,21 @@ typedef struct {
   int len;
 } Vector;
 
-Vector *new_vector();
-void delete_vector(Vector *);
-void vec_push(Vector *, void *);
-void *vec_pop(Vector *);
-void *vec_last(Vector *);
+Vector *new_Vector();
+void delete_Vector(Vector *);
+void Vector_push(Vector *, void *);
+void *Vector_pop(Vector *);
+void *Vector_last(Vector *);
 
 typedef struct {
   Vector *keys;
   Vector *vals;
 } Map;
 
-Map *new_map();
-void delete_map(Map *);
-void map_put(Map *, char *, void *);
-void *map_get(Map *, char *);
+Map *new_Map();
+void delete_Map(Map *);
+void Map_put(Map *, char *, void *);
+void *Map_get(Map *, char *);
 
 int *intdup(int);
 

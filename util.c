@@ -5,22 +5,22 @@
 #include <stdlib.h> // free(3)
 #include <string.h> // strcmp(3)
 
-Args *new_args(int argc, char **argv) {
+Args *new_Args(int argc, char **argv) {
   Args *args = malloc(sizeof(Args));
   args->argc = argc;
   args->argv = argv;
   return args;
 }
-/*
-void delete_args(Args *args) {
+
+void delete_Args(Args *args) {
   free(args);
 }
-*/
-bool args_has_next(Args *args) {
+
+bool Args_hasNext(Args *args) {
   return args->argc > 0;
 }
 
-char *args_next(Args *args) {
+char *Args_next(Args *args) {
   char *ret = *(args->argv);
   args->argc--;
   args->argv++;
@@ -28,7 +28,7 @@ char *args_next(Args *args) {
   return ret;
 }
 
-Vector *new_vector() {
+Vector *new_Vector() {
   Vector *vec = calloc(1, sizeof(Vector));
   vec->capacity = 16;
   vec->data = calloc(vec->capacity, sizeof(void *));
@@ -36,14 +36,14 @@ Vector *new_vector() {
   return vec;
 }
 
-void delete_vector(Vector *vec) {
+void delete_Vector(Vector *vec) {
   for (int i = 0; i < vec->len; i++)
     free(vec->data[i]);
   free(vec->data);
   free(vec);
 }
 
-void vec_push(Vector *vec, void *elem) {
+void Vector_push(Vector *vec, void *elem) {
   if (vec->capacity == vec->len) {
     vec->capacity *= 2;
     vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
@@ -51,37 +51,37 @@ void vec_push(Vector *vec, void *elem) {
   vec->data[vec->len++] = elem;
 }
 
-void *vec_pop(Vector *vec) {
+void *Vector_pop(Vector *vec) {
   return vec->data[--vec->len];
 }
 
-void *vec_last(Vector *vec) {
+void *Vector_last(Vector *vec) {
   return vec->data[vec->len - 1];
 }
 
-Map *new_map() {
+Map *new_Map() {
   Map *map = malloc(sizeof(Map));
-  map->keys = new_vector();
-  map->vals = new_vector();
+  map->keys = new_Vector();
+  map->vals = new_Vector();
   return map;
 }
 
-void delete_map(Map *map) {
-  delete_vector(map->vals);
-  delete_vector(map->keys);
+void delete_Map(Map *map) {
+  delete_Vector(map->vals);
+  delete_Vector(map->keys);
   free(map);
 }
 
-void map_put(Map *map, char *key, void *val) {
-  vec_push(map->keys, key);
-  vec_push(map->vals, val);
+void Map_put(Map *map, char *key, void *val) {
+  Vector_push(map->keys, key);
+  Vector_push(map->vals, val);
 }
 
 /**
  * @return value
  * @return NULL key is not found
  */
-void *map_get(Map *map, char *key) {
+void *Map_get(Map *map, char *key) {
   for (int i = map->keys->len - 1; i >= 0; i--) {
     if (strcmp(map->keys->data[i], key) == 0) {
       return map->vals->data[i];

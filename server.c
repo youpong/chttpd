@@ -37,7 +37,7 @@ void server_start(Option *opt) {
       exit(1);
     case 0: // child
       while (true) {
-        Socket *sock = server_accept(sv_sock);
+        Socket *sock = Server_accept(sv_sock);
         printf("open pid: %d, address: %s, port: %d\n", getpid(),
                inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
         handle_connection(sock, log, opt);
@@ -130,11 +130,11 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
 }
 
 static void header_put(HttpMessage *msg, char *key, char *value) {
-  map_put(msg->header_map, strdup(key), strdup(value));
+  Map_put(msg->header_map, strdup(key), strdup(value));
 }
 
 static char *header_get(HttpMessage *msg, char *key, char *default_val) {
-  char *val = map_get(msg->header_map, key);
+  char *val = Map_get(msg->header_map, key);
   if (val == NULL)
     return default_val;
   return val;
@@ -145,7 +145,7 @@ static char *get_mime_type(char *path) {
   if (ext == NULL)
     return "text/plain";
 
-  char *mime = map_get(Mime_map, ext);
+  char *mime = Map_get(MimeMap, ext);
 
   free(ext);
   if (mime == NULL)
