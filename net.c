@@ -32,7 +32,7 @@ void delete_socket(Socket *sock) {
   free(sock);
 }
 
-Socket *create_server_socket(int port) {
+Socket *new_ServerSocket(int port) {
   Socket *sv_sock = new_socket(S_SRV);
 
   /* create a socket, endpoint of connection */

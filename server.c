@@ -25,7 +25,7 @@ void server_start(Option *opt) {
     exit(1);
   }
 
-  Socket *sv_sock = create_server_socket(opt->port);
+  Socket *sv_sock = new_ServerSocket(opt->port);
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
 
@@ -316,7 +316,7 @@ static void test_write_log() {
   //
   // write log
   //
-  Socket *sock = create_server_socket(8081);
+  Socket *sock = new_ServerSocket(8081);
 
   HttpMessage *req = new_HttpMessage(HM_REQ);
   req->method = strdup("GET");

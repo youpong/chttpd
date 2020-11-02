@@ -27,7 +27,7 @@ typedef struct {
   FILE *ops; // Output Stream
 } Socket;
 
-Socket *create_server_socket(int);
+Socket *new_ServerSocket(int);
 Socket *server_accept(Socket *);
 void delete_socket(Socket *);
 
