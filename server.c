@@ -68,7 +68,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
 
     HttpMessage *res = new_HttpResponse(req, opt);
 
-    write_http_message(sock->ops, res);
+    HttpMessage_write(res, sock->ops);
     write_log(log, sock, &req_time, req, res);
 
     if (strcmp(header_get(req, "Connection", ""), "close") == 0)

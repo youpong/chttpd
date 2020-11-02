@@ -302,7 +302,7 @@ static void consume(FILE *f, char expected) {
     error("unexpected character: %c\n", c);
 }
 
-void write_http_message(FILE *f, HttpMessage *msg) {
+void HttpMessage_write(HttpMessage *msg, FILE *f) {
   assert(msg->_ty == HM_RES); // HM_REQ not implemented yet.
 
   Map *map = msg->header_map;
@@ -405,7 +405,7 @@ static void test_HttpMessage_parse() {
   unlink(tmp_file);
 }
 
-static void test_write_http_message() {
+static void test_HttpMessage_write() {
   HttpMessage *res = new_HttpMessage(HM_RES);
 
   res->http_version = strdup("HTTP/1.1");
@@ -420,7 +420,7 @@ static void test_write_http_message() {
   char *template = strdup("XXXXXX");
   int fd = mkstemp(template);
 
-  write_http_message(fdopen(fd, "w"), res);
+  HttpMessage_write(res, fdopen(fd, "w"));
 
   char buf[1024];
   FILE *f = fopen(template, "r");
@@ -447,5 +447,5 @@ static void test_write_http_message() {
 void run_all_test_net() {
   test_url_decode();
   test_HttpMessage_parse();
-  test_write_http_message();
+  test_HttpMessage_write();
 }
