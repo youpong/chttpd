@@ -39,6 +39,12 @@ typedef enum {
   HM_RES, // Http Response
 } HttpMessageType;
 
+typedef enum {
+  HMMT_GET,
+  HMMT_HEAD,
+  HMMT_UNKNOWN, // not implemented method
+} HttpMessageMethodType;
+
 /**
  * HTTP-message    = Request | Response
  *
@@ -56,7 +62,9 @@ typedef struct {
 
   // start-line (Request-Line|Status-Line)
   char *method;
+  HttpMessageMethodType method_ty;
   char *request_uri;
+  char *filename; // pick out from request_uri  
   char *http_version;
   char *status_code;
   char *reason_phrase;
@@ -67,10 +75,7 @@ typedef struct {
   // message-body
   char *body;
   int body_len;
-
-  // utilities
-  char *filename; // pick out from request_uri
-
+  
 } HttpMessage;
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);

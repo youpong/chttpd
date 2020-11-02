@@ -84,10 +84,12 @@ static char *get_mime_type(char *fname);
 
 static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
-
-  if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
-    File *file;
-
+  File *file;
+  char buf[20 + 1]; // log10(ULONG_MAX) < 20
+    
+  switch (req->method_ty) {
+  case HMMT_GET:
+  case HMMT_HEAD:    
     // HTTP-Version
     res->http_version = strdup(HTTP_VERSION);
 
@@ -109,18 +111,18 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
     header_put(res, "Content-Type", get_mime_type(file->path));
 
     // Content-Length
-    char buf[20 + 1]; // log10(ULONG_MAX) < 20
     sprintf(buf, "%d", file->len);
     header_put(res, "Content-Length", buf);
 
     // Body (omit if POST method)
-    if (strcmp(req->method, "GET") == 0) {
+    if (req->method_ty == HMMT_GET) {
       res->body = malloc(file->len + 1);
       res->body_len = file_read(file, res->body);
     }
 
     delete_File(file);
-  } else {
+    break;
+  default:
     // Not Allowed Request method
     res->status_code = strdup("405");
     res->reason_phrase = strdup("Not Allowed");
@@ -248,7 +250,6 @@ static void test_formatted_time() {
   expect_str(__LINE__, "01/Jan/1970:00:00:00 +0830",
              formatted_time(&t_tm, -(9 * 60 * 60 - 30 * 60) - 1));
 
-  // t = 2,147,483,647;
   t = 1602589880;
   gmtime_r(&t, &t_tm);
   expect_str(__LINE__, "13/Oct/2020:11:51:20 +0900",
@@ -263,12 +264,14 @@ static void test_new_HttpResponse() {
 
   // Not Allowed Request method
   req->method = strdup("FOO");
+  req->method_ty = HMMT_UNKNOWN;
   res = new_HttpResponse(req, opt);
   expect(__LINE__, HM_RES, res->_ty);
   expect_str(__LINE__, "405", res->status_code);
 
   // GET not exist filename
   req->method = strdup("GET");
+  req->method_ty = HMMT_GET;
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
   res = new_HttpResponse(req, opt);
@@ -278,6 +281,7 @@ static void test_new_HttpResponse() {
 
   // HEAD not exist filename
   req->method = strdup("HEAD");
+  req->method_ty = HMMT_HEAD;
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
   res = new_HttpResponse(req, opt);
@@ -286,6 +290,7 @@ static void test_new_HttpResponse() {
 
   // GET
   req->method = strdup("GET");
+  req->method_ty = HMMT_GET;
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
   res = new_HttpResponse(req, opt);
@@ -295,6 +300,7 @@ static void test_new_HttpResponse() {
 
   // HEAD
   req->method = strdup("HEAD");
+  req->method_ty = HMMT_HEAD;  
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
   res = new_HttpResponse(req, opt);

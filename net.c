@@ -244,6 +244,14 @@ static void request_line(FILE *f, HttpMessage *msg) {
   *p = '\0';
   msg->http_version = strdup(buf);
 
+  // method type
+  if (strcmp(msg->method, "GET") == 0) 
+    msg->method_ty = HMMT_GET;
+  else if (strcmp(msg->method, "HEAD") == 0) 
+    msg->method_ty = HMMT_HEAD;
+  else
+    msg->method_ty = HMMT_UNKNOWN;
+    
   // filename
   msg->filename = malloc(strlen(msg->request_uri) + 1);
   p = msg->filename;
