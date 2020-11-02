@@ -146,8 +146,8 @@ static char *get_mime_type(char *path) {
     return "text/plain";
 
   char *mime = map_get(Mime_map, ext);
-  free(ext);
 
+  free(ext);
   if (mime == NULL)
     return "text/plain";
 
@@ -218,16 +218,13 @@ static char *formatted_time(struct tm *t_tm, long timezone) {
 }
 
 static bool is_locked() {
-  bool ret;
-  FILE *f;
+  int fd;
+  if ((fd = open("/var/lock/dali.pid", O_RDONLY)) != -1) {
+    close(fd);
+    return true;
+  }
 
-  if ((f = fopen("/var/lock/dali.pid", "r")) != NULL) {
-    fclose(f);
-    ret = true;
-  } else
-    ret = false;
-
-  return ret;
+  return false;
 }
 
 static int lock() {
@@ -378,10 +375,13 @@ static void test_write_log() {
 }
 
 static void test_get_mime_type() {
-  expect_str(__LINE__, "text/html", get_mime_type("index.html"));
-  expect_str(__LINE__, "text/plain", get_mime_type("extless"));
+  // clang-format off
+  expect_str(__LINE__, "text/html",  get_mime_type("www/index.html"));
+  expect_str(__LINE__, "text/html",  get_mime_type("/index.html"));  
+  expect_str(__LINE__, "text/plain", get_mime_type("www/extless"));
   expect_str(__LINE__, "text/plain", get_mime_type("a.unknownext"));
   expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));
+  // clang-format on  
 }
 
 void run_all_test_server() {

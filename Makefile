@@ -20,7 +20,7 @@ clean:
 	- rm -f *~ a.out $(TARGET) $(OBJS) 
 
 format:
-	clang-format -i *.c
+	clang-format -i *.[ch] 
 
 tags:
 	etags $(SRCS) *.h

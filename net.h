@@ -2,9 +2,9 @@
 
 #include "util.h"
 
-#include <stdbool.h> // bool
 #include <netinet/in.h> // socklen_t
-#include <stdio.h> // FILE
+#include <stdbool.h>    // bool
+#include <stdio.h>      // FILE
 
 /* general net lib */
 
@@ -20,9 +20,9 @@ typedef struct {
 
   struct sockaddr_in *addr;
   socklen_t addr_len;
-  
-  int _fd;   // for internal: file descriptor
-  
+
+  int _fd; // for internal: file descriptor
+
   FILE *ips; // Input Stream
   FILE *ops; // Output Stream
 } Socket;
@@ -35,7 +35,7 @@ void url_decode(char *dest, char *src);
 
 /* http lib */
 typedef enum {
-  HM_REQ, // Http Request		       
+  HM_REQ, // Http Request
   HM_RES, // Http Response
 } HttpMessageType;
 
@@ -44,12 +44,12 @@ typedef enum {
  *
  * generic-message = start-line
  *                   *(message-header CRLF)
- *                   [ message-body ] 
+ *                   [ message-body ]
  * start-line      = Request-Line | Status-Line
  *
  * Request-Line = Method       SP Request-URI SP HTTP-Version  CRLF
  * Status-Line  = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
- * 
+ *
  */
 typedef struct {
   HttpMessageType _ty; // for internal: type of message(request/response)
@@ -70,7 +70,7 @@ typedef struct {
 
   // utilities
   char *filename; // pick out from request_uri
-  
+
 } HttpMessage;
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);

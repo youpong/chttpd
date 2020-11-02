@@ -1,8 +1,8 @@
 // -*- mode: c -*-
 #pragma once
 
+#include <stdbool.h>     // bool
 #include <stdnoreturn.h> // noreturn
-#include <stdbool.h> // bool
 
 /* util.c */
 typedef struct {
@@ -11,7 +11,7 @@ typedef struct {
 } Args;
 
 Args *new_args(int, char **);
-//void delete_args(Args *);  
+// void delete_args(Args *);
 bool args_has_next(Args *);
 char *args_next(Args *);
 
@@ -42,11 +42,11 @@ int *intdup(int);
 noreturn void error(char *, ...);
 
 // test
-// __LINE__ 
+// __LINE__
 void expect(int line, int expected, int actual);
 void expect_str(int line, char *expected, char *actual);
 void expect_ptr(int line, void *expected, void *actual);
 void expect_bool(int line, bool expected, bool actual);
-  
+
 /* util_test.c */
 void run_all_test_util();
