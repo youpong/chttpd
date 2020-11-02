@@ -62,7 +62,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
   while (conn_keep_alive) {
     time(&req_time);
 
-    HttpMessage *req = http_message_parse(sock->ips, HM_REQ, opt->debug);
+    HttpMessage *req = HttpMessage_parse(sock->ips, HM_REQ, opt->debug);
     if (req == NULL)
       break;
 

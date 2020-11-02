@@ -180,7 +180,7 @@ void delete_HttpMessage(HttpMessage *msg) {
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
  */
-HttpMessage *http_message_parse(FILE *f, HttpMessageType ty, bool debug) {
+HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
   int c;
 
@@ -381,7 +381,7 @@ static void test_url_decode() {
   expect_str(__LINE__, "%3", buf);
 }
 
-static void test_http_message_parse() {
+static void test_HttpMessage_parse() {
   char tmp_file[] = "XXXXXX";
   int fd = mkstemp(tmp_file);
   FILE *f = fdopen(fd, "w");
@@ -392,7 +392,7 @@ static void test_http_message_parse() {
 
   fd = open(tmp_file, O_RDONLY);
 
-  HttpMessage *req = http_message_parse(fdopen(fd, "r"), HM_REQ, false);
+  HttpMessage *req = HttpMessage_parse(fdopen(fd, "r"), HM_REQ, false);
 
   expect(__LINE__, HM_REQ, req->_ty);
   expect_str(__LINE__, "GET", req->method);
@@ -446,6 +446,6 @@ static void test_write_http_message() {
 
 void run_all_test_net() {
   test_url_decode();
-  test_http_message_parse();
+  test_HttpMessage_parse();
   test_write_http_message();
 }
