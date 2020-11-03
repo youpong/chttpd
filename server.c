@@ -37,11 +37,11 @@ void server_start(Option *opt) {
       exit(1);
     case 0: // child
       while (true) {
-        Socket *sock = Server_accept(sv_sock);
+        Socket *sock = ServerSocket_accept(sv_sock);
         printf("open pid: %d, address: %s, port: %d\n", getpid(),
                inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
         handle_connection(sock, log, opt);
-        delete_socket(sock);
+        delete_Socket(sock);
       }
       break;
     default: // parent
@@ -52,7 +52,7 @@ void server_start(Option *opt) {
   pause();
 
   fclose(log);
-  delete_socket(sv_sock);
+  delete_Socket(sv_sock);
 }
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt) {

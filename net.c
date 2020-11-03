@@ -15,13 +15,13 @@
 static Socket *new_Socket(SocketType ty) {
   Socket *sock = calloc(1, sizeof(Socket));
   sock->_ty = ty;
-  sock->addr = malloc(sizeof(struct sockaddr_in));
+  sock->addr = calloc(1, sizeof(struct sockaddr_in));
   sock->addr_len = sizeof(*sock->addr);
 
   return sock;
 }
 
-void delete_socket(Socket *sock) {
+void delete_Socket(Socket *sock) {
   if (sock->_ty == S_CLT) {
     fclose(sock->ips);
     fclose(sock->ops);
@@ -60,7 +60,7 @@ Socket *new_ServerSocket(int port) {
   return sv_sock;
 }
 
-Socket *Server_accept(Socket *sv_sock) {
+Socket *ServerSocket_accept(Socket *sv_sock) {
   Socket *sock = new_Socket(S_CLT);
 
   if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
@@ -204,6 +204,7 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
   return msg;
 }
 
+// MAX_LINE_LEN = 256
 static void request_line(FILE *f, HttpMessage *msg) {
   char buf[256];
   char *p;
@@ -261,6 +262,7 @@ static void request_line(FILE *f, HttpMessage *msg) {
   *p = '\0';
 }
 
+// MAX_LINE_LEN = 256
 static void message_header(FILE *f, HttpMessage *msg) {
   char buf[256];
   char *p, *key, *value;
@@ -313,8 +315,6 @@ static void consume(FILE *f, char expected) {
 void HttpMessage_write(HttpMessage *msg, FILE *f) {
   assert(msg->_ty == HM_RES); // HM_REQ not implemented yet.
 
-  Map *map = msg->header_map;
-
   switch (msg->_ty) {
   case HM_REQ:
     break;
@@ -325,6 +325,7 @@ void HttpMessage_write(HttpMessage *msg, FILE *f) {
   }
 
   // headers
+  Map *map = msg->header_map;
   for (int i = 0; i < map->keys->len; i++) {
     fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
             (char *)map->vals->data[i]);
@@ -385,27 +386,22 @@ static void test_url_decode() {
 }
 
 static void test_HttpMessage_parse() {
-  char tmp_file[] = "XXXXXX";
-  int fd = mkstemp(tmp_file);
-  FILE *f = fdopen(fd, "w");
-  fprintf(f, "GET /hello.html HTTP/1.1\r\n");
-  fprintf(f, "Host: localhost\r\n");
-  fprintf(f, "\r\n");
+  FILE *f = tmpfile();
+  fprintf(f,
+	  "GET /hello.html HTTP/1.1\r\n"
+	  "Host: localhost\r\n"
+	  "\r\n");
+
+  rewind(f);
+  HttpMessage *req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
-
-  fd = open(tmp_file, O_RDONLY);
-
-  HttpMessage *req = HttpMessage_parse(fdopen(fd, "r"), HM_REQ, false);
-
+  
   expect(__LINE__, HM_REQ, req->_ty);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
   expect_str(__LINE__, "/hello.html", req->filename);
   expect_str(__LINE__, "localhost", (char *)Map_get(req->header_map, "Host"));
-
-  close(fd);
-  unlink(tmp_file);
 }
 
 static void test_HttpMessage_write() {
@@ -421,30 +417,24 @@ static void test_HttpMessage_write() {
   res->body_len = 4;
   res->body = strdup("body");
 
-  char *template = strdup("XXXXXX");
-  int fd = mkstemp(template);
-
-  HttpMessage_write(res, fdopen(fd, "w"));
-
-  char buf[1024];
-  FILE *f = fopen(template, "r");
-  char *p = buf;
-  int c;
-  while ((c = fgetc(f)) != EOF) {
-    *p++ = c;
-  }
-  *p = '\0';
-  fclose(f);
-
-  expect_str(__LINE__,
-             "HTTP/1.1 200 OK\r\n"
+  FILE *f = tmpfile();
+  HttpMessage_write(res, f);
+  rewind(f);
+  
+  // clang-format off
+  char *p = "HTTP/1.1 200 OK\r\n"
              "Server: Dali/0.1\r\n"
              "Content-Length: 4\r\n"
              "\r\n"
-             "body",
-             buf);
-  unlink(template);
-
+             "bodY";
+  // clang-format on
+  
+  int c;
+  while ((c = fgetc(f)) != EOF) {
+    expect(__LINE__, *p++, c);
+  }
+  expect(__LINE__, '\0', *p);
+  
   delete_HttpMessage(res);
 }
 

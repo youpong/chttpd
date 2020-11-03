@@ -28,8 +28,8 @@ typedef struct {
 } Socket;
 
 Socket *new_ServerSocket(int);
-Socket *Server_accept(Socket *);
-void delete_socket(Socket *);
+Socket *ServerSocket_accept(Socket *);
+void delete_Socket(Socket *);
 
 void url_decode(char *dest, char *src);
 
