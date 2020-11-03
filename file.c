@@ -58,7 +58,8 @@ void delete_File(File *file) {
   free(file);
 }
 
-// duplicate
+// storage duration: dynamic
+// caller frees allocated memory for result.
 char *parent_path(char *path) {
   char *ret = strdup(path);
 
@@ -73,7 +74,8 @@ char *parent_path(char *path) {
   return ret;
 }
 
-// duplicate
+// storage duration: dynamic
+// caller frees allocated memory for result.
 char *filename(char *path) {
   char *p = strrchr(path, '/');
   if (p == NULL)
@@ -82,7 +84,8 @@ char *filename(char *path) {
   return strdup(p + 1);
 }
 
-// duplicate
+// storage duration: dynamic
+// caller frees allocated memory for result.
 char *extension(char *path) {
   char *fname = filename(path);
   char *p = strrchr(fname, '.');
@@ -93,27 +96,31 @@ char *extension(char *path) {
 }
 
 static void test_parent_path() {
+  // clang-format off
   // absolute path
   expect_str(__LINE__, "/java/net", parent_path("/java/net/URL.java"));
-  expect_str(__LINE__, "/java", parent_path("/java/net"));
-  expect_str(__LINE__, "", parent_path("/java"));
+  expect_str(__LINE__, "/java",     parent_path("/java/net"));
+  expect_str(__LINE__, "",          parent_path("/java"));
 
   // relative path
   expect_str(__LINE__, "www", parent_path("www/index.html"));
-  expect_str(__LINE__, "", parent_path("www"));
-  expect_str(__LINE__, "", parent_path(""));
+  expect_str(__LINE__, "",    parent_path("www"));
+  expect_str(__LINE__, "",    parent_path(""));
+  // clang-format on
 }
 
 static void test_filename() {
+  // clang-format off
   expect_str(__LINE__, "URL.java", filename("/java/net/URL.java"));
-  expect_str(__LINE__, "index.html", filename("index.html"));
+  expect_str(__LINE__, "URL.java", filename("URL.java"));
   expect_str(__LINE__, "", filename(""));
+  // clang-format on
 }
 
 static void test_extension() {
   // clang-format off
   expect_str(__LINE__, "ext", extension("dir/foo.ext"));
-  expect_str(__LINE__, "",    extension("dir/foo."));        
+  expect_str(__LINE__, "",    extension("dir/foo."));
   expect_ptr(__LINE__, NULL,  extension("dir.name/foo"));
   // clang-format on
 }

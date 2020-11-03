@@ -333,12 +333,7 @@ void HttpMessage_write(HttpMessage *msg, FILE *f) {
   fprintf(f, "\r\n");
 
   // body
-  char *len_str = Map_get(map, "Content-Length");
-  int len = 0;
-  if (len_str != NULL) {
-    len = atoi(len_str);
-  }
-  for (int i = 0; i < len; i++) {
+  for (int i = 0; i < msg->body_len; i++) {
     fputc(msg->body[i], f);
   }
 
@@ -423,6 +418,7 @@ static void test_HttpMessage_write() {
   Map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
   Map_put(res->header_map, strdup("Content-Length"), strdup("4"));
 
+  res->body_len = 4;
   res->body = strdup("body");
 
   char *template = strdup("XXXXXX");

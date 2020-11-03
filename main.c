@@ -37,12 +37,13 @@ int main(int argc, char **argv) {
   server_start(opt);
 
   // System will delete bellow objects soon.
-  // - MimeMap,
+  // - MimeMap
   // - opt
 
   return EXIT_SUCCESS;
 }
 
+// MimeMap: don't use delete_Map()
 static Map *new_MimeMap() {
   Map *map = new_Map();
 

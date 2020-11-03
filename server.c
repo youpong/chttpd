@@ -82,6 +82,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
 static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
+// TODO: 404 handle error if error.html is not found
 static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
   HttpMessage *res = new_HttpMessage(HM_RES);
   File *file;
@@ -180,10 +181,11 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
     }
   } while (lock() == -1);
 
+  char *buf;
   // clang-format off
   fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
 	  inet_ntoa(sock->addr->sin_addr),
-	  formatted_time(&req_tm, timezone),
+	  buf = formatted_time(&req_tm, timezone),
 	  req->method, req->request_uri, req->http_version,
 	  res->status_code,
 	  header_get(res, "Content-Length", "\"-\""),	  
@@ -193,11 +195,14 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
   fflush(out);
 
   unlock();
+  free(buf);
 }
 
 /**
  * e.g.
  * "09/Oct/2020:17:34:23 +0900"
+ * storage duration: dynamic
+ * caller frees allocated memory for result.
  */
 static char *formatted_time(struct tm *t_tm, long timezone) {
   char date[20 + 1];
@@ -238,7 +243,6 @@ static void test_formatted_time() {
 
   expect_str(__LINE__, "01/Jan/1970:00:00:00 +0000", formatted_time(&t_tm, 0));
   expect_str(__LINE__, "01/Jan/1970:00:00:00 +0000", formatted_time(&t_tm, 59));
-
   expect_str(__LINE__, "01/Jan/1970:00:00:00 -0930",
              formatted_time(&t_tm, 9 * 60 * 60 + 30 * 60));
   expect_str(__LINE__, "01/Jan/1970:00:00:00 +0930",
