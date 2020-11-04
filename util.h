@@ -38,11 +38,11 @@ void Map_put(Map *, char *, void *);
 void *Map_get(Map *, char *);
 
 typedef struct {
-  Vector *body;
   int len;
+  Vector *_body;
 
-  char *buf;
-  int buf_len; // TODO: internal
+  char *_buf;
+  int _buf_len;
   int _buf_siz;
 } StringBuffer;
 

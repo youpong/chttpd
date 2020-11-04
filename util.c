@@ -98,49 +98,49 @@ StringBuffer *new_StringBuffer() {
   StringBuffer *sb = calloc(1, sizeof(StringBuffer));
 
   sb->len = 0;
-  sb->body = new_Vector();
+  sb->_body = new_Vector();
   sb->_buf_siz = 255 + 1;
-  sb->buf = calloc(sb->_buf_siz, sizeof(char));
+  sb->_buf = calloc(sb->_buf_siz, sizeof(char));
 
   return sb;
 }
 
 void StringBuffer_append(StringBuffer *sb, char *string) {
-  if (sb->buf_len != 0) {
-    sb->buf[sb->buf_len] = '\0';
-    Vector_push(sb->body, strdup(sb->buf));
-    sb->buf_len = 0;
+  if (sb->_buf_len != 0) {
+    sb->_buf[sb->_buf_len] = '\0';
+    Vector_push(sb->_body, strdup(sb->_buf));
+    sb->_buf_len = 0;
   }
-  Vector_push(sb->body, strdup(string));
+  Vector_push(sb->_body, strdup(string));
   sb->len += strlen(string);
 }
 
 void StringBuffer_appendChar(StringBuffer *sb, char c) {
-  if (sb->buf_len + 1 >= sb->_buf_siz) {
-    sb->buf[sb->buf_len] = '\0';
-    Vector_push(sb->body, strdup(sb->buf));
-    sb->buf_len = 0;
+  if (sb->_buf_len + 1 >= sb->_buf_siz) {
+    sb->_buf[sb->_buf_len] = '\0';
+    Vector_push(sb->_body, strdup(sb->_buf));
+    sb->_buf_len = 0;
   }
-  sb->buf[sb->buf_len] = c;
-  sb->buf_len++;
+  sb->_buf[sb->_buf_len] = c;
+  sb->_buf_len++;
   sb->len++;
 }
 
 char *StringBuffer_toString(StringBuffer *sb) {
   char *str = calloc(sb->len + 1, sizeof(char));
 
-  for (int i = 0; i < sb->body->len; i++)
-    strcat(str, sb->body->data[i]);
+  for (int i = 0; i < sb->_body->len; i++)
+    strcat(str, sb->_body->data[i]);
 
-  sb->buf[sb->buf_len] = '\0';
-  strcat(str, sb->buf);
+  sb->_buf[sb->_buf_len] = '\0';
+  strcat(str, sb->_buf);
 
   return str;
 }
 
 void delete_StringBuffer(StringBuffer *sb) {
-  delete_Vector(sb->body);
-  free(sb->buf);
+  delete_Vector(sb->_body);
+  free(sb->_buf);
   free(sb);
 }
 
