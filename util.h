@@ -37,6 +37,21 @@ void delete_Map(Map *);
 void Map_put(Map *, char *, void *);
 void *Map_get(Map *, char *);
 
+typedef struct {
+  Vector *body;
+  int len;
+
+  char *buf;
+  int buf_len;
+  int _buf_siz;
+} StringBuffer;
+
+StringBuffer *new_StringBuffer();
+void StringBuffer_append(StringBuffer *sb, char *string);
+void StringBuffer_appendChar(StringBuffer *sb, char c);
+char *StringBuffer_toString(StringBuffer *);
+void delete_StringBuffer(StringBuffer *);
+
 int *intdup(int);
 
 noreturn void error(char *, ...);

@@ -387,15 +387,14 @@ static void test_url_decode() {
 
 static void test_HttpMessage_parse() {
   FILE *f = tmpfile();
-  fprintf(f,
-	  "GET /hello.html HTTP/1.1\r\n"
-	  "Host: localhost\r\n"
-	  "\r\n");
+  fprintf(f, "GET /hello.html HTTP/1.1\r\n"
+             "Host: localhost\r\n"
+             "\r\n");
 
   rewind(f);
   HttpMessage *req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
-  
+
   expect(__LINE__, HM_REQ, req->_ty);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
@@ -420,21 +419,21 @@ static void test_HttpMessage_write() {
   FILE *f = tmpfile();
   HttpMessage_write(res, f);
   rewind(f);
-  
+
   // clang-format off
   char *p = "HTTP/1.1 200 OK\r\n"
              "Server: Dali/0.1\r\n"
              "Content-Length: 4\r\n"
              "\r\n"
-             "bodY";
+             "body";
   // clang-format on
-  
+
   int c;
   while ((c = fgetc(f)) != EOF) {
     expect(__LINE__, *p++, c);
   }
   expect(__LINE__, '\0', *p);
-  
+
   delete_HttpMessage(res);
 }
 

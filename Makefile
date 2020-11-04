@@ -5,8 +5,10 @@
 # refer to feature_test_macros(7)
 CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 
+# efence: electric fence
 # libc: fdopen(3)
-LIBS = -lc
+#LIBS = -lefence -lc
+LIBS = -lc 
 
 TARGET = httpd
 SRCS = main.c server.c net.c file.c util.c util_test.c

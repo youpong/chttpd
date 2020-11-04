@@ -90,6 +90,60 @@ void *Map_get(Map *map, char *key) {
   return NULL;
 }
 
+//
+// StringBuffer
+//
+
+StringBuffer *new_StringBuffer() {
+  StringBuffer *sb = calloc(1, sizeof(StringBuffer));
+
+  sb->len = 0;
+  sb->body = new_Vector();
+  sb->_buf_siz = 255 + 1;
+  sb->buf = calloc(sb->_buf_siz, sizeof(char));
+
+  return sb;
+}
+
+void StringBuffer_append(StringBuffer *sb, char *string) {
+  if (sb->buf_len != 0) {
+    sb->buf[sb->buf_len] = '\0';
+    Vector_push(sb->body, strdup(sb->buf));
+    sb->buf_len = 0;
+  }
+  Vector_push(sb->body, strdup(string));
+  sb->len += strlen(string);
+}
+
+void StringBuffer_appendChar(StringBuffer *sb, char c) {
+  if (sb->buf_len + 1 >= sb->_buf_siz) {
+    sb->buf[sb->buf_len] = '\0';
+    Vector_push(sb->body, strdup(sb->buf));
+    sb->buf_len = 0;
+  }
+  sb->buf[sb->buf_len] = c;
+  sb->buf_len++;
+  sb->len++;
+}
+
+char *StringBuffer_toString(StringBuffer *sb) {
+  char *str = calloc(sb->len + 1, sizeof(char));
+
+  for (int i = 0; i < sb->body->len; i++)
+    strcat(str, sb->body->data[i]);
+
+  sb->buf[sb->buf_len] = '\0';
+  strcat(str, sb->buf);
+
+  return str;
+}
+
+void delete_StringBuffer(StringBuffer *sb) {
+  delete_Vector(sb->body);
+  free(sb->buf);
+  free(sb);
+}
+
 int *intdup(int n) {
   int *num = malloc(sizeof(int));
   *num = n;

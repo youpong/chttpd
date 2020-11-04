@@ -1,5 +1,7 @@
 #include "util.h"
 
+#include <stdio.h>  // fopen(3)
+#include <stdlib.h> // free(3)
 #include <string.h> // strdup(3)
 
 static void test_Vector() {
@@ -48,6 +50,50 @@ static void test_Map() {
   delete_Map(map);
 }
 
+static void test_StringBuffer() {
+  char *str;
+  StringBuffer *sb;
+
+  //
+  // 1.
+  //
+  sb = new_StringBuffer();
+  StringBuffer_append(sb, "One");
+  StringBuffer_append(sb, "Two");
+  str = StringBuffer_toString(sb);
+  expect_str(__LINE__, "OneTwo", str);
+  free(str);
+
+  StringBuffer_appendChar(sb, '3');
+  str = StringBuffer_toString(sb);
+  expect_str(__LINE__, "OneTwo3", str);
+  free(str);
+
+  StringBuffer_append(sb, "Four");
+  str = StringBuffer_toString(sb);
+  expect_str(__LINE__, "OneTwo3Four", str);
+  free(str);
+
+  delete_StringBuffer(sb);
+
+  //
+  // 2.
+  //
+  sb = new_StringBuffer();
+  FILE *f = fopen("LICENSE", "r");
+  int c;
+  while ((c = fgetc(f)) != EOF) {
+    StringBuffer_appendChar(sb, c);
+  }
+  fclose(f);
+
+  str = StringBuffer_toString(sb);
+  expect(__LINE__, 1064, strlen(str));
+
+  free(str);
+  delete_StringBuffer(sb);
+}
+
 static void test_strcmp() {
   //
   // compare empty string
@@ -59,8 +105,16 @@ static void test_strcmp() {
   // clang-format on
 }
 
+static void test_sizeof() {
+  char *buf = malloc(256);
+  expect(__LINE__, 8, sizeof(buf));
+  free(buf);
+}
+
 void run_all_test_util() {
   test_Vector();
   test_Map();
+  test_StringBuffer();
   test_strcmp();
+  test_sizeof();
 }

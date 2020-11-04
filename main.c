@@ -204,11 +204,11 @@ static void run_all_test_main() {
 static void run_all_test() {
   MimeMap = new_MimeMap();
 
-  run_all_test_main();
-  run_all_test_server();
-  run_all_test_net();
   run_all_test_util();
+  run_all_test_main();
   run_all_test_file();
+  run_all_test_net();
+  run_all_test_server();
 
   printf("========================\n");
   printf(" All unit tests passed.\n");
