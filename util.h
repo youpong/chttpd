@@ -42,7 +42,7 @@ typedef struct {
   int len;
 
   char *buf;
-  int buf_len;
+  int buf_len; // TODO: internal
   int _buf_siz;
 } StringBuffer;
 

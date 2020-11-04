@@ -1,4 +1,5 @@
 #include "net.h"
+#include "util.h"
 
 #include <assert.h>    // assert(3)
 #include <fcntl.h>     // open(2)
@@ -204,46 +205,46 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
   return msg;
 }
 
-// MAX_LINE_LEN = 256
 static void request_line(FILE *f, HttpMessage *msg) {
-  char buf[256];
-  char *p;
+  StringBuffer *sb;
   int c;
 
   assert(msg->_ty == HM_REQ);
 
   // method
-  p = buf;
+  sb = new_StringBuffer();
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
       break;
-    *p++ = c;
+    StringBuffer_appendChar(sb, c);
   }
-  *p = '\0';
-  msg->method = strdup(buf);
+  msg->method = StringBuffer_toString(sb);
+  delete_StringBuffer(sb);
 
   // request_uri
-  p = buf;
+  sb = new_StringBuffer();
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
       break;
-    *p++ = c;
+    StringBuffer_appendChar(sb, c);
   }
-  *p = '\0';
-  msg->request_uri = malloc(strlen(buf) + 1);
-  url_decode(msg->request_uri, buf);
+  char *str = StringBuffer_toString(sb);
+  msg->request_uri = malloc(sb->len + 1);
+  url_decode(msg->request_uri, str);
+  free(str);
+  delete_StringBuffer(sb);
 
   // http_version
-  p = buf;
+  sb = new_StringBuffer();
   while ((c = fgetc(f)) != EOF) {
     if (c == '\r') {
       consume(f, '\n');
       break;
     }
-    *p++ = c;
+    StringBuffer_appendChar(sb, c);
   }
-  *p = '\0';
-  msg->http_version = strdup(buf);
+  msg->http_version = StringBuffer_toString(sb);
+  delete_StringBuffer(sb);
 
   // method type
   if (strcmp(msg->method, "GET") == 0)
@@ -255,17 +256,16 @@ static void request_line(FILE *f, HttpMessage *msg) {
 
   // filename
   msg->filename = malloc(strlen(msg->request_uri) + 1);
-  p = msg->filename;
+  char *p = msg->filename;
   char *q = msg->request_uri;
   while (*q != '\0' && *q != '?')
     *p++ = *q++;
   *p = '\0';
 }
 
-// MAX_LINE_LEN = 256
 static void message_header(FILE *f, HttpMessage *msg) {
-  char buf[256];
-  char *p, *key, *value;
+  StringBuffer *sb;
+  char *key, *value;
   int c;
 
   while ((c = fgetc(f)) != EOF) {
@@ -276,29 +276,29 @@ static void message_header(FILE *f, HttpMessage *msg) {
     ungetc(c, f);
 
     // key
-    p = buf;
+    sb = new_StringBuffer();
     while ((c = fgetc(f)) != EOF) {
       if (c == ':')
         break;
-      *p++ = c;
+      StringBuffer_appendChar(sb, c);
     }
-    *p = '\0';
-    key = strdup(buf);
+    key = StringBuffer_toString(sb);
+    delete_StringBuffer(sb);
 
     // SP
     consume(f, ' ');
 
     // value
-    p = buf;
+    sb = new_StringBuffer();
     while ((c = fgetc(f)) != EOF) {
       if (c == '\r') {
         consume(f, '\n');
         break;
       }
-      *p++ = c;
+      StringBuffer_appendChar(sb, c);
     }
-    *p = '\0';
-    value = strdup(buf);
+    value = StringBuffer_toString(sb);
+    delete_StringBuffer(sb);
 
     Map_put(msg->header_map, key, value);
   }
