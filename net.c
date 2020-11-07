@@ -230,6 +230,8 @@ static bool request_line(FILE *f, HttpMessage *msg) {
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
       break;
+    if (c == '\r')
+      return false;
     StringBuffer_appendChar(sb, c);
   }
   msg->method = StringBuffer_toString(sb);
@@ -240,6 +242,8 @@ static bool request_line(FILE *f, HttpMessage *msg) {
   while ((c = fgetc(f)) != EOF) {
     if (c == ' ')
       break;
+    if (c == '\r')
+      return false;
     StringBuffer_appendChar(sb, c);
   }
   char *str = StringBuffer_toString(sb);
