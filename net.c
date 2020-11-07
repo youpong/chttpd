@@ -428,13 +428,18 @@ static void test_url_decode() {
 
 static void test_HttpMessage_parse() {
   FILE *f = tmpfile();
+  HttpMessage *req;
+
+  //
+  // Normal
+  //
+  f = tmpfile();
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "Host: localhost\r\n"
              "\r\n");
   rewind(f);
-  HttpMessage *req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
-
   expect(__LINE__, HM_REQ, req->_ty);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
@@ -444,16 +449,28 @@ static void test_HttpMessage_parse() {
   delete_HttpMessage(req);
 
   //
+  // Normal(Empty message-header)
+  //
+  f = tmpfile();
+  fprintf(f, "GET /hello.html HTTP/1.1\r\n"
+             "\r\n");
+  rewind(f);
+  req = HttpMessage_parse(f, HM_REQ, false);
+  fclose(f);
+  expect(__LINE__, HM_REQ, req->_ty);
+  expect_str(__LINE__, "GET", req->method);
+  delete_HttpMessage(req);
+
+  //
   // empty request
   //
   f = tmpfile();
   req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
-
   expect_ptr(__LINE__, NULL, req);
 
   //
-  // empty Http-Version
+  // few SP in Request-Line
   //
   f = tmpfile();
   fprintf(f, "GET /hello.html\r\n"
@@ -462,7 +479,30 @@ static void test_HttpMessage_parse() {
   rewind(f);
   req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
+  expect_ptr(__LINE__, NULL, req);
 
+  //
+  // empty Method
+  //
+  f = tmpfile();
+  fprintf(f, " /hello.html HTTP/1.1\r\n"
+             "Host: localhost\r\n"
+             "\r\n");
+  rewind(f);
+  req = HttpMessage_parse(f, HM_REQ, false);
+  fclose(f);
+  expect_ptr(__LINE__, NULL, req);
+
+  //
+  // Empty key in message-header
+  //
+  f = tmpfile();
+  fprintf(f, "GET /hello.html HTTP/1.1\r\n"
+             ": localhost\r\n"
+             "\r\n");
+  rewind(f);
+  req = HttpMessage_parse(f, HM_REQ, false);
+  fclose(f);
   expect_ptr(__LINE__, NULL, req);
 }
 
