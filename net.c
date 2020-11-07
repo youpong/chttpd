@@ -427,7 +427,6 @@ static void test_HttpMessage_parse() {
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "Host: localhost\r\n"
              "\r\n");
-
   rewind(f);
   HttpMessage *req = HttpMessage_parse(f, HM_REQ, false);
   fclose(f);
@@ -438,6 +437,29 @@ static void test_HttpMessage_parse() {
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
   expect_str(__LINE__, "/hello.html", req->filename);
   expect_str(__LINE__, "localhost", (char *)Map_get(req->header_map, "Host"));
+  delete_HttpMessage(req);
+
+  //
+  // empty request
+  //
+  f = tmpfile();
+  req = HttpMessage_parse(f, HM_REQ, false);
+  fclose(f);
+
+  expect_ptr(__LINE__, NULL, req);
+
+  //
+  // empty Http-Version
+  //
+  f = tmpfile();
+  fprintf(f, "GET /hello.html\r\n"
+             "Host: localhost\r\n"
+             "\r\n");
+  rewind(f);
+  req = HttpMessage_parse(f, HM_REQ, false);
+  fclose(f);
+
+  expect_ptr(__LINE__, NULL, req);
 }
 
 static void test_HttpMessage_write() {
