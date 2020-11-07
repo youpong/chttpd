@@ -4,6 +4,7 @@
 #include "util.h"
 
 #include <arpa/inet.h> // inet_ntoa(3)
+#include <errno.h>     // errno
 #include <fcntl.h>     // open(2)
 #include <stdlib.h>    // malloc(3)
 #include <string.h>    // strcmp(3), strrchr(3)
@@ -26,6 +27,8 @@ void server_start(Option *opt) {
   }
 
   Socket *sv_sock = new_ServerSocket(opt->port);
+  if (sv_sock == NULL)
+    error("Error: new_ServerSock: %s: %s", ErrorMsg, strerror(errno));
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
 
@@ -38,6 +41,8 @@ void server_start(Option *opt) {
     case 0: // child
       while (true) {
         Socket *sock = ServerSocket_accept(sv_sock);
+        if (sock == NULL)
+          error("Error: ServerSock_accept: %s: %s", ErrorMsg, strerror(errno));
         printf("open pid: %d, address: %s, port: %d\n", getpid(),
                inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
         handle_connection(sock, log, opt);

@@ -55,6 +55,7 @@ void delete_StringBuffer(StringBuffer *);
 int *intdup(int);
 
 noreturn void error(char *, ...);
+extern char *ErrorMsg;
 
 // test
 // __LINE__

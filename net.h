@@ -50,12 +50,25 @@ typedef enum {
  *
  * generic-message = start-line
  *                   *(message-header CRLF)
+ *                   CRLF
  *                   [ message-body ]
  * start-line      = Request-Line | Status-Line
  *
  * Request-Line = Method       SP Request-URI SP HTTP-Version  CRLF
  * Status-Line  = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+ * - Method = token
+ * - Request-URI = "*" | absoluteURI | abs_path | authority
  *
+ * - message-header = field-name ": " field-content
+ * field-name     = token
+ * - field-content  = token
+ *
+ * --------------------
+ * RFC spec is below.
+ *
+ * Request-URI = "*" | absoluteURI | abs_path | authority
+ * message-header = field-name ":" [field-value]
+ * field-value    = *( field-content | LWS)
  */
 typedef struct {
   HttpMessageType _ty; // for internal: type of message(request/response)

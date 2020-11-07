@@ -5,6 +5,8 @@
 #include <stdlib.h> // free(3)
 #include <string.h> // strcmp(3)
 
+char *ErrorMsg;
+
 Args *new_Args(int argc, char **argv) {
   Args *args = malloc(sizeof(Args));
   args->argc = argc;
@@ -111,6 +113,7 @@ void StringBuffer_append(StringBuffer *sb, char *string) {
     Vector_push(sb->_body, strdup(sb->_buf));
     sb->_buf_len = 0;
   }
+
   Vector_push(sb->_body, strdup(string));
   sb->len += strlen(string);
 }
@@ -121,6 +124,7 @@ void StringBuffer_appendChar(StringBuffer *sb, char c) {
     Vector_push(sb->_body, strdup(sb->_buf));
     sb->_buf_len = 0;
   }
+
   sb->_buf[sb->_buf_len] = c;
   sb->_buf_len++;
   sb->len++;

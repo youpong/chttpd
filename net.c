@@ -38,8 +38,8 @@ Socket *new_ServerSocket(int port) {
 
   /* create a socket, endpoint of connection */
   if ((sv_sock->_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket");
-    exit(1);
+    ErrorMsg = "socket";
+    return NULL;
   }
 
   /* bind */
@@ -48,14 +48,14 @@ Socket *new_ServerSocket(int port) {
   addr->sin_port = htons(port);
   addr->sin_addr.s_addr = INADDR_ANY;
   if (bind(sv_sock->_fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
-    perror("bind");
-    exit(1);
+    ErrorMsg = "bind";
+    return NULL;
   }
 
   /* listen */
   if (listen(sv_sock->_fd, LISTEN_QUEUE) == -1) {
-    perror("listen");
-    exit(1);
+    ErrorMsg = "listen";
+    return NULL;
   }
 
   return sv_sock;
@@ -66,16 +66,16 @@ Socket *ServerSocket_accept(Socket *sv_sock) {
 
   if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
                           &sock->addr_len)) < 0) {
-    perror("accept");
-    exit(1);
+    ErrorMsg = "accept";
+    return NULL;
   }
   if ((sock->ips = fdopen(sock->_fd, "r")) == NULL) {
-    perror("fdopen");
-    exit(1);
+    ErrorMsg = "fdopen";
+    return NULL;
   }
   if ((sock->ops = fdopen(sock->_fd, "w")) == NULL) {
-    perror("fdopen");
-    exit(1);
+    ErrorMsg = "fdopen";
+    return NULL;
   }
 
   return sock;
@@ -145,9 +145,9 @@ void url_decode(char *dest, char *src) {
 // http
 //
 
-static void consume(FILE *f, char c);
-static void request_line(FILE *f, HttpMessage *req);
-static void message_header(FILE *f, HttpMessage *req);
+static bool consume(FILE *f, char c);
+static bool request_line(FILE *f, HttpMessage *req);
+static bool message_header(FILE *f, HttpMessage *req);
 
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
@@ -180,32 +180,46 @@ void delete_HttpMessage(HttpMessage *msg) {
 /**
  * @return a pointer to HttpRequest object.
  * @return NULL when read null request.
+ *
+ * Refer to document for declaration of typedef HttpMessage.
  */
 HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
-  int c;
-
-  if ((c = fgetc(f)) == EOF)
-    return NULL;
-  ungetc(c, f);
 
   HttpMessage *msg = new_HttpMessage(ty);
+
+  // parse start-line = Request-Line | Status-Line
   switch (ty) {
   case HM_REQ:
-    request_line(f, msg);
+    if (!request_line(f, msg))
+      goto exception;
     break;
   case HM_RES:
-    // status_line(f, msg);
+    // if (! status_line(f, msg))
+    //   goto exception;
     break;
   }
 
-  message_header(f, msg);
-  // message_body(f, msg);
+  // parse *(message_header CRLF)
+  if (!message_header(f, msg))
+    goto exception;
+
+  // parse CRLF
+  consume(f, '\r');
+  consume(f, '\n');
+
+  // parse [message-body]
+  // if (! message_body(f, msg))
+  //  goto exception;
 
   return msg;
+
+exception:
+  delete_HttpMessage(msg);
+  return NULL;
 }
 
-static void request_line(FILE *f, HttpMessage *msg) {
+static bool request_line(FILE *f, HttpMessage *msg) {
   StringBuffer *sb;
   int c;
 
@@ -246,6 +260,15 @@ static void request_line(FILE *f, HttpMessage *msg) {
   msg->http_version = StringBuffer_toString(sb);
   delete_StringBuffer(sb);
 
+  // return NULL for invalid input.
+  if (strlen(msg->method) == 0 || strlen(msg->request_uri) == 0 ||
+      strlen(msg->http_version) == 0)
+    return false;
+
+  //
+  // set members
+  //
+
   // method type
   if (strcmp(msg->method, "GET") == 0)
     msg->method_ty = HMMT_GET;
@@ -261,16 +284,18 @@ static void request_line(FILE *f, HttpMessage *msg) {
   while (*q != '\0' && *q != '?')
     *p++ = *q++;
   *p = '\0';
+
+  return true;
 }
 
-static void message_header(FILE *f, HttpMessage *msg) {
+static bool message_header(FILE *f, HttpMessage *msg) {
   StringBuffer *sb;
   char *key, *value;
   int c;
 
   while ((c = fgetc(f)) != EOF) {
     if (c == '\r') {
-      consume(f, '\n');
+      ungetc(c, f);
       break;
     }
     ungetc(c, f);
@@ -278,15 +303,16 @@ static void message_header(FILE *f, HttpMessage *msg) {
     // key
     sb = new_StringBuffer();
     while ((c = fgetc(f)) != EOF) {
-      if (c == ':')
+      if (c == ':') {
+        consume(f, ' ');
         break;
+      }
       StringBuffer_appendChar(sb, c);
     }
     key = StringBuffer_toString(sb);
     delete_StringBuffer(sb);
-
-    // SP
-    consume(f, ' ');
+    if (strlen(key) == 0)
+      return false;
 
     // value
     sb = new_StringBuffer();
@@ -301,15 +327,25 @@ static void message_header(FILE *f, HttpMessage *msg) {
     delete_StringBuffer(sb);
 
     Map_put(msg->header_map, key, value);
+
+    // empty key is invalid
+    if (strlen(key) == 0)
+      return NULL;
   }
+
+  return true;
 }
 
-static void consume(FILE *f, char expected) {
+static bool consume(FILE *f, char expected) {
   int c;
 
   c = fgetc(f);
-  if (c != expected)
-    error("unexpected character: %c\n", c);
+  if (c != expected) {
+    ungetc(c, f);
+    return false;
+  }
+
+  return true;
 }
 
 void HttpMessage_write(HttpMessage *msg, FILE *f) {
@@ -331,9 +367,10 @@ void HttpMessage_write(HttpMessage *msg, FILE *f) {
             (char *)map->vals->data[i]);
   }
 
+  // CRLF
   fprintf(f, "\r\n");
 
-  // body
+  // body(option)
   for (int i = 0; i < msg->body_len; i++) {
     fputc(msg->body[i], f);
   }

@@ -17,7 +17,6 @@ static Option *Option_parse(int argc, char **argv);
 static void print_usage(char *);
 
 Map *MimeMap;
-char *ErrorMsg;
 
 int main(int argc, char **argv) {
 
