@@ -14,6 +14,7 @@
 
 static void header_put(HttpMessage *msg, char *key, char *value);
 static char *header_get(HttpMessage *msg, char *key, char *default_val);
+static File *new_File2(char *parent_path, char *child_path);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *new_HttpResponse(HttpMessage *, Option *);
@@ -146,6 +147,23 @@ static char *header_get(HttpMessage *msg, char *key, char *default_val) {
   if (val == NULL)
     return default_val;
   return val;
+}
+
+static File *new_File2(char *parent_path, char *child_path) {
+  File *file;
+  StringBuffer *sb = new_StringBuffer();
+  char *path;
+
+  StringBuffer_append(sb, parent_path);
+  StringBuffer_append(sb, child_path);
+  path = StringBuffer_toString(sb);
+
+  file = new_File(path);
+
+  free(path);
+  delete_StringBuffer(sb);
+
+  return file;
 }
 
 static char *get_mime_type(char *path) {

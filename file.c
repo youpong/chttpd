@@ -8,18 +8,6 @@
 #include <sys/types.h> // stat(2)
 #include <unistd.h>    // stat(2)
 
-File *new_File2(char *parent_path, char *child_path) {
-  File *file;
-  char *path = malloc(strlen(parent_path) + strlen(child_path) + 1);
-  strcpy(path, parent_path);
-  strcat(path, child_path);
-
-  file = new_File(path);
-  free(path);
-
-  return file;
-}
-
 File *new_File(char *path) {
 
   struct stat st;

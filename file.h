@@ -13,7 +13,6 @@ typedef struct {
 } File;
 
 File *new_File(char *path);
-File *new_File2(char *parent_path, char *child_path);
 void delete_File(File *file);
 
 char *parent_path(char *path);
