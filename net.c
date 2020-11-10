@@ -189,7 +189,7 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
 
   HttpMessage *msg = new_HttpMessage(ty);
 
-  // parse start-line = Request-Line | Status-Line
+  // parse: start-line = Request-Line | Status-Line
   switch (ty) {
   case HM_REQ:
     request_line(f, msg, ex);
@@ -200,16 +200,12 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
     break;
   }
 
-  // parse *(message_header CRLF)
+  // parse: *(message_header CRLF) CRLF
   message_header(f, msg, ex);
   if (ex->ty != E_Okay)
     return msg;
 
-  // parse CRLF
-  consume(f, '\r');
-  consume(f, '\n');
-
-  // parse [message-body]
+  // parse: [message-body]
   // ...
 
   return msg;
@@ -305,49 +301,40 @@ static char *read_line(FILE *f) {
 }
 
 static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
-  StringBuffer *sb;
   char *key, *value;
-  int c;
+  char *p, *line;
 
-  while ((c = fgetc(f)) != EOF) {
-    if (c == '\r') {
-      ungetc(c, f);
+  while ((line = read_line(f)) != NULL) {
+    if (strlen(line) == 0)
       break;
-    }
-    ungetc(c, f);
 
     // key
-    sb = new_StringBuffer();
-    while ((c = fgetc(f)) != EOF) {
-      if (c == ':') {
-        consume(f, ' ');
-        break;
-      }
-      StringBuffer_appendChar(sb, c);
+    if ((p = strchr(line, ':')) == NULL)
+      goto bad_request;
+    *p++ = '\0';
+    key = strdup(line);
+
+    // consume ' '
+    if (*p == ' ') {
+      p++;
     }
-    key = StringBuffer_toString(sb);
-    delete_StringBuffer(sb);
 
     // value
-    sb = new_StringBuffer();
-    while ((c = fgetc(f)) != EOF) {
-      if (c == '\r') {
-        consume(f, '\n');
-        break;
-      }
-      StringBuffer_appendChar(sb, c);
-    }
-    value = StringBuffer_toString(sb);
-    delete_StringBuffer(sb);
+    value = strdup(p);
 
     Map_put(msg->header_map, key, value);
+    free(line);
 
     // empty key is invalid
-    if (strlen(key) == 0) {
-      ex->ty = HM_BadRequest;
-      return;
-    }
+    if (strlen(key) == 0)
+      goto bad_request;
   }
+  return;
+
+bad_request:
+  ex->ty = HM_BadRequest;
+  free(line);
+  return;
 }
 
 static bool consume(FILE *f, char expected) {
