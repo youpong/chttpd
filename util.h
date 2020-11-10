@@ -5,6 +5,17 @@
 #include <stdnoreturn.h> // noreturn
 
 /* util.c */
+typedef enum {
+  E_Okay,
+  HM_EmptyRequest,
+  HM_BadRequest,
+} ExceptionType;
+
+typedef struct {
+  ExceptionType ty;
+  char *msg;
+} Exception;
+
 typedef struct {
   int argc;
   char **argv;

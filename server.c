@@ -17,7 +17,7 @@ static char *header_get(HttpMessage *msg, char *key, char *default_val);
 static File *new_File2(char *parent_path, char *child_path);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
-static HttpMessage *new_HttpResponse(HttpMessage *, Option *);
+static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
@@ -62,22 +62,24 @@ void server_start(Option *opt) {
 }
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt) {
+  Exception *ex = calloc(1, sizeof(Exception));
   time_t req_time;
   bool conn_keep_alive = true;
 
   while (conn_keep_alive) {
     time(&req_time);
 
-    HttpMessage *req = HttpMessage_parse(sock->ips, HM_REQ, opt->debug);
-    if (req == NULL)
+    HttpMessage *req = HttpMessage_parse(sock->ips, HM_REQ, ex, opt->debug);
+    if (ex->ty == HM_EmptyRequest)
       break;
 
-    HttpMessage *res = new_HttpResponse(req, opt);
+    HttpMessage *res = new_HttpResponse(req, opt, ex);
 
     HttpMessage_write(res, sock->ops);
     write_log(log, sock, &req_time, req, res);
 
-    if (strcmp(header_get(req, "Connection", ""), "close") == 0)
+    if (strcmp(header_get(req, "Connection", ""), "close") == 0 ||
+        strcmp(header_get(res, "Connection", ""), "close") == 0)
       conn_keep_alive = false;
 
     delete_HttpMessage(req);
@@ -89,10 +91,31 @@ static int file_read(File *file, char *dest); // extern ?
 static char *get_mime_type(char *fname);
 
 // TODO: 404 handle error if error.html is not found
-static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts) {
+static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts,
+                                     Exception *ex) {
   HttpMessage *res = new_HttpMessage(HM_RES);
   File *file;
   char buf[20 + 1]; // log10(ULONG_MAX) < 20
+
+  if (ex->ty != E_Okay) {
+    res->http_version = strdup(HTTP_VERSION);
+    res->status_code = strdup("400");
+    res->reason_phrase = strdup("Bad Request");
+    header_put(res, "Server", SERVER_NAME);
+    header_put(res, "Content-Type", "text/html");
+    // TODO: system information, server name and os name
+    res->body = strdup("<html>\n"
+                       "<head><title>400 Bad Request</title></head>\n"
+                       "<body>\n"
+                       "<center><h1>400 Bad Request</h1></center>\n"
+                       "</body>\n"
+                       "</html>\n");
+    res->body_len = strlen(res->body);
+    sprintf(buf, "%d", res->body_len);
+    header_put(res, "Content-Length", buf);
+    header_put(res, "Connection", "close");
+    return res;
+  }
 
   switch (req->method_ty) {
   case HMMT_GET:
@@ -143,7 +166,11 @@ static void header_put(HttpMessage *msg, char *key, char *value) {
 }
 
 static char *header_get(HttpMessage *msg, char *key, char *default_val) {
-  char *val = Map_get(msg->header_map, key);
+  char *val;
+
+  if (msg == NULL)
+    return default_val;
+  val = Map_get(msg->header_map, key);
   if (val == NULL)
     return default_val;
   return val;
@@ -206,10 +233,10 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
 
   char *buf;
   // clang-format off
-  fprintf(out, "%s - - [%s] \"%s %s %s\" %s %s \"%s\" \"%s\"\n",
+  fprintf(out, "%s - - [%s] \"%s\" %s %s \"%s\" \"%s\"\n",
 	  inet_ntoa(sock->addr->sin_addr),
 	  buf = formatted_time(&req_tm, timezone),
-	  req->method, req->request_uri, req->http_version,
+	  req->request_line,
 	  res->status_code,
 	  header_get(res, "Content-Length", "\"-\""),	  
 	  header_get(req, "Referer", "-"),
@@ -288,11 +315,12 @@ static void test_new_HttpResponse() {
   HttpMessage *req = new_HttpMessage(HM_REQ);
   Option *opt = malloc(sizeof(Option));
   opt->document_root = strdup("www");
+  Exception *ex = calloc(1, sizeof(Exception));
 
   // Not Allowed Request method
   req->method = strdup("FOO");
   req->method_ty = HMMT_UNKNOWN;
-  res = new_HttpResponse(req, opt);
+  res = new_HttpResponse(req, opt, ex);
   expect(__LINE__, HM_RES, res->_ty);
   expect_str(__LINE__, "405", res->status_code);
 
@@ -301,7 +329,7 @@ static void test_new_HttpResponse() {
   req->method_ty = HMMT_GET;
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
-  res = new_HttpResponse(req, opt);
+  res = new_HttpResponse(req, opt, ex);
   expect_str(__LINE__, "404", res->status_code);
   expect_bool(__LINE__, true,
               res->body_len == atoi(header_get(res, "Content-Length", "")));
@@ -311,7 +339,7 @@ static void test_new_HttpResponse() {
   req->method_ty = HMMT_HEAD;
   req->request_uri = strdup("/not_exist");
   req->filename = strdup("/not_exist");
-  res = new_HttpResponse(req, opt);
+  res = new_HttpResponse(req, opt, ex);
   expect_str(__LINE__, "404", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
 
@@ -320,7 +348,7 @@ static void test_new_HttpResponse() {
   req->method_ty = HMMT_GET;
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
-  res = new_HttpResponse(req, opt);
+  res = new_HttpResponse(req, opt, ex);
   expect_str(__LINE__, "200", res->status_code);
   expect_bool(__LINE__, true,
               res->body_len == atoi(header_get(res, "Content-Length", "")));
@@ -330,7 +358,7 @@ static void test_new_HttpResponse() {
   req->method_ty = HMMT_HEAD;
   req->request_uri = strdup("/hello.html");
   req->filename = strdup("/hello.html");
-  res = new_HttpResponse(req, opt);
+  res = new_HttpResponse(req, opt, ex);
   expect_str(__LINE__, "200", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
 }
@@ -353,9 +381,7 @@ static void test_write_log() {
   Socket *sock = new_ServerSocket(8081);
 
   HttpMessage *req = new_HttpMessage(HM_REQ);
-  req->method = strdup("GET");
-  req->request_uri = strdup("/hello.html");
-  req->http_version = strdup("HTTP/1.1");
+  req->request_line = strdup("GET /hello.html HTTP/1.1");
   header_put(req, "Referer", "http://localhost:8080/hello2.html");
   header_put(req, "User-Agent", "Dali/0.1");
 

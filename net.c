@@ -146,8 +146,8 @@ void url_decode(char *dest, char *src) {
 //
 
 static bool consume(FILE *f, char c);
-static bool request_line(FILE *f, HttpMessage *req);
-static bool message_header(FILE *f, HttpMessage *req);
+static void request_line(FILE *f, HttpMessage *req, Exception *);
+static void message_header(FILE *f, HttpMessage *req, Exception *);
 
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
@@ -183,7 +183,8 @@ void delete_HttpMessage(HttpMessage *msg) {
  *
  * Refer to document for declaration of typedef HttpMessage.
  */
-HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
+HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
+                               bool debug) {
   assert(ty == HM_REQ); // not implemented HM_RES yet.
 
   HttpMessage *msg = new_HttpMessage(ty);
@@ -191,83 +192,66 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, bool debug) {
   // parse start-line = Request-Line | Status-Line
   switch (ty) {
   case HM_REQ:
-    if (!request_line(f, msg))
-      goto exception;
+    request_line(f, msg, ex);
+    if (ex->ty != E_Okay)
+      return msg;
     break;
   case HM_RES:
-    // if (! status_line(f, msg))
-    //   goto exception;
     break;
   }
 
   // parse *(message_header CRLF)
-  if (!message_header(f, msg))
-    goto exception;
+  message_header(f, msg, ex);
+  if (ex->ty != E_Okay)
+    return msg;
 
   // parse CRLF
   consume(f, '\r');
   consume(f, '\n');
 
   // parse [message-body]
-  // if (! message_body(f, msg))
-  //  goto exception;
+  // ...
 
   return msg;
-
-exception:
-  delete_HttpMessage(msg);
-  return NULL;
 }
 
-static bool request_line(FILE *f, HttpMessage *msg) {
-  StringBuffer *sb;
-  int c;
+static char *read_line(FILE *f);
+
+static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
+  char *p, *p0;
 
   assert(msg->_ty == HM_REQ);
 
-  // method
-  sb = new_StringBuffer();
-  while ((c = fgetc(f)) != EOF) {
-    if (c == ' ')
-      break;
-    if (c == '\r')
-      return false;
-    StringBuffer_appendChar(sb, c);
+  char *line = read_line(f);
+  if (line == NULL) {
+    ex->ty = HM_EmptyRequest;
+    return;
   }
-  msg->method = StringBuffer_toString(sb);
-  delete_StringBuffer(sb);
+
+  // request_line
+  msg->request_line = strdup(line);
+
+  // method
+  if ((p = strchr(line, ' ')) == NULL)
+    goto bad_request;
+  *p = '\0';
+  msg->method = strdup(line);
 
   // request_uri
-  sb = new_StringBuffer();
-  while ((c = fgetc(f)) != EOF) {
-    if (c == ' ')
-      break;
-    if (c == '\r')
-      return false;
-    StringBuffer_appendChar(sb, c);
-  }
-  char *str = StringBuffer_toString(sb);
-  msg->request_uri = malloc(sb->len + 1);
-  url_decode(msg->request_uri, str);
-  free(str);
-  delete_StringBuffer(sb);
+  p0 = ++p;
+  if ((p = strchr(p0, ' ')) == NULL)
+    goto bad_request;
+  *p = '\0';
+  msg->request_uri = calloc(strlen(p0) + 1, sizeof(char));
+  url_decode(msg->request_uri, p0);
 
   // http_version
-  sb = new_StringBuffer();
-  while ((c = fgetc(f)) != EOF) {
-    if (c == '\r') {
-      consume(f, '\n');
-      break;
-    }
-    StringBuffer_appendChar(sb, c);
-  }
-  msg->http_version = StringBuffer_toString(sb);
-  delete_StringBuffer(sb);
+  msg->http_version = strdup(++p);
 
-  // return NULL for invalid input.
+  // bad_request: empty field
   if (strlen(msg->method) == 0 || strlen(msg->request_uri) == 0 ||
       strlen(msg->http_version) == 0)
-    return false;
+    goto bad_request;
 
   //
   // set members
@@ -282,17 +266,45 @@ static bool request_line(FILE *f, HttpMessage *msg) {
     msg->method_ty = HMMT_UNKNOWN;
 
   // filename
-  msg->filename = malloc(strlen(msg->request_uri) + 1);
-  char *p = msg->filename;
-  char *q = msg->request_uri;
-  while (*q != '\0' && *q != '?')
-    *p++ = *q++;
-  *p = '\0';
+  msg->filename = strdup(msg->request_uri);
+  if ((p = strchr(msg->filename, '?')) != NULL)
+    *p = '\0';
 
-  return true;
+  // query_str
+  // msg->query_str = strdup(++p);
+
+  return;
+
+bad_request:
+  ex->ty = HM_BadRequest;
+  free(line);
+  return;
 }
 
-static bool message_header(FILE *f, HttpMessage *msg) {
+static char *read_line(FILE *f) {
+  char *ret;
+  StringBuffer *sb = new_StringBuffer();
+
+  int c;
+  while ((c = fgetc(f)) != EOF) {
+    if (c == '\r') {
+      consume(f, '\n');
+      break;
+    }
+    StringBuffer_appendChar(sb, c);
+  }
+  if (c == EOF) {
+    delete_StringBuffer(sb);
+    return NULL;
+  }
+
+  ret = StringBuffer_toString(sb);
+  delete_StringBuffer(sb);
+
+  return ret;
+}
+
+static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
   StringBuffer *sb;
   char *key, *value;
   int c;
@@ -315,8 +327,6 @@ static bool message_header(FILE *f, HttpMessage *msg) {
     }
     key = StringBuffer_toString(sb);
     delete_StringBuffer(sb);
-    if (strlen(key) == 0)
-      return false;
 
     // value
     sb = new_StringBuffer();
@@ -333,11 +343,11 @@ static bool message_header(FILE *f, HttpMessage *msg) {
     Map_put(msg->header_map, key, value);
 
     // empty key is invalid
-    if (strlen(key) == 0)
-      return NULL;
+    if (strlen(key) == 0) {
+      ex->ty = HM_BadRequest;
+      return;
+    }
   }
-
-  return true;
 }
 
 static bool consume(FILE *f, char expected) {
@@ -429,6 +439,7 @@ static void test_url_decode() {
 static void test_HttpMessage_parse() {
   FILE *f = tmpfile();
   HttpMessage *req;
+  Exception *ex = calloc(1, sizeof(Exception));
 
   //
   // Normal
@@ -438,9 +449,11 @@ static void test_HttpMessage_parse() {
              "Host: localhost\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
   expect(__LINE__, HM_REQ, req->_ty);
+  expect(__LINE__, HMMT_GET, req->method_ty);
+  expect_str(__LINE__, "GET /hello.html HTTP/1.1", req->request_line);
   expect_str(__LINE__, "GET", req->method);
   expect_str(__LINE__, "/hello.html", req->request_uri);
   expect_str(__LINE__, "HTTP/1.1", req->http_version);
@@ -455,31 +468,32 @@ static void test_HttpMessage_parse() {
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
-  expect(__LINE__, HM_REQ, req->_ty);
-  expect_str(__LINE__, "GET", req->method);
+  expect(__LINE__, E_Okay, ex->ty);
+  expect(__LINE__, HMMT_GET, req->method_ty);
   delete_HttpMessage(req);
 
   //
   // empty request
   //
   f = tmpfile();
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
-  expect_ptr(__LINE__, NULL, req);
+  expect(__LINE__, HM_EmptyRequest, ex->ty);
 
   //
   // few SP in Request-Line
   //
   f = tmpfile();
-  fprintf(f, "GET /hello.html\r\n"
+  fprintf(f, "GET /hello.htmlHTTP/1.1\r\n"
              "Host: localhost\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
-  expect_ptr(__LINE__, NULL, req);
+  expect(__LINE__, HM_BadRequest, ex->ty);
+  expect_str(__LINE__, "GET /hello.htmlHTTP/1.1", req->request_line);
 
   //
   // empty Method
@@ -489,9 +503,9 @@ static void test_HttpMessage_parse() {
              "Host: localhost\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
-  expect_ptr(__LINE__, NULL, req);
+  expect(__LINE__, HM_BadRequest, ex->ty);
 
   //
   // Empty key in message-header
@@ -501,9 +515,10 @@ static void test_HttpMessage_parse() {
              ": localhost\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, false);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
   fclose(f);
-  expect_ptr(__LINE__, NULL, req);
+  expect(__LINE__, HM_BadRequest, ex->ty);
+  expect(__LINE__, HMMT_GET, req->method_ty);
 }
 
 static void test_HttpMessage_write() {
@@ -540,8 +555,17 @@ static void test_HttpMessage_write() {
   delete_HttpMessage(res);
 }
 
+void test_read_line() {
+  char *str = "HTTP/1.1 200 OK\r\n";
+  FILE *f = tmpfile();
+  fputs(str, f);
+  rewind(f);
+  expect_str(__LINE__, "HTTP/1.1 200 OK", read_line(f));
+}
+
 void run_all_test_net() {
   test_url_decode();
+  test_read_line();
   test_HttpMessage_parse();
   test_HttpMessage_write();
 }

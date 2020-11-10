@@ -74,6 +74,7 @@ typedef struct {
   HttpMessageType _ty; // for internal: type of message(request/response)
 
   // start-line (Request-Line|Status-Line)
+  char *request_line; // for log
   char *method;
   HttpMessageMethodType method_ty;
   char *request_uri;
@@ -93,7 +94,7 @@ typedef struct {
 
 HttpMessage *new_HttpMessage(HttpMessageType ty);
 void delete_HttpMessage(HttpMessage *);
-HttpMessage *HttpMessage_parse(FILE *, HttpMessageType, bool);
+HttpMessage *HttpMessage_parse(FILE *, HttpMessageType, Exception *, bool);
 void HttpMessage_write(HttpMessage *, FILE *);
 
 void run_all_test_net();
