@@ -264,8 +264,8 @@ static char *formatted_time(struct tm *t_tm, long timezone) {
 
   strftime(date, 20 + 1, "%d/%b/%Y:%H:%M:%S", t_tm);
   sprintf(buf, "%s %+03d%02d", date,
-          (int)-timezone / (60 * 60),      // hour of timezone
-          abs(timezone) % (60 * 60) / 60); // minute of timezone
+          (int)-timezone / (60 * 60),           // hour of timezone
+          abs((int)timezone) % (60 * 60) / 60); // minute of timezone
   return buf;
 }
 
