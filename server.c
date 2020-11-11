@@ -365,6 +365,8 @@ static void test_new_HttpResponse() {
   res = new_HttpResponse(req, opt, ex);
   expect_str(__LINE__, "200", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
+
+  free(ex);
 }
 
 static void test_file_read() {
