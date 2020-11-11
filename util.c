@@ -79,10 +79,6 @@ void Map_put(Map *map, char *key, void *val) {
   Vector_push(map->vals, val);
 }
 
-/**
- * @return value
- * @return NULL key is not found
- */
 void *Map_get(Map *map, char *key) {
   for (int i = map->keys->len - 1; i >= 0; i--) {
     if (strcmp(map->keys->data[i], key) == 0) {
@@ -105,6 +101,12 @@ StringBuffer *new_StringBuffer() {
   sb->_buf = calloc(sb->_buf_siz, sizeof(char));
 
   return sb;
+}
+
+void delete_StringBuffer(StringBuffer *sb) {
+  delete_Vector(sb->_body);
+  free(sb->_buf);
+  free(sb);
 }
 
 void StringBuffer_append(StringBuffer *sb, char *string) {
@@ -140,12 +142,6 @@ char *StringBuffer_toString(StringBuffer *sb) {
   strcat(str, sb->_buf);
 
   return str;
-}
-
-void delete_StringBuffer(StringBuffer *sb) {
-  delete_Vector(sb->_body);
-  free(sb->_buf);
-  free(sb);
 }
 
 int *intdup(int n) {

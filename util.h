@@ -47,6 +47,10 @@ typedef struct {
 Map *new_Map();
 void delete_Map(Map *);
 void Map_put(Map *, char *, void *);
+/**
+ * @return value
+ * @return NULL key is not found
+ */
 void *Map_get(Map *, char *);
 
 typedef struct {
@@ -59,10 +63,10 @@ typedef struct {
 } StringBuffer;
 
 StringBuffer *new_StringBuffer();
+void delete_StringBuffer(StringBuffer *);
 void StringBuffer_append(StringBuffer *sb, char *string);
 void StringBuffer_appendChar(StringBuffer *sb, char c);
 char *StringBuffer_toString(StringBuffer *);
-void delete_StringBuffer(StringBuffer *);
 
 int *intdup(int);
 
