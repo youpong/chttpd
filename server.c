@@ -418,7 +418,7 @@ static void test_write_log() {
   //
 
   // clang-format off
-  expect_str(__LINE__,
+  char *expected =
     "0.0.0.0 "                      // client ip addr
     "- "                            // client identity(identd)
     "- "                            // user id
@@ -427,10 +427,18 @@ static void test_write_log() {
     "200 "                          // Status-Code
     "199 "                          // content length
     "\"http://localhost:8080/hello2.html\" " // Referer
-    "\"Dali/0.1\"",               // User-Agent
-    buf);
+    "\"Dali/0.1\"";                // User-Agent
   // clang-format on
-
+  expect(__LINE__, strlen(expected), strlen(buf));
+  int i = 0; 
+  for (; expected[i] != '['; i++) 
+    expect(__LINE__, expected[i], buf[i]);
+  // skip between '[' and ']'
+  for (; expected[i] != ']'; i++)
+    ; 
+  for (; expected[i] != '\0'; i++) 
+    expect(__LINE__, expected[i], buf[i]);
+  
   free(ex);
 }
 
