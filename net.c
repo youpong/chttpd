@@ -145,9 +145,10 @@ void url_decode(char *dest, char *src) {
 // http
 //
 
-static bool consume(FILE *f, char c);
 static void request_line(FILE *f, HttpMessage *req, Exception *);
 static void message_header(FILE *f, HttpMessage *req, Exception *);
+static char *read_line(FILE *f);
+static bool consume(FILE *f, char c);
 
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
@@ -210,8 +211,6 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
 
   return msg;
 }
-
-static char *read_line(FILE *f);
 
 static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
   char *p, *p0;
@@ -277,29 +276,6 @@ bad_request:
   return;
 }
 
-static char *read_line(FILE *f) {
-  char *ret;
-  StringBuffer *sb = new_StringBuffer();
-
-  int c;
-  while ((c = fgetc(f)) != EOF) {
-    if (c == '\r') {
-      consume(f, '\n');
-      break;
-    }
-    StringBuffer_appendChar(sb, c);
-  }
-  if (c == EOF) {
-    delete_StringBuffer(sb);
-    return NULL;
-  }
-
-  ret = StringBuffer_toString(sb);
-  delete_StringBuffer(sb);
-
-  return ret;
-}
-
 static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
   char *key, *value;
   char *p, *line;
@@ -335,6 +311,29 @@ bad_request:
   ex->ty = HM_BadRequest;
   free(line);
   return;
+}
+
+static char *read_line(FILE *f) {
+  char *ret;
+  StringBuffer *sb = new_StringBuffer();
+
+  int c;
+  while ((c = fgetc(f)) != EOF) {
+    if (c == '\r') {
+      consume(f, '\n');
+      break;
+    }
+    StringBuffer_appendChar(sb, c);
+  }
+  if (c == EOF) {
+    delete_StringBuffer(sb);
+    return NULL;
+  }
+
+  ret = StringBuffer_toString(sb);
+  delete_StringBuffer(sb);
+
+  return ret;
 }
 
 static bool consume(FILE *f, char expected) {
