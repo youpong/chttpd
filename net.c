@@ -422,6 +422,14 @@ static void test_url_decode() {
   expect_str(__LINE__, "%3", buf);
 }
 
+static void test_read_line() {
+  char *str = "HTTP/1.1 200 OK\r\n";
+  FILE *f = tmpfile();
+  fputs(str, f);
+  rewind(f);
+  expect_str(__LINE__, "HTTP/1.1 200 OK", read_line(f));
+}
+
 static void test_HttpMessage_parse() {
   FILE *f = tmpfile();
   HttpMessage *req;
@@ -539,14 +547,6 @@ static void test_HttpMessage_write() {
   expect(__LINE__, '\0', *p);
 
   delete_HttpMessage(res);
-}
-
-void test_read_line() {
-  char *str = "HTTP/1.1 200 OK\r\n";
-  FILE *f = tmpfile();
-  fputs(str, f);
-  rewind(f);
-  expect_str(__LINE__, "HTTP/1.1 200 OK", read_line(f));
 }
 
 void run_all_test_net() {
