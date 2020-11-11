@@ -18,7 +18,7 @@ static File *new_File2(char *parent_path, char *child_path);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
-static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
+static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
   Exception *ex = calloc(1, sizeof(Exception));
@@ -224,9 +224,10 @@ static bool is_locked();
 static int lock();
 static void unlock();
 
-static void write_log(FILE *out, Socket *sock, time_t *req_time,
-                      HttpMessage *req, HttpMessage *res) {
+static int write_log(FILE *out, Socket *sock, time_t *req_time,
+                     HttpMessage *req, HttpMessage *res) {
   struct tm req_tm;
+  int size;
   localtime_r(req_time, &req_tm);
 
   do {
@@ -237,7 +238,7 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
 
   char *buf;
   // clang-format off
-  fprintf(out, "%s - - [%s] \"%s\" %s %s \"%s\" \"%s\"\n",
+  size = fprintf(out, "%s - - [%s] \"%s\" %s %s \"%s\" \"%s\"\n",
 	  inet_ntoa(sock->addr->sin_addr),
 	  buf = formatted_time(&req_tm, timezone),
 	  req->request_line,
@@ -250,6 +251,8 @@ static void write_log(FILE *out, Socket *sock, time_t *req_time,
 
   unlock();
   free(buf);
+
+  return size;
 }
 
 /**
@@ -381,10 +384,10 @@ static void test_file_read() {
 }
 
 static void test_write_log() {
-  Exception *ex = calloc(1, sizeof(Exception));
   //
   // write log
   //
+  Exception *ex = calloc(1, sizeof(Exception));
   Socket *sock = new_ServerSocket(8081, ex);
 
   HttpMessage *req = new_HttpMessage(HM_REQ);
@@ -397,21 +400,18 @@ static void test_write_log() {
   header_put(res, "Content-Length", "199");
 
   time_t req_time = 1602737916;
-  FILE *log = fopen("log", "w");
-  write_log(log, sock, &req_time, req, res);
-  fclose(log);
+  FILE *log = tmpfile();
+  int len = write_log(log, sock, &req_time, req, res);
   delete_HttpMessage(req);
   delete_HttpMessage(res);
 
   //
   // read log
   //
-
-  File *f = new_File("log");
-  char *buf = malloc(f->len);
-  file_read(f, buf);
-  delete_File(f);
-  unlink("log");
+  rewind(log);
+  char *buf = malloc(len - strlen("\n") + 1);
+  fgets(buf, len - strlen("\n") + 1, log);
+  fclose(log);
 
   //
   // check
@@ -427,7 +427,7 @@ static void test_write_log() {
     "200 "                          // Status-Code
     "199 "                          // content length
     "\"http://localhost:8080/hello2.html\" " // Referer
-    "\"Dali/0.1\"\n",               // User-Agent
+    "\"Dali/0.1\"",               // User-Agent
     buf);
   // clang-format on
 

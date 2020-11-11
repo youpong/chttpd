@@ -1,4 +1,4 @@
-CC = clang
+#CC = clang
 
 # _POSIX_C_SOURCE: fdopen(3)
 # _DEFAULT_SOURCE: timezone
