@@ -83,6 +83,22 @@ char *extension(char *path) {
   return strdup(p + 1);
 }
 
+static void test_new_File() {
+  File *file;
+
+  // normal case
+  file = new_File("LICENSE");
+  expect(__LINE__, 1064, file->len);
+  expect(__LINE__, F_FILE, file->ty);
+  expect_str(__LINE__, "LICENSE", file->path);
+  delete_File(file);
+
+  // file not found
+  file = new_File("LICENSE.");
+  expect_ptr(__LINE__, NULL, file);
+  delete_File(file);
+}
+
 static void test_parent_path() {
   // clang-format off
   // absolute path
@@ -113,25 +129,9 @@ static void test_extension() {
   // clang-format on
 }
 
-static void test_new_File() {
-  File *file;
-
-  // normal case
-  file = new_File("LICENSE");
-  expect(__LINE__, 1064, file->len);
-  expect(__LINE__, F_FILE, file->ty);
-  expect_str(__LINE__, "LICENSE", file->path);
-  delete_File(file);
-
-  // file not found
-  file = new_File("LICENSE.");
-  expect_ptr(__LINE__, NULL, file);
-  delete_File(file);
-}
-
 void run_all_test_file() {
+  test_new_File();
   test_parent_path();
   test_filename();
   test_extension();
-  test_new_File();
 }
