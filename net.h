@@ -27,9 +27,9 @@ typedef struct {
   FILE *ops; // Output Stream
 } Socket;
 
-Socket *new_ServerSocket(int);
+Socket *new_ServerSocket(int, Exception *);
 void delete_Socket(Socket *);
-Socket *ServerSocket_accept(Socket *);
+Socket *ServerSocket_accept(Socket *, Exception *);
 
 void url_decode(char *dest, char *src);
 

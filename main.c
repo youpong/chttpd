@@ -13,17 +13,18 @@ static void run_all_test_main();
 void run_all_test_server();
 
 static Map *new_MimeMap();
-static Option *Option_parse(int argc, char **argv);
+static Option *Option_parse(int argc, char **argv, Exception *ex);
 static void print_usage(char *);
 
 Map *MimeMap;
 
 int main(int argc, char **argv) {
+  Exception *ex = calloc(1, sizeof(Exception));
 
-  Option *opt = Option_parse(argc, argv);
-  if (opt == NULL) {
-    fprintf(stderr, "%s\n", ErrorMsg);
-    print_usage(argv[0]);
+  Option *opt = Option_parse(argc, argv, ex);
+  if (ex->ty != E_Okay) {
+    fprintf(stderr, "%s\n", ex->msg);
+    print_usage(opt->prog_name);
     return EXIT_FAILURE;
   }
 
@@ -36,8 +37,9 @@ int main(int argc, char **argv) {
   server_start(opt);
 
   // System will delete bellow objects soon.
-  // - MimeMap
-  // - opt
+  // - Map       MimeMap
+  // - Option    opt
+  // - Exception ex
 
   return EXIT_SUCCESS;
 }
@@ -56,7 +58,7 @@ static Map *new_MimeMap() {
   return map;
 }
 
-static Option *Option_parse(int argc, char **argv) {
+static Option *Option_parse(int argc, char **argv, Exception *ex) {
   Args *args = new_Args(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
 
@@ -76,7 +78,7 @@ static Option *Option_parse(int argc, char **argv) {
     }
     if (strcmp(arg, "-r") == 0) {
       if (!Args_hasNext(args)) {
-        ErrorMsg = "option require an argument -- 'r'";
+        ex->msg = "option require an argument -- 'r'";
         goto IllegalArgument;
       }
       opts->document_root = strdup(Args_next(args));
@@ -84,7 +86,7 @@ static Option *Option_parse(int argc, char **argv) {
     }
     if (strcmp(arg, "-l") == 0) {
       if (!Args_hasNext(args)) {
-        ErrorMsg = "option require an argument -- 'l'";
+        ex->msg = "option require an argument -- 'l'";
         goto IllegalArgument;
       }
       opts->access_log = strdup(Args_next(args));
@@ -96,14 +98,14 @@ static Option *Option_parse(int argc, char **argv) {
     //
     if (opts->port < 0) {
       if (atoi(arg) < 0) {
-        ErrorMsg = "PORT must be non-negative";
+        ex->msg = "PORT must be non-negative";
         goto IllegalArgument;
       }
       opts->port = atoi(arg);
       continue;
     }
 
-    ErrorMsg = "too many arguments";
+    ex->msg = "too many arguments";
     goto IllegalArgument;
   }
   delete_Args(args);
@@ -127,9 +129,9 @@ static Option *Option_parse(int argc, char **argv) {
   // catch parse error
   //
 IllegalArgument:
+  ex->ty = O_IllegalArgument;
   delete_Args(args);
-  free(opts);
-  return NULL;
+  return opts;
 }
 
 static void print_usage(char *prog_name) {
@@ -140,13 +142,15 @@ static void print_usage(char *prog_name) {
 
 static void test_Option_parse() {
   Option *opt;
+  Exception *ex = calloc(1, sizeof(Exception));
 
   //
   // normal cases...
   //
 
   char *arg_min[] = {"./httpd"};
-  opt = Option_parse(1, arg_min);
+  opt = Option_parse(1, arg_min, ex);
+  expect(__LINE__, ex->ty, E_Okay);
   expect(__LINE__, opt->port, 8088);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
@@ -154,7 +158,7 @@ static void test_Option_parse() {
   free(opt);
 
   char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
-  opt = Option_parse(6, arg_full);
+  opt = Option_parse(6, arg_full, ex);
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
@@ -162,13 +166,13 @@ static void test_Option_parse() {
   free(opt);
 
   char *test_opt[] = {"./httpd", "-test"};
-  opt = Option_parse(2, test_opt);
+  opt = Option_parse(2, test_opt, ex);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
   free(opt);
 
   char *arg_port[] = {"./httpd", "80"};
-  opt = Option_parse(2, arg_port);
+  opt = Option_parse(2, arg_port, ex);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect(__LINE__, 80, opt->port);
   free(opt);
@@ -178,21 +182,19 @@ static void test_Option_parse() {
   //
 
   char *arg_omit[] = {"./httpd", "-r"};
-  opt = Option_parse(2, arg_omit);
-  expect_ptr(__LINE__, NULL, opt);
-  expect_str(__LINE__, "option require an argument -- 'r'", ErrorMsg);
+  opt = Option_parse(2, arg_omit, ex);
+  expect(__LINE__, ex->ty, O_IllegalArgument);
+  expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
   free(opt);
 
   char *arg_neg[] = {"./httpd", "-1"};
-  opt = Option_parse(2, arg_neg);
-  expect_ptr(__LINE__, NULL, opt);
-  expect_str(__LINE__, "PORT must be non-negative", ErrorMsg);
+  opt = Option_parse(2, arg_neg, ex);
+  expect_str(__LINE__, "PORT must be non-negative", ex->msg);
   free(opt);
 
   char *arg_many[] = {"./httpd", "80", "80"};
-  opt = Option_parse(3, arg_many);
-  expect_ptr(__LINE__, NULL, opt);
-  expect_str(__LINE__, "too many arguments", ErrorMsg);
+  opt = Option_parse(3, arg_many, ex);
+  expect_str(__LINE__, "too many arguments", ex->msg);
   free(opt);
 }
 

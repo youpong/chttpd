@@ -33,12 +33,12 @@ void delete_Socket(Socket *sock) {
   free(sock);
 }
 
-Socket *new_ServerSocket(int port) {
+Socket *new_ServerSocket(int port, Exception *ex) {
   Socket *sv_sock = new_Socket(S_SRV);
 
   /* create a socket, endpoint of connection */
   if ((sv_sock->_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    ErrorMsg = "socket";
+    ex->msg = "socket";
     return NULL;
   }
 
@@ -48,33 +48,33 @@ Socket *new_ServerSocket(int port) {
   addr->sin_port = htons(port);
   addr->sin_addr.s_addr = INADDR_ANY;
   if (bind(sv_sock->_fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
-    ErrorMsg = "bind";
+    ex->msg = "bind";
     return NULL;
   }
 
   /* listen */
   if (listen(sv_sock->_fd, LISTEN_QUEUE) == -1) {
-    ErrorMsg = "listen";
+    ex->msg = "listen";
     return NULL;
   }
 
   return sv_sock;
 }
 
-Socket *ServerSocket_accept(Socket *sv_sock) {
+Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
   Socket *sock = new_Socket(S_CLT);
 
   if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
                           &sock->addr_len)) < 0) {
-    ErrorMsg = "accept";
+    ex->msg = "accept";
     return NULL;
   }
   if ((sock->ips = fdopen(sock->_fd, "r")) == NULL) {
-    ErrorMsg = "fdopen";
+    ex->msg = "fdopen";
     return NULL;
   }
   if ((sock->ops = fdopen(sock->_fd, "w")) == NULL) {
-    ErrorMsg = "fdopen";
+    ex->msg = "fdopen";
     return NULL;
   }
 

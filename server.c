@@ -21,15 +21,17 @@ static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
 static void write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
+  Exception *ex = calloc(1, sizeof(Exception));
+
   FILE *log = fopen(opt->access_log, "a");
   if (log == NULL) {
     perror("fopen");
     exit(1);
   }
 
-  Socket *sv_sock = new_ServerSocket(opt->port);
+  Socket *sv_sock = new_ServerSocket(opt->port, ex);
   if (sv_sock == NULL)
-    error("Error: new_ServerSock: %s: %s", ErrorMsg, strerror(errno));
+    error("Error: new_ServerSock: %s: %s", ex->msg, strerror(errno));
   printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
          ntohs(sv_sock->addr->sin_port));
 
@@ -41,9 +43,9 @@ void server_start(Option *opt) {
       exit(1);
     case 0: // child
       while (true) {
-        Socket *sock = ServerSocket_accept(sv_sock);
+        Socket *sock = ServerSocket_accept(sv_sock, ex);
         if (sock == NULL)
-          error("Error: ServerSock_accept: %s: %s", ErrorMsg, strerror(errno));
+          error("Error: ServerSock_accept: %s: %s", ex->msg, strerror(errno));
         printf("open pid: %d, address: %s, port: %d\n", getpid(),
                inet_ntoa(sock->addr->sin_addr), ntohs(sock->addr->sin_port));
         handle_connection(sock, log, opt);
@@ -59,6 +61,7 @@ void server_start(Option *opt) {
 
   fclose(log);
   delete_Socket(sv_sock);
+  free(ex);
 }
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt) {
@@ -85,6 +88,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
     delete_HttpMessage(req);
     delete_HttpMessage(res);
   }
+  free(ex);
 }
 
 static int file_read(File *file, char *dest); // extern ?
@@ -375,10 +379,11 @@ static void test_file_read() {
 }
 
 static void test_write_log() {
+  Exception *ex = calloc(1, sizeof(Exception));
   //
   // write log
   //
-  Socket *sock = new_ServerSocket(8081);
+  Socket *sock = new_ServerSocket(8081, ex);
 
   HttpMessage *req = new_HttpMessage(HM_REQ);
   req->request_line = strdup("GET /hello.html HTTP/1.1");
@@ -423,6 +428,8 @@ static void test_write_log() {
     "\"Dali/0.1\"\n",               // User-Agent
     buf);
   // clang-format on
+
+  free(ex);
 }
 
 static void test_get_mime_type() {

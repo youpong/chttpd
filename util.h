@@ -9,6 +9,7 @@ typedef enum {
   E_Okay,
   HM_EmptyRequest,
   HM_BadRequest,
+  O_IllegalArgument,
 } ExceptionType;
 
 typedef struct {
@@ -66,7 +67,6 @@ void delete_StringBuffer(StringBuffer *);
 int *intdup(int);
 
 noreturn void error(char *, ...);
-extern char *ErrorMsg;
 
 // test
 // __LINE__
