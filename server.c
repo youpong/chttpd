@@ -430,15 +430,15 @@ static void test_write_log() {
     "\"Dali/0.1\"";                // User-Agent
   // clang-format on
   expect(__LINE__, strlen(expected), strlen(buf));
-  int i = 0; 
-  for (; expected[i] != '['; i++) 
+  int i = 0;
+  for (; expected[i] != '['; i++)
     expect(__LINE__, expected[i], buf[i]);
   // skip between '[' and ']'
   for (; expected[i] != ']'; i++)
-    ; 
-  for (; expected[i] != '\0'; i++) 
+    ;
+  for (; expected[i] != '\0'; i++)
     expect(__LINE__, expected[i], buf[i]);
-  
+
   free(ex);
 }
 
