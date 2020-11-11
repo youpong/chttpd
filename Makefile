@@ -3,7 +3,8 @@
 # _POSIX_C_SOURCE: fdopen(3)
 # _DEFAULT_SOURCE: timezone
 # refer to feature_test_macros(7)
-CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
+#CFLAGS = -g -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
+CFLAGS = -g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 
 # efence: electric fence
 # libc: fdopen(3)
