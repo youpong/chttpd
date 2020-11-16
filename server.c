@@ -127,19 +127,33 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts,
     // HTTP-Version
     res->http_version = strdup(HTTP_VERSION);
 
+    // Server
+    header_put(res, "Server", SERVER_NAME);
+
     // Status-Code, Reason-Phrase
     file = new_File2(opts->document_root, req->filename);
     if (file != NULL && file->ty == F_FILE) {
       res->status_code = strdup("200");
       res->reason_phrase = strdup("OK");
     } else {
-      file = new_File2(opts->document_root, "/error.html");
       res->status_code = strdup("404");
       res->reason_phrase = strdup("Not Found");
+      header_put(res, "Content-Type", "text/html");
+      res->body = strdup("<html>\n"
+                         "<head><title>400 Bad Request</title></head>\n"
+                         "<body>\n"
+                         "<center><h1>400 Bad Request</h1></center>\n"
+                         "</body>\n"
+                         "</html>\n");
+      res->body_len = strlen(res->body);
+      if (req->method_ty == HMMT_HEAD) {
+        free(res->body);
+        res->body = NULL;
+      }
+      sprintf(buf, "%d", res->body_len);
+      header_put(res, "Content-Length", buf);
+      return res;
     }
-
-    // Server
-    header_put(res, "Server", SERVER_NAME);
 
     // Content-Type
     header_put(res, "Content-Type", get_mime_type(file->path));
