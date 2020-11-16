@@ -1,3 +1,4 @@
+![C/C++ CI](https://github.com/youpong/chttpd/workflows/C/C++%20CI/badge.svg)
 # Web Server
 
 A multi-process HTTP 1.1 Server implemented in C,
