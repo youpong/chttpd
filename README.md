@@ -1,13 +1,14 @@
 # Web Server
 
-A simple multi-process HTTP 1.1 Server implemented in C.
+A multi-process HTTP 1.1 Server implemented in C,
+records apache-like access logs.
 
 This software is released under MIT license.
 
 
 ## RUNNING
 
-The web server runs on Ubuntu-20.
+The web server runs on Ubuntu-20.04 x86_64.
 
 To start the server, run the following command:
 
