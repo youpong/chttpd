@@ -1,10 +1,11 @@
 ![C/C++ CI](https://github.com/youpong/chttpd/workflows/C/C++%20CI/badge.svg)
+
 # Web Server
 
 A multi-process HTTP 1.1 Server implemented in C,
 records apache-like access logs.
 
-This software is released under MIT license.
+This software is released under [MIT license](./LICENSE).
 
 
 ## RUNNING
@@ -45,6 +46,8 @@ Run the following command:
 $ make check
 ```
 
+## Reference
 
-
+*  https://www.rfc-editor.org/rfc/rfc7230.html Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing
+*  https://httpd.apache.org/docs/2.4/en/logs.html Apache HTTP Server V2.4 Log Files
 
