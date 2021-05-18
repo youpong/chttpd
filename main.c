@@ -4,9 +4,15 @@
 
 #include <arpa/inet.h>  // inet_ntoa(3)
 #include <netinet/in.h> // inet_ntoa(3)
+#include <setjmp.h>     // setjmp(3)
 #include <stdlib.h>     // atoi(3)
 #include <string.h>     // strcmp(3)
 #include <sys/socket.h> // inet_ntoa(3)
+
+enum {
+  EX_OK = 0,
+  EX_ILLEGAL_ARG,
+};
 
 static void run_all_test();
 static void run_all_test_main();
@@ -15,15 +21,22 @@ static Map *new_MimeMap();
 static Option *Option_parse(int argc, char **argv, Exception *ex);
 static void print_usage(char *);
 
+jmp_buf g_env;
 Map *MimeMap;
 
 int main(int argc, char **argv) {
+  Option *opt;
   Exception *ex = calloc(1, sizeof(Exception));
 
-  Option *opt = Option_parse(argc, argv, ex);
-  if (ex->ty != E_Okay) {
+  switch (setjmp(g_env)) {
+  case 0:
+    opt = Option_parse(argc, argv, ex);
+    break;
+  case EX_ILLEGAL_ARG:
+    //    ex->ty = O_IllegalArgument;
     fprintf(stderr, "%s\n", ex->msg);
-    print_usage(opt->prog_name);
+    //    print_usage(opt->prog_name);    
+    print_usage(argv[0]);
     return EXIT_FAILURE;
   }
 
@@ -78,7 +91,9 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     if (strcmp(arg, "-r") == 0) {
       if (!Args_hasNext(args)) {
         ex->msg = "option require an argument -- 'r'";
-        goto IllegalArgument;
+        delete_Args(args);
+        longjmp(g_env, EX_ILLEGAL_ARG);
+        // goto IllegalArgument;
       }
       opts->document_root = strdup(Args_next(args));
       continue;
@@ -86,7 +101,9 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     if (strcmp(arg, "-l") == 0) {
       if (!Args_hasNext(args)) {
         ex->msg = "option require an argument -- 'l'";
-        goto IllegalArgument;
+        delete_Args(args);
+        longjmp(g_env, EX_ILLEGAL_ARG);
+        //        goto IllegalArgument;
       }
       opts->access_log = strdup(Args_next(args));
       continue;
@@ -98,16 +115,19 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     if (opts->port < 0) {
       if (atoi(arg) < 0) {
         ex->msg = "PORT must be non-negative";
-        goto IllegalArgument;
+        delete_Args(args);
+        longjmp(g_env, EX_ILLEGAL_ARG);
+        // goto IllegalArgument;
       }
       opts->port = atoi(arg);
       continue;
     }
 
     ex->msg = "too many arguments";
-    goto IllegalArgument;
+    delete_Args(args);
+    longjmp(g_env, EX_ILLEGAL_ARG);
+    //    goto IllegalArgument;
   }
-  delete_Args(args);
 
   //
   // set default values...
@@ -122,15 +142,16 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     opts->access_log = strdup("access.log");
   }
 
+  delete_Args(args);
   return opts;
 
   //
   // catch parse error
   //
-IllegalArgument:
-  ex->ty = O_IllegalArgument;
-  delete_Args(args);
-  return opts;
+  // IllegalArgument:
+  //  ex->ty = O_IllegalArgument;
+  //  delete_Args(args);
+  //  return opts;
 }
 
 static void print_usage(char *prog_name) {
@@ -146,6 +167,13 @@ static void test_Option_parse() {
   //
   // normal cases...
   //
+
+  switch (setjmp(g_env)) {
+  case EX_ILLEGAL_ARG:
+    // TODO: catch
+    // do not come here
+    exit(1);
+  }
 
   char *arg_min[] = {"./httpd"};
   opt = Option_parse(1, arg_min, ex);
@@ -181,20 +209,37 @@ static void test_Option_parse() {
   //
 
   char *arg_omit[] = {"./httpd", "-r"};
-  opt = Option_parse(2, arg_omit, ex);
-  expect(__LINE__, ex->ty, O_IllegalArgument);
-  expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
-  free(opt);
+  switch (setjmp(g_env)) {
+  case 0:
+    opt = Option_parse(2, arg_omit, ex);
+    free(opt);
+    break;
+  case EX_ILLEGAL_ARG:
+    //    expect(__LINE__, ex->ty, O_IllegalArgument);
+    expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
+    break;
+  }
 
   char *arg_neg[] = {"./httpd", "-1"};
-  opt = Option_parse(2, arg_neg, ex);
-  expect_str(__LINE__, "PORT must be non-negative", ex->msg);
-  free(opt);
+  switch (setjmp(g_env)) {
+  case 0:
+    opt = Option_parse(2, arg_neg, ex);
+    free(opt);
+    break;
+  case EX_ILLEGAL_ARG:
+    expect_str(__LINE__, "PORT must be non-negative", ex->msg);
+    break;
+  }
 
   char *arg_many[] = {"./httpd", "80", "80"};
-  opt = Option_parse(3, arg_many, ex);
-  expect_str(__LINE__, "too many arguments", ex->msg);
-  free(opt);
+  switch (setjmp(g_env)) {
+  case 0:
+    opt = Option_parse(3, arg_many, ex);
+    free(opt);
+    break;
+  case EX_ILLEGAL_ARG:
+    expect_str(__LINE__, "too many arguments", ex->msg);
+  }
 }
 
 static void run_all_test_main() {

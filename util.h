@@ -9,7 +9,7 @@ typedef enum {
   E_Okay,
   HM_EmptyRequest,
   HM_BadRequest,
-  O_IllegalArgument,
+  //  O_IllegalArgument,
 } ExceptionType;
 
 typedef struct {
