@@ -10,7 +10,6 @@
 
 static void run_all_test();
 static void run_all_test_main();
-void run_all_test_server();
 
 static Map *new_MimeMap();
 static Option *Option_parse(int argc, char **argv, Exception *ex);
