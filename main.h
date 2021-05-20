@@ -14,6 +14,7 @@ enum {
   EX_OK = 0,
   EX_ILLEGAL_ARG,
   EX_BAD_REQUEST,
+  EX_EMPTY_REQUEST,
 };
 
 typedef struct {

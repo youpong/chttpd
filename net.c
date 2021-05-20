@@ -453,6 +453,14 @@ static void test_HttpMessage_parse() {
   //
   // Normal
   //
+
+  switch (setjmp(g_env)) {
+  case 0:
+    break;
+  default:
+    error("%s:%d: unexpected exception occurred", __FILE__, __LINE__);
+  }
+  
   f = tmpfile();
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "Host: localhost\r\n"
@@ -486,48 +494,72 @@ static void test_HttpMessage_parse() {
   //
   // empty request
   //
-  f = tmpfile();
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
-  fclose(f);
-  expect(__LINE__, HM_EmptyRequest, ex->ty);
+  switch (setjmp(g_env)) {
+  case 0:
+    f = tmpfile();
+    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    fclose(f);
+    break;
+  case EX_EMPTY_REQUEST:
+    expect(__LINE__, HM_EmptyRequest, ex->ty);
+    break;
+  }
 
   //
   // few SP in Request-Line
   //
-  f = tmpfile();
-  fprintf(f, "GET /hello.htmlHTTP/1.1\r\n"
-             "Host: localhost\r\n"
-             "\r\n");
-  rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
-  fclose(f);
-  expect(__LINE__, HM_BadRequest, ex->ty);
-  expect_str(__LINE__, "GET /hello.htmlHTTP/1.1", req->request_line);
+  switch (setjmp(g_env)) {
+  case 0:
+    f = tmpfile();
+    fprintf(f, "GET /hello.htmlHTTP/1.1\r\n"
+	    "Host: localhost\r\n"
+	    "\r\n");
+    rewind(f);
+    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    fclose(f);
+    break;
+  case EX_BAD_REQUEST:
+    expect(__LINE__, HM_BadRequest, ex->ty);
+    expect_str(__LINE__, "GET /hello.htmlHTTP/1.1", req->request_line);
+    break;
+  }
 
   //
   // empty Method
   //
-  f = tmpfile();
-  fprintf(f, " /hello.html HTTP/1.1\r\n"
-             "Host: localhost\r\n"
-             "\r\n");
-  rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
-  fclose(f);
-  expect(__LINE__, HM_BadRequest, ex->ty);
+  switch (setjmp(g_env)) {
+  case 0:
+    f = tmpfile();
+    fprintf(f, " /hello.html HTTP/1.1\r\n"
+	    "Host: localhost\r\n"
+	    "\r\n");
+    rewind(f);
+    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    fclose(f);
+    break;
+  case EX_BAD_REQUEST:
+    expect(__LINE__, HM_BadRequest, ex->ty);
+    break;
+  }
 
   //
   // Empty key in message-header
   //
-  f = tmpfile();
-  fprintf(f, "GET /hello.html HTTP/1.1\r\n"
-             ": localhost\r\n"
-             "\r\n");
-  rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
-  fclose(f);
-  expect(__LINE__, HM_BadRequest, ex->ty);
-  expect(__LINE__, HMMT_GET, req->method_ty);
+  switch (setjmp(g_env)) {
+  case 0:
+    f = tmpfile();
+    fprintf(f, "GET /hello.html HTTP/1.1\r\n"
+	    ": localhost\r\n"
+	    "\r\n");
+    rewind(f);
+    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    fclose(f);
+    break;
+  case EX_BAD_REQUEST:
+    expect(__LINE__, HM_BadRequest, ex->ty);
+    expect(__LINE__, HMMT_GET, req->method_ty);
+    break;
+  }
 }
 
 static void test_HttpMessage_write() {

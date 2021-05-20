@@ -165,10 +165,10 @@ static void test_Option_parse() {
   //
 
   switch (setjmp(g_env)) {
-  case EX_ILLEGAL_ARG:
-    // TODO: catch
-    // do not come here
-    exit(1);
+  case 0:
+    break;
+  default:
+    error("%s:%d: unexpected exception occurred", __FILE__, __LINE__);
   }
 
   char *arg_min[] = {"./httpd"};
