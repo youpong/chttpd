@@ -70,12 +70,18 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
   bool conn_keep_alive = true;
 
   while (conn_keep_alive) {
+    HttpMessage *req;    
     time(&req_time);
 
-    HttpMessage *req = HttpMessage_parse(sock->ips, HM_REQ, ex, opt->debug);
-    if (ex->ty == HM_EmptyRequest)
+    switch (setjmp(g_env)) {
+    case 0:
+      req = HttpMessage_parse(sock->ips, HM_REQ, ex, opt->debug);
       break;
-
+    default:
+      //    if (ex->ty == HM_EmptyRequest)
+      break;
+    }
+    
     HttpMessage *res = new_HttpResponse(req, opt, ex);
 
     HttpMessage_write(res, sock->ops);

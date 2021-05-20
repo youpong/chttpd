@@ -235,6 +235,7 @@ static void test_Option_parse() {
     break;
   case EX_ILLEGAL_ARG:
     expect_str(__LINE__, "too many arguments", ex->msg);
+    break;
   }
 }
 

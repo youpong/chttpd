@@ -1,3 +1,4 @@
+#include "main.h"
 #include "net.h"
 #include "util.h"
 
@@ -8,6 +9,7 @@
 #include <sys/stat.h>  // oepn(2)
 #include <sys/types.h> // open(2)
 #include <unistd.h>    // unlink(2)
+#include <setjmp.h>    // longjmp(3)
 
 //
 // general net
@@ -194,8 +196,8 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
   switch (ty) {
   case HM_REQ:
     request_line(f, msg, ex);
-    if (ex->ty != E_Okay)
-      return msg;
+    //    if (ex->ty != E_Okay)
+    //      return msg;
     break;
   case HM_RES:
     break;
@@ -203,8 +205,8 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
 
   // parse: *(message_header CRLF) CRLF
   message_header(f, msg, ex);
-  if (ex->ty != E_Okay)
-    return msg;
+  //  if (ex->ty != E_Okay)
+  //    return msg;
 
   // parse: [message-body]
   // ...
@@ -276,41 +278,54 @@ bad_request:
   return;
 }
 
+/**
+ * parse
+ * *(message_header CRLF) CRLF
+ * message-header = field-name ":" [field-value]
+ */
 static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
-  char *key, *value;
+  char *field_name, *field_value;
   char *p, *line;
 
   while ((line = read_line(f)) != NULL) {
+    // return if line consists of only CRLF
     if (strlen(line) == 0)
-      break;
+      return;
 
-    // key
-    if ((p = strchr(line, ':')) == NULL)
-      goto bad_request;
+    // parse field-name
+    if ((p = strchr(line, ':')) == NULL) {
+      // goto bad_request;
+      free(line);
+      longjmp(g_env, EX_BAD_REQUEST);
+    }
     *p++ = '\0';
-    key = strdup(line);
+    field_name = strdup(line);
 
     // consume ' '
     if (*p == ' ') {
       p++;
     }
 
-    // value
-    value = strdup(p);
+    // parse field_value
+    field_value = strdup(p);
 
-    Map_put(msg->header_map, key, value);
+    // store set of field_name and field_value to map.
+    Map_put(msg->header_map, field_name, field_value);
     free(line);
 
-    // empty key is invalid
-    if (strlen(key) == 0)
-      goto bad_request;
+    // empty field_name is invalid
+    if (strlen(field_name) == 0) {
+      // goto bad_request;
+      longjmp(g_env, EX_BAD_REQUEST);
+    }
   }
-  return;
+  
+  // return;
 
-bad_request:
-  ex->ty = HM_BadRequest;
-  free(line);
-  return;
+  //bad_request:
+  //  ex->ty = HM_BadRequest;
+  //  free(line);
+  //  return;
 }
 
 static char *read_line(FILE *f) {
