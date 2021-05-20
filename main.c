@@ -9,10 +9,6 @@
 #include <string.h>     // strcmp(3)
 #include <sys/socket.h> // inet_ntoa(3)
 
-enum {
-  EX_OK = 0,
-  EX_ILLEGAL_ARG,
-};
 
 static void run_all_test();
 static void run_all_test_main();
