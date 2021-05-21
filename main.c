@@ -9,7 +9,6 @@
 #include <string.h>     // strcmp(3)
 #include <sys/socket.h> // inet_ntoa(3)
 
-
 static void run_all_test();
 static void run_all_test_main();
 
@@ -31,7 +30,7 @@ int main(int argc, char **argv) {
   case EX_ILLEGAL_ARG:
     //    ex->ty = O_IllegalArgument;
     fprintf(stderr, "%s\n", ex->msg);
-    //    print_usage(opt->prog_name);    
+    //    print_usage(opt->prog_name);
     print_usage(argv[0]);
     return EXIT_FAILURE;
   }

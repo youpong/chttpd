@@ -1,15 +1,15 @@
-#include "main.h"
 #include "net.h"
+#include "main.h"
 #include "util.h"
 
 #include <assert.h>    // assert(3)
 #include <fcntl.h>     // open(2)
+#include <setjmp.h>    // longjmp(3)
 #include <stdlib.h>    // malloc(3)
 #include <string.h>    // strdup(3)
 #include <sys/stat.h>  // oepn(2)
 #include <sys/types.h> // open(2)
 #include <unistd.h>    // unlink(2)
-#include <setjmp.h>    // longjmp(3)
 
 //
 // general net
@@ -185,15 +185,24 @@ void delete_HttpMessage(HttpMessage *msg) {
  * @return NULL when read null request.
  *
  * Refer to document for declaration of typedef HttpMessage.
+ *
+ * -- sample code --
+ * switch (setjmp(g_env)) {
+ * case 0:
+ *   HttpMessage *msg = new_HttpMessage(HM_REQ);
+ *   HttpMessage_parse(f, msg, ex, false); // throws exception
+ *   break;
+ * case EX_BAD_REQUEST:
+ *   break;
+ * }
  */
-HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
-                               bool debug) {
-  assert(ty == HM_REQ); // not implemented HM_RES yet.
-
-  HttpMessage *msg = new_HttpMessage(ty);
+void HttpMessage_parse(FILE *f, HttpMessage *msg, Exception *ex, bool debug) {
+  //  assert(ty == HM_REQ); // not implemented HM_RES yet.
+  // HttpMessage *msg = new_HttpMessage(ty);
+  assert(msg->_ty == HM_REQ); // not implemented HM_RES yet.
 
   // parse: start-line = Request-Line | Status-Line
-  switch (ty) {
+  switch (msg->_ty) {
   case HM_REQ:
     request_line(f, msg, ex);
     //    if (ex->ty != E_Okay)
@@ -211,7 +220,7 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
   // parse: [message-body]
   // ...
 
-  return msg;
+  //  return msg;
 }
 
 static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
@@ -229,15 +238,21 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
   msg->request_line = strdup(line);
 
   // method
-  if ((p = strchr(line, ' ')) == NULL)
-    goto bad_request;
+  if ((p = strchr(line, ' ')) == NULL) {
+    // goto bad_request;
+    free(line);
+    longjmp(g_env, EX_BAD_REQUEST);
+  }
   *p = '\0';
   msg->method = strdup(line);
 
   // request_uri
   p0 = ++p;
-  if ((p = strchr(p0, ' ')) == NULL)
-    goto bad_request;
+  if ((p = strchr(p0, ' ')) == NULL) {
+    // goto bad_request;
+    free(line);
+    longjmp(g_env, EX_BAD_REQUEST);
+  }
   *p = '\0';
   msg->request_uri = calloc(strlen(p0) + 1, sizeof(char));
   url_decode(msg->request_uri, p0);
@@ -319,10 +334,10 @@ static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
       longjmp(g_env, EX_BAD_REQUEST);
     }
   }
-  
+
   // return;
 
-  //bad_request:
+  // bad_request:
   //  ex->ty = HM_BadRequest;
   //  free(line);
   //  return;
@@ -460,13 +475,14 @@ static void test_HttpMessage_parse() {
   default:
     error("%s:%d: unexpected exception occurred", __FILE__, __LINE__);
   }
-  
+
   f = tmpfile();
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "Host: localhost\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
+  req = new_HttpMessage(HM_REQ);
+  HttpMessage_parse(f, req, ex, false);
   fclose(f);
   expect(__LINE__, HM_REQ, req->_ty);
   expect(__LINE__, HMMT_GET, req->method_ty);
@@ -485,7 +501,8 @@ static void test_HttpMessage_parse() {
   fprintf(f, "GET /hello.html HTTP/1.1\r\n"
              "\r\n");
   rewind(f);
-  req = HttpMessage_parse(f, HM_REQ, ex, false);
+  req = new_HttpMessage(HM_REQ);
+  HttpMessage_parse(f, req, ex, false);
   fclose(f);
   expect(__LINE__, E_Okay, ex->ty);
   expect(__LINE__, HMMT_GET, req->method_ty);
@@ -497,13 +514,15 @@ static void test_HttpMessage_parse() {
   switch (setjmp(g_env)) {
   case 0:
     f = tmpfile();
-    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    req = new_HttpMessage(HM_REQ);
+    HttpMessage_parse(f, req, ex, false);
     fclose(f);
     break;
   case EX_EMPTY_REQUEST:
     expect(__LINE__, HM_EmptyRequest, ex->ty);
     break;
   }
+  delete_HttpMessage(req);
 
   //
   // few SP in Request-Line
@@ -512,17 +531,19 @@ static void test_HttpMessage_parse() {
   case 0:
     f = tmpfile();
     fprintf(f, "GET /hello.htmlHTTP/1.1\r\n"
-	    "Host: localhost\r\n"
-	    "\r\n");
+               "Host: localhost\r\n"
+               "\r\n");
     rewind(f);
-    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    req = new_HttpMessage(HM_REQ);
+    HttpMessage_parse(f, req, ex, false);
     fclose(f);
     break;
   case EX_BAD_REQUEST:
-    expect(__LINE__, HM_BadRequest, ex->ty);
+    // expect(__LINE__, HM_BadRequest, ex->ty);
     expect_str(__LINE__, "GET /hello.htmlHTTP/1.1", req->request_line);
     break;
   }
+  delete_HttpMessage(req);
 
   //
   // empty Method
@@ -531,16 +552,18 @@ static void test_HttpMessage_parse() {
   case 0:
     f = tmpfile();
     fprintf(f, " /hello.html HTTP/1.1\r\n"
-	    "Host: localhost\r\n"
-	    "\r\n");
+               "Host: localhost\r\n"
+               "\r\n");
     rewind(f);
-    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    req = new_HttpMessage(HM_REQ);
+    HttpMessage_parse(f, req, ex, false);
     fclose(f);
     break;
   case EX_BAD_REQUEST:
     expect(__LINE__, HM_BadRequest, ex->ty);
     break;
   }
+  delete_HttpMessage(req);
 
   //
   // Empty key in message-header
@@ -549,10 +572,11 @@ static void test_HttpMessage_parse() {
   case 0:
     f = tmpfile();
     fprintf(f, "GET /hello.html HTTP/1.1\r\n"
-	    ": localhost\r\n"
-	    "\r\n");
+               ": localhost\r\n"
+               "\r\n");
     rewind(f);
-    req = HttpMessage_parse(f, HM_REQ, ex, false);
+    req = new_HttpMessage(HM_REQ);
+    HttpMessage_parse(f, req, ex, false);
     fclose(f);
     break;
   case EX_BAD_REQUEST:
@@ -560,6 +584,7 @@ static void test_HttpMessage_parse() {
     expect(__LINE__, HMMT_GET, req->method_ty);
     break;
   }
+  delete_HttpMessage(req);
 }
 
 static void test_HttpMessage_write() {
