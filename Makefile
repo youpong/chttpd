@@ -15,7 +15,7 @@ TARGET = httpd
 SRCS = main.c server.c net.c file.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean format check tags
+.PHONY: all clean format check tags cloc
 
 all: $(TARGET)
 
@@ -27,6 +27,9 @@ format:
 
 tags:
 	etags $(SRCS) *.h
+
+cloc:
+	cloc $(SRCS) *.h
 
 check: $(TARGET)
 	./$(TARGET) -test
