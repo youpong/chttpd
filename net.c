@@ -262,8 +262,11 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
 
   // bad_request: empty field
   if (strlen(msg->method) == 0 || strlen(msg->request_uri) == 0 ||
-      strlen(msg->http_version) == 0)
-    goto bad_request;
+      strlen(msg->http_version) == 0) {
+    // goto bad_request;
+    free(line);
+    longjmp(g_env, EX_BAD_REQUEST);
+  }
 
   //
   // set members
@@ -287,10 +290,10 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
 
   return;
 
-bad_request:
-  ex->ty = HM_BadRequest;
-  free(line);
-  return;
+  // bad_request:
+  //  ex->ty = HM_BadRequest;
+  //  free(line);
+  //  return;
 }
 
 /**
@@ -516,10 +519,10 @@ static void test_HttpMessage_parse() {
     f = tmpfile();
     req = new_HttpMessage(HM_REQ);
     HttpMessage_parse(f, req, ex, false);
-    fclose(f);
     break;
   case EX_EMPTY_REQUEST:
     expect(__LINE__, HM_EmptyRequest, ex->ty);
+    fclose(f);
     break;
   }
   delete_HttpMessage(req);
@@ -536,11 +539,10 @@ static void test_HttpMessage_parse() {
     rewind(f);
     req = new_HttpMessage(HM_REQ);
     HttpMessage_parse(f, req, ex, false);
-    fclose(f);
     break;
   case EX_BAD_REQUEST:
-    // expect(__LINE__, HM_BadRequest, ex->ty);
     expect_str(__LINE__, "GET /hello.htmlHTTP/1.1", req->request_line);
+    fclose(f);
     break;
   }
   delete_HttpMessage(req);
@@ -557,10 +559,10 @@ static void test_HttpMessage_parse() {
     rewind(f);
     req = new_HttpMessage(HM_REQ);
     HttpMessage_parse(f, req, ex, false);
-    fclose(f);
     break;
   case EX_BAD_REQUEST:
-    expect(__LINE__, HM_BadRequest, ex->ty);
+    expect(__LINE__, HM_REQ, req->_ty);
+    fclose(f);
     break;
   }
   delete_HttpMessage(req);
@@ -577,11 +579,10 @@ static void test_HttpMessage_parse() {
     rewind(f);
     req = new_HttpMessage(HM_REQ);
     HttpMessage_parse(f, req, ex, false);
-    fclose(f);
     break;
   case EX_BAD_REQUEST:
-    expect(__LINE__, HM_BadRequest, ex->ty);
     expect(__LINE__, HMMT_GET, req->method_ty);
+    fclose(f);
     break;
   }
   delete_HttpMessage(req);
