@@ -13,19 +13,19 @@ static void run_all_test();
 static void run_all_test_main();
 
 static Map *new_MimeMap();
-static Option *Option_parse(int argc, char **argv, Exception *ex);
+static void Option_parse(Option *opts, int argc, char **argv, Exception *ex);
 static void print_usage(char *);
 
 jmp_buf g_env;
 Map *MimeMap;
 
 int main(int argc, char **argv) {
-  Option *opt;
+  Option *opt = calloc(1, sizeof(Option));
   Exception *ex = calloc(1, sizeof(Exception));
 
   switch (setjmp(g_env)) {
   case 0:
-    opt = Option_parse(argc, argv, ex);
+    Option_parse(opt, argc, argv, ex);
     break;
   case EX_ILLEGAL_ARG:
     fprintf(stderr, "%s\n", ex->msg);
@@ -63,9 +63,9 @@ static Map *new_MimeMap() {
   return map;
 }
 
-static Option *Option_parse(int argc, char **argv, Exception *ex) {
+static void Option_parse(Option *opts, int argc, char **argv, Exception *ex) {
   Args *args = new_Args(argc, argv);
-  Option *opts = calloc(1, sizeof(Option));
+  //  Option *opts = calloc(1, sizeof(Option));
 
   opts->port = -1; // -1: not setted
 
@@ -132,7 +132,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   }
 
   delete_Args(args);
-  return opts;
 }
 
 static void print_usage(char *prog_name) {
@@ -157,7 +156,8 @@ static void test_Option_parse() {
   }
 
   char *arg_min[] = {"./httpd"};
-  opt = Option_parse(1, arg_min, ex);
+  opt = calloc(1, sizeof(Option));
+  Option_parse(opt, 1, arg_min, ex);
   expect(__LINE__, ex->ty, E_Okay);
   expect(__LINE__, opt->port, 8088);
   expect_str(__LINE__, opt->prog_name, "./httpd");
@@ -166,7 +166,8 @@ static void test_Option_parse() {
   free(opt);
 
   char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
-  opt = Option_parse(6, arg_full, ex);
+  opt = calloc(1, sizeof(Option));
+  Option_parse(opt, 6, arg_full, ex);
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
@@ -174,13 +175,15 @@ static void test_Option_parse() {
   free(opt);
 
   char *test_opt[] = {"./httpd", "-test"};
-  opt = Option_parse(2, test_opt, ex);
+  opt = calloc(1, sizeof(Option));
+  Option_parse(opt, 2, test_opt, ex);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
   free(opt);
 
   char *arg_port[] = {"./httpd", "80"};
-  opt = Option_parse(2, arg_port, ex);
+  opt = calloc(1, sizeof(Option));
+  Option_parse(opt, 2, arg_port, ex);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect(__LINE__, 80, opt->port);
   free(opt);
@@ -192,34 +195,36 @@ static void test_Option_parse() {
   char *arg_omit[] = {"./httpd", "-r"};
   switch (setjmp(g_env)) {
   case 0:
-    opt = Option_parse(2, arg_omit, ex);
-    free(opt);
+    opt = calloc(1, sizeof(Option));
+    Option_parse(opt, 2, arg_omit, ex);
     break;
   case EX_ILLEGAL_ARG:
-    //    expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
+    free(opt);
     break;
   }
 
   char *arg_neg[] = {"./httpd", "-1"};
   switch (setjmp(g_env)) {
   case 0:
-    opt = Option_parse(2, arg_neg, ex);
-    free(opt);
+    opt = calloc(1, sizeof(Option));
+    Option_parse(opt, 2, arg_neg, ex);
     break;
   case EX_ILLEGAL_ARG:
     expect_str(__LINE__, "PORT must be non-negative", ex->msg);
+    free(opt);
     break;
   }
 
   char *arg_many[] = {"./httpd", "80", "80"};
   switch (setjmp(g_env)) {
   case 0:
-    opt = Option_parse(3, arg_many, ex);
-    free(opt);
+    opt = calloc(1, sizeof(Option));
+    Option_parse(opt, 3, arg_many, ex);
     break;
   case EX_ILLEGAL_ARG:
     expect_str(__LINE__, "too many arguments", ex->msg);
+    free(opt);
     break;
   }
 }

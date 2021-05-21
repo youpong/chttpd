@@ -198,16 +198,12 @@ void delete_HttpMessage(HttpMessage *msg) {
  * }
  */
 void HttpMessage_parse(FILE *f, HttpMessage *msg, Exception *ex, bool debug) {
-  //  assert(ty == HM_REQ); // not implemented HM_RES yet.
-  // HttpMessage *msg = new_HttpMessage(ty);
   assert(msg->_ty == HM_REQ); // not implemented HM_RES yet.
 
   // parse: start-line = Request-Line | Status-Line
   switch (msg->_ty) {
   case HM_REQ:
     request_line(f, msg, ex);
-    //    if (ex->ty != E_Okay)
-    //      return msg;
     break;
   case HM_RES:
     break;
@@ -215,13 +211,9 @@ void HttpMessage_parse(FILE *f, HttpMessage *msg, Exception *ex, bool debug) {
 
   // parse: *(message_header CRLF) CRLF
   message_header(f, msg, ex);
-  //  if (ex->ty != E_Okay)
-  //    return msg;
 
   // parse: [message-body]
   // ...
-
-  //  return msg;
 }
 
 static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
@@ -285,13 +277,6 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
 
   // query_str
   // msg->query_str = strdup(++p);
-
-  return;
-
-  // bad_request:
-  //  ex->ty = HM_BadRequest;
-  //  free(line);
-  //  return;
 }
 
 /**
