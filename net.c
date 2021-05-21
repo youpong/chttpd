@@ -127,17 +127,18 @@ void url_decode(char *dest, char *src) {
     p += 3;
     continue;
 
-  IllegalByteSequence : { // clang-format off
-      // append to dest '%' and trailing 2..0 bytes
-      int len = q - p + 1;
-      if (*q == '\0') // not copy '\0'
-	len--;
+    int len; // declare 'len' before a label 'IllegalByteSequence'.
+    // Because a label can only be part of statement and declaration
+    // is not a statement.
+  IllegalByteSequence:
+    // append to dest '%' and trailing 2..0 bytes
+    len = q - p + 1; // cannot declare 'len' here.
+    if (*q == '\0')  // not copy '\0'
+      len--;
 
-      memcpy(dest, p, len);
-      dest += len;
-      p += len;
-    }
-    // clang-format on
+    memcpy(dest, p, len);
+    dest += len;
+    p += len;
   }
 
   *dest = '\0';
