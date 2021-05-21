@@ -240,7 +240,6 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
 
   // method
   if ((p = strchr(line, ' ')) == NULL) {
-    // goto bad_request;
     free(line);
     longjmp(g_env, EX_BAD_REQUEST);
   }
@@ -250,7 +249,6 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
   // request_uri
   p0 = ++p;
   if ((p = strchr(p0, ' ')) == NULL) {
-    // goto bad_request;
     free(line);
     longjmp(g_env, EX_BAD_REQUEST);
   }
@@ -264,7 +262,6 @@ static void request_line(FILE *f, HttpMessage *msg, Exception *ex) {
   // bad_request: empty field
   if (strlen(msg->method) == 0 || strlen(msg->request_uri) == 0 ||
       strlen(msg->http_version) == 0) {
-    // goto bad_request;
     free(line);
     longjmp(g_env, EX_BAD_REQUEST);
   }
@@ -313,7 +310,6 @@ static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
 
     // parse field-name
     if ((p = strchr(line, ':')) == NULL) {
-      // goto bad_request;
       free(line);
       longjmp(g_env, EX_BAD_REQUEST);
     }
@@ -334,17 +330,9 @@ static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
 
     // empty field_name is invalid
     if (strlen(field_name) == 0) {
-      // goto bad_request;
       longjmp(g_env, EX_BAD_REQUEST);
     }
   }
-
-  // return;
-
-  // bad_request:
-  //  ex->ty = HM_BadRequest;
-  //  free(line);
-  //  return;
 }
 
 static char *read_line(FILE *f) {

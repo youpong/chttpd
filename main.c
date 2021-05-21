@@ -28,9 +28,7 @@ int main(int argc, char **argv) {
     opt = Option_parse(argc, argv, ex);
     break;
   case EX_ILLEGAL_ARG:
-    //    ex->ty = O_IllegalArgument;
     fprintf(stderr, "%s\n", ex->msg);
-    //    print_usage(opt->prog_name);
     print_usage(argv[0]);
     return EXIT_FAILURE;
   }
@@ -88,7 +86,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         ex->msg = "option require an argument -- 'r'";
         delete_Args(args);
         longjmp(g_env, EX_ILLEGAL_ARG);
-        // goto IllegalArgument;
       }
       opts->document_root = strdup(Args_next(args));
       continue;
@@ -98,7 +95,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         ex->msg = "option require an argument -- 'l'";
         delete_Args(args);
         longjmp(g_env, EX_ILLEGAL_ARG);
-        //        goto IllegalArgument;
       }
       opts->access_log = strdup(Args_next(args));
       continue;
@@ -112,7 +108,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         ex->msg = "PORT must be non-negative";
         delete_Args(args);
         longjmp(g_env, EX_ILLEGAL_ARG);
-        // goto IllegalArgument;
       }
       opts->port = atoi(arg);
       continue;
@@ -121,7 +116,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     ex->msg = "too many arguments";
     delete_Args(args);
     longjmp(g_env, EX_ILLEGAL_ARG);
-    //    goto IllegalArgument;
   }
 
   //
@@ -139,14 +133,6 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
 
   delete_Args(args);
   return opts;
-
-  //
-  // catch parse error
-  //
-  // IllegalArgument:
-  //  ex->ty = O_IllegalArgument;
-  //  delete_Args(args);
-  //  return opts;
 }
 
 static void print_usage(char *prog_name) {
