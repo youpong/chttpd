@@ -201,7 +201,7 @@ HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
     break;
   }
 
-  // parse: *(message_header CRLF) CRLF
+  // parse: *(message-header CRLF) CRLF
   message_header(f, msg, ex);
   if (ex->ty != E_Okay)
     return msg;
@@ -276,6 +276,11 @@ bad_request:
   return;
 }
 
+/**
+ * parse
+ * *(message-header CRLF) CRLF
+ * message-header = field-name ":" [field-value]
+ */
 static void message_header(FILE *f, HttpMessage *msg, Exception *ex) {
   char *key, *value;
   char *p, *line;
