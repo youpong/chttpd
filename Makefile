@@ -4,7 +4,7 @@
 # dependencies
 # $ apt install cloc
 
-#CC = clang
+CC = clang
 
 # _POSIX_C_SOURCE: fdopen(3)
 # _DEFAULT_SOURCE: timezone
@@ -18,6 +18,7 @@ CFLAGS = -g -Wall -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 LIBS = -lc 
 
 TARGET = httpd
+TEST   = test
 SRCS = main.c server.c net.c file.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
@@ -26,7 +27,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 clean:
-	- rm -f *~ a.out $(TARGET) $(OBJS) 
+	- rm -f *~ a.out $(TARGET) $(TEST) $(OBJS) 
 
 format:
 	clang-format -i *.[ch] 
@@ -37,8 +38,9 @@ tags:
 cloc:
 	cloc $(SRCS) *.h
 
-check: $(TARGET)
+check: $(TARGET) $(TEST)
 	./$(TARGET) -test
+	./$(TEST)
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)
