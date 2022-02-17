@@ -3,15 +3,21 @@
 #include "net.h"
 #include "util.h"
 
-#include <arpa/inet.h> // inet_ntoa(3)
-#include <errno.h>     // errno
-#include <fcntl.h>     // open(2)
-#include <stdlib.h>    // malloc(3)
-#include <string.h>    // strcmp(3), strrchr(3)
-#include <sys/stat.h>  // open(2)
-#include <time.h>      // time(2)
-#include <unistd.h>    // unlink(2)
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
 
+pid_t Pids[MAX_SERVERS];
+
+static void cleanup(int);
 static void header_put(HttpMessage *msg, char *key, char *value);
 static char *header_get(HttpMessage *msg, char *key, char *default_val);
 static File *new_File2(char *parent_path, char *child_path);
@@ -53,15 +59,28 @@ void server_start(Option *opt) {
       }
       break;
     default: // parent
-             /* no-op */;
+      Pids[i] = pid;
     }
   }
 
-  pause();
+  signal(SIGTERM, cleanup);
+
+  for (int i = 0; i < MAX_SERVERS; ++i) {
+    int wstatus;
+    waitpid(-1, &wstatus, 0);
+  }
 
   fclose(log);
   delete_Socket(sv_sock);
   free(ex);
+}
+
+static void cleanup(int sig_type) {
+  signal(sig_type, SIG_DFL);
+
+  for (int i = 0; i < MAX_SERVERS; ++i) {
+    kill(Pids[i], sig_type);
+  }
 }
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt) {

@@ -2,6 +2,7 @@ TAGS
 httpd
 test
 a.out
+access.log
 *.o
 *~
 \#*#
