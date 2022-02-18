@@ -24,6 +24,9 @@ static File *new_File2(char *parent_path, char *child_path);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
+static HttpMessage *new_HttpResponse_for_bad_query(HttpMessage *, Option *,
+                                                   Exception *);
+
 static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
@@ -95,7 +98,13 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
     if (ex->ty == HM_EmptyRequest)
       break;
 
-    HttpMessage *res = new_HttpResponse(req, opt, ex);
+    HttpMessage *res;
+    if (ex->ty == E_Okay)
+      res = new_HttpResponse(req, opt, ex);
+    else {
+      // todo
+      res = new_HttpResponse_for_bad_query(req, opt, ex);
+    }
 
     HttpMessage_write(res, sock->ops);
     write_log(log, sock, &req_time, req, res);
@@ -119,26 +128,6 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts,
   HttpMessage *res = new_HttpMessage(HM_RES);
   File *file;
   char buf[20 + 1]; // log10(ULONG_MAX) < 20
-
-  if (ex->ty != E_Okay) {
-    res->http_version = strdup(HTTP_VERSION);
-    res->status_code = strdup("400");
-    res->reason_phrase = strdup("Bad Request");
-    header_put(res, "Server", SERVER_NAME);
-    header_put(res, "Content-Type", "text/html");
-    // TODO: system information, server name and os name
-    res->body = strdup("<html>\n"
-                       "<head><title>400 Bad Request</title></head>\n"
-                       "<body>\n"
-                       "<center><h1>400 Bad Request</h1></center>\n"
-                       "</body>\n"
-                       "</html>\n");
-    res->body_len = strlen(res->body);
-    sprintf(buf, "%d", res->body_len);
-    header_put(res, "Content-Length", buf);
-    header_put(res, "Connection", "close");
-    return res;
-  }
 
   switch (req->method_ty) {
   case HMMT_GET:
@@ -195,6 +184,30 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts,
     res->reason_phrase = strdup("Not Allowed");
   }
 
+  return res;
+}
+
+static HttpMessage *
+new_HttpResponse_for_bad_query(HttpMessage *req, Option *opts, Exception *ex) {
+  HttpMessage *res = new_HttpMessage(HM_RES);
+  char buf[20 + 1]; // log10(ULONG_MAX) < 20
+
+  res->http_version = strdup(HTTP_VERSION);
+  res->status_code = strdup("400");
+  res->reason_phrase = strdup("Bad Request");
+  header_put(res, "Server", SERVER_NAME);
+  header_put(res, "Content-Type", "text/html");
+  // TODO: system information, server name and os name
+  res->body = strdup("<html>\n"
+                     "<head><title>400 Bad Request</title></head>\n"
+                     "<body>\n"
+                     "<center><h1>400 Bad Request</h1></center>\n"
+                     "</body>\n"
+                     "</html>\n");
+  res->body_len = strlen(res->body);
+  sprintf(buf, "%d", res->body_len);
+  header_put(res, "Content-Length", buf);
+  header_put(res, "Connection", "close");
   return res;
 }
 
