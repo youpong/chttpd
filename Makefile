@@ -2,7 +2,12 @@
 # cloc - count line of source code.
 
 # dependencies
-# $ apt install cloc
+#
+# on develop
+#   $ apt install cloc
+#   gcc or clang
+#   make, efence, etags, clang-format
+#   gdb
 
 CC = clang
 
