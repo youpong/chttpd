@@ -14,8 +14,11 @@ function error() {
 # start server
 $prog $PORT &
 
-# curl
+# Normal
 curl -s --head 127.0.0.1:${PORT}/hello.html | head -1 | grep 200 > /dev/null || error "$LINENO"
+
+# Not Found
+curl -s --head 127.0.0.1:${PORT}/not_found  | head -1 | grep 404 > /dev/null || error "$LINENO"
 
 # stop server
 kill %1

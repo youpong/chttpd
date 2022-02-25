@@ -52,6 +52,7 @@ static Map *new_MimeMap() {
   Map_put(map, "gif" , "image/gif");
   Map_put(map, "html", "text/html");
   Map_put(map, "png" , "image/png");
+  Map_put(map, "wmv" , "video/x-ms-wmv");  
   // clang-format on
 
   return map;
