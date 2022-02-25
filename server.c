@@ -4,6 +4,7 @@
 #include "util.h"
 
 #include <arpa/inet.h>
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -27,7 +28,8 @@ static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
 static HttpMessage *new_HttpResponse_for_bad_query(HttpMessage *, Option *,
                                                    Exception *);
 
-static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
+static void write_msg(HttpMessage *, HttpMessage *, FILE *);
+static int  write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
   Exception *ex = calloc(1, sizeof(Exception));
@@ -106,7 +108,7 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
       res = new_HttpResponse_for_bad_query(req, opt, ex);
     }
 
-    HttpMessage_write(res, sock->ops);
+    write_msg(req, res, sock->ops);
     write_log(log, sock, &req_time, req, res);
 
     if (strcmp(header_get(req, "Connection", ""), "close") == 0 ||
@@ -148,9 +150,9 @@ static HttpMessage *new_HttpResponse(HttpMessage *req, Option *opts,
       res->reason_phrase = strdup("Not Found");
       header_put(res, "Content-Type", "text/html");
       res->body = strdup("<html>\n"
-                         "<head><title>400 Bad Request</title></head>\n"
+                         "<head><title>404 Not found</title></head>\n"
                          "<body>\n"
-                         "<center><h1>400 Bad Request</h1></center>\n"
+                         "<center><h1>404 Not found</h1></center>\n"
                          "</body>\n"
                          "</html>\n");
       res->body_len = strlen(res->body);
@@ -269,6 +271,32 @@ static char *formatted_time(struct tm *, long);
 static bool is_locked();
 static int lock();
 static void unlock();
+
+static void write_msg(HttpMessage *req, HttpMessage *res, FILE *f) {
+  assert(req->_ty == HM_REQ); 
+  assert(res->_ty == HM_RES); 
+
+  // status_line
+  fprintf(f, "%s %s %s\r\n", res->http_version, res->status_code,
+            res->reason_phrase);
+
+  // headers
+  Map *map = res->header_map;
+  for (int i = 0; i < map->keys->len; i++) {
+      fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
+            (char *)map->vals->data[i]);
+  }
+
+  // CRLF
+  fprintf(f, "\r\n");
+
+  if (req->method_ty != HMMT_HEAD)
+    for (int i = 0; i < res->body_len; i++) {
+      fputc(res->body[i], f);
+    }
+
+  fflush(f);
+}
 
 static int write_log(FILE *out, Socket *sock, time_t *req_time,
                      HttpMessage *req, HttpMessage *res) {
@@ -415,6 +443,7 @@ static void test_new_HttpResponse() {
   expect_str(__LINE__, "200", res->status_code);
   expect_ptr(__LINE__, NULL, res->body);
 
+  free(opt);
   free(ex);
 }
 

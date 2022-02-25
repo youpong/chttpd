@@ -353,36 +353,6 @@ static bool consume(FILE *f, char expected) {
   return true;
 }
 
-void HttpMessage_write(HttpMessage *msg, FILE *f) {
-  assert(msg->_ty == HM_RES); // HM_REQ not implemented yet.
-
-  switch (msg->_ty) {
-  case HM_REQ:
-    break;
-  case HM_RES:
-    // status_line
-    fprintf(f, "%s %s %s\r\n", msg->http_version, msg->status_code,
-            msg->reason_phrase);
-  }
-
-  // headers
-  Map *map = msg->header_map;
-  for (int i = 0; i < map->keys->len; i++) {
-    fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
-            (char *)map->vals->data[i]);
-  }
-
-  // CRLF
-  fprintf(f, "\r\n");
-
-  // body(option)
-  for (int i = 0; i < msg->body_len; i++) {
-    fputc(msg->body[i], f);
-  }
-
-  fflush(f);
-}
-
 static void test_url_decode() {
   char buf[100];
 
@@ -474,6 +444,23 @@ static void test_HttpMessage_parse() {
   delete_HttpMessage(req);
 
   //
+  // Normal(HEAD)
+  //
+  f = tmpfile();
+  fprintf(f, "HEAD /hello.html HTTP/1.1\r\n"
+             "\r\n");
+  rewind(f);
+  req = HttpMessage_parse(f, HM_REQ, ex, false);
+  fclose(f);
+  expect(__LINE__, E_Okay, ex->ty);
+  expect(__LINE__, HMMT_HEAD, req->method_ty);
+  delete_HttpMessage(req);
+
+  //-----------
+  // Irregular
+  //-----------
+
+  //
   // empty request
   //
   f = tmpfile();
@@ -482,7 +469,7 @@ static void test_HttpMessage_parse() {
   expect(__LINE__, HM_EmptyRequest, ex->ty);
 
   //
-  // few SP in Request-Line
+  // Omitting SP in Request-Line
   //
   f = tmpfile();
   fprintf(f, "GET /hello.htmlHTTP/1.1\r\n"
@@ -520,43 +507,8 @@ static void test_HttpMessage_parse() {
   expect(__LINE__, HMMT_GET, req->method_ty);
 }
 
-static void test_HttpMessage_write() {
-  HttpMessage *res = new_HttpMessage(HM_RES);
-
-  res->http_version = strdup("HTTP/1.1");
-  res->status_code = strdup("200");
-  res->reason_phrase = strdup("OK");
-
-  Map_put(res->header_map, strdup("Server"), strdup("Dali/0.1"));
-  Map_put(res->header_map, strdup("Content-Length"), strdup("4"));
-
-  res->body_len = 4;
-  res->body = strdup("body");
-
-  FILE *f = tmpfile();
-  HttpMessage_write(res, f);
-  rewind(f);
-
-  // clang-format off
-  char *p = "HTTP/1.1 200 OK\r\n"
-             "Server: Dali/0.1\r\n"
-             "Content-Length: 4\r\n"
-             "\r\n"
-             "body";
-  // clang-format on
-
-  int c;
-  while ((c = fgetc(f)) != EOF) {
-    expect(__LINE__, *p++, c);
-  }
-  expect(__LINE__, '\0', *p);
-
-  delete_HttpMessage(res);
-}
-
 void run_all_test_net() {
   test_url_decode();
   test_read_line();
   test_HttpMessage_parse();
-  test_HttpMessage_write();
 }
