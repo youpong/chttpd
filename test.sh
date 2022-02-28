@@ -14,11 +14,19 @@ function error() {
 # start server
 $prog $PORT &
 
-# Normal
+# Normal request
 curl -s --head 127.0.0.1:${PORT}/hello.html | head -1 | grep 200 > /dev/null || error "$LINENO"
 
 # Not Found
 curl -s --head 127.0.0.1:${PORT}/not_found  | head -1 | grep 404 > /dev/null || error "$LINENO"
+
+# Empty request
+echo -n | telnet 127.0.0.1 ${PORT} 2>/dev/null | cmp - <<EOF
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+EOF
+[[ $? != 0 ]] && error "$LINENO"
 
 # stop server
 kill %1

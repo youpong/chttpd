@@ -52,7 +52,7 @@ static Map *new_MimeMap() {
   Map_put(map, "gif" , "image/gif");
   Map_put(map, "html", "text/html");
   Map_put(map, "png" , "image/png");
-  Map_put(map, "wmv" , "video/x-ms-wmv");  
+  Map_put(map, "wmv" , "video/x-ms-wmv");
   // clang-format on
 
   return map;
@@ -211,7 +211,7 @@ static void run_all_test() {
   run_all_test_net();
   run_all_test_server();
 
-  printf("========================\n");
+  printf("==============================\n");
   printf(" All unit tests passed.\n");
-  printf("========================\n");
+  printf("==============================\n");
 }

@@ -158,6 +158,10 @@ HttpMessage *new_HttpMessage(HttpMessageType ty) {
 }
 
 void delete_HttpMessage(HttpMessage *msg) {
+  if (msg == NULL) {
+    return;
+  }
+
   // start-line(Request-Line|Status-Line)
   free(msg->method);
   free(msg->request_uri);
@@ -180,7 +184,6 @@ void delete_HttpMessage(HttpMessage *msg) {
 
 /**
  * @return a pointer to HttpRequest object.
- * @return NULL when read null request.
  *
  * Refer to document for declaration of typedef HttpMessage.
  */

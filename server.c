@@ -29,7 +29,7 @@ static HttpMessage *new_HttpResponse_for_bad_query(HttpMessage *, Option *,
                                                    Exception *);
 
 static void write_msg(HttpMessage *, HttpMessage *, FILE *);
-static int  write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
+static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 void server_start(Option *opt) {
   Exception *ex = calloc(1, sizeof(Exception));
@@ -89,21 +89,23 @@ static void cleanup(int sig_type) {
 }
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt) {
+  HttpMessage *req, *res;
   Exception *ex = calloc(1, sizeof(Exception));
-  time_t req_time;
-  bool conn_keep_alive = true;
 
-  while (conn_keep_alive) {
+  bool cond = true;
+  while (cond) {
+    time_t req_time;
     time(&req_time);
 
-    HttpMessage *req = HttpMessage_parse(sock->ips, HM_REQ, ex, opt->debug);
-    if (ex->ty == HM_EmptyRequest)
-      break;
+    req = HttpMessage_parse(sock->ips, HM_REQ, ex, opt->debug);
 
-    HttpMessage *res;
     if (ex->ty == E_Okay)
       res = new_HttpResponse(req, opt, ex);
-    else {
+    else if (ex->ty == HM_EmptyRequest) {
+      cond = false;
+      res = NULL;
+      goto cleanup;
+    } else {
       // todo
       res = new_HttpResponse_for_bad_query(req, opt, ex);
     }
@@ -112,12 +114,15 @@ static void handle_connection(Socket *sock, FILE *log, Option *opt) {
     write_log(log, sock, &req_time, req, res);
 
     if (strcmp(header_get(req, "Connection", ""), "close") == 0 ||
-        strcmp(header_get(res, "Connection", ""), "close") == 0)
-      conn_keep_alive = false;
+        strcmp(header_get(res, "Connection", ""), "close") == 0) {
+      cond = false;
+    }
 
+  cleanup:
     delete_HttpMessage(req);
     delete_HttpMessage(res);
   }
+
   free(ex);
 }
 
@@ -273,17 +278,17 @@ static int lock();
 static void unlock();
 
 static void write_msg(HttpMessage *req, HttpMessage *res, FILE *f) {
-  assert(req->_ty == HM_REQ); 
-  assert(res->_ty == HM_RES); 
+  assert(req->_ty == HM_REQ);
+  assert(res->_ty == HM_RES);
 
   // status_line
   fprintf(f, "%s %s %s\r\n", res->http_version, res->status_code,
-            res->reason_phrase);
+          res->reason_phrase);
 
   // headers
   Map *map = res->header_map;
   for (int i = 0; i < map->keys->len; i++) {
-      fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
+    fprintf(f, "%s: %s\r\n", (char *)map->keys->data[i],
             (char *)map->vals->data[i]);
   }
 
