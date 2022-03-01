@@ -6,7 +6,7 @@
 #define HTTP_VERSION "HTTP/1.1"
 #define SERVER_NAME  "Dali"
 #define DEFAULT_PORT 8088
-#define MAX_SERVERS  5
+#define MAX_SERVERS  20
 // clang-format on
 
 typedef struct {

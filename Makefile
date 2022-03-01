@@ -4,7 +4,7 @@
 # dependencies
 #
 # on develop
-#   $ apt install cloc
+#   $ apt install cloc doxygen dot2tex
 #   gcc or clang
 #   make, efence, etags, clang-format
 #   gdb
@@ -27,7 +27,7 @@ TEST   = test
 SRCS = main.c server.c net.c file.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean format check tags cloc
+.PHONY: all clean format docs tags cloc check
 
 all: $(TARGET)
 
@@ -36,6 +36,9 @@ clean:
 
 format:
 	clang-format -i *.[ch] 
+
+docs:
+	doxygen
 
 tags:
 	etags $(SRCS) *.h

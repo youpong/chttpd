@@ -1,3 +1,6 @@
+/**
+ * @file util.c
+ */
 #include "util.h"
 
 #include <stdarg.h> // va_start(3)

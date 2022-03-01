@@ -1,3 +1,6 @@
+/**
+ * @file server.c
+ */
 #include "file.h"
 #include "main.h"
 #include "net.h"
