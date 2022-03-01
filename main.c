@@ -5,11 +5,8 @@
 #include "file.h"
 #include "net.h"
 
-#include <arpa/inet.h>  // inet_ntoa(3)
-#include <netinet/in.h> // inet_ntoa(3)
 #include <stdlib.h>     // atoi(3)
 #include <string.h>     // strcmp(3)
-#include <sys/socket.h> // inet_ntoa(3)
 
 static void run_all_test();
 static void run_all_test_main();
