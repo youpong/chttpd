@@ -34,6 +34,9 @@ static HttpMessage *new_HttpResponse_for_bad_query(HttpMessage *, Option *,
 static void write_msg(HttpMessage *, HttpMessage *, FILE *);
 static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
+/**
+ * @param opt
+ */
 void server_start(Option *opt) {
   Exception *ex = calloc(1, sizeof(Exception));
 

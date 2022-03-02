@@ -15,8 +15,12 @@ static Map *new_MimeMap();
 static Option *Option_parse(int argc, char **argv, Exception *ex);
 static void print_usage(char *);
 
+/** Mime */
 Map *MimeMap;
 
+/**
+ * 
+ */
 int main(int argc, char **argv) {
   Exception *ex = calloc(1, sizeof(Exception));
 
