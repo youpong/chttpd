@@ -1,9 +1,13 @@
+/**
+ * @file file.h
+ */
 #pragma once
 
+/// file type
 typedef enum {
-  F_DIR,   // directory
-  F_FILE,  // regular file
-  F_OTHER, // other
+  F_DIR,   ///< directory
+  F_FILE,  ///< regular file
+  F_OTHER, ///< other
 } FileType;
 
 typedef struct {

@@ -25,6 +25,11 @@ static Socket *new_Socket(SocketType ty) {
   return sock;
 }
 
+/**
+ * Destroy the Socket object
+ *
+ * @param sock the pointer to Socket
+ */
 void delete_Socket(Socket *sock) {
   if (sock->_ty == S_CLT) {
     fclose(sock->ips);
@@ -36,6 +41,15 @@ void delete_Socket(Socket *sock) {
   free(sock);
 }
 
+/**
+ * TODO: exception 
+ * Creates a new Socket object for the server
+ *
+ * @return a pointer to Socket object
+ * @return NULL if error occurs
+ * @param port number
+ * @param ex a pointer to Exception
+ */
 Socket *new_ServerSocket(int port, Exception *ex) {
   Socket *sv_sock = new_Socket(S_SRV);
 
@@ -64,6 +78,14 @@ Socket *new_ServerSocket(int port, Exception *ex) {
   return sv_sock;
 }
 
+/**
+ * TODO: exception 
+ * Accepts a connection on Socket
+ *
+ * @return a new connected Socket
+ * @param sv_sock the pointer to Socket
+ * @param ex the pointer to Exception
+ */
 Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
   Socket *sock = new_Socket(S_CLT);
 
@@ -84,11 +106,14 @@ Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
   return sock;
 }
 
-/*
- * ReferTo:
- * -
- * https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
- * - https://url.spec.whatwg.org/
+/**
+ * Decodes an application/x-www-form-urlencoded string.
+ *
+ * @param dest the decoded string
+ * @param src the string to decode
+ *
+ * @see https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
+ * @see https://url.spec.whatwg.org/
  */
 void url_decode(char *dest, char *src) {
   char *p = src;
@@ -153,6 +178,12 @@ static void message_header(FILE *f, HttpMessage *req, Exception *);
 static char *read_line(FILE *f);
 static bool consume(FILE *f, char c);
 
+/**
+ * Create a new HttpMessage object.
+ *
+ * @param ty message type, request or response.
+ * @return a newly created HttpMessage object.
+ */
 HttpMessage *new_HttpMessage(HttpMessageType ty) {
   HttpMessage *result = calloc(1, sizeof(HttpMessage));
   result->_ty = ty;
@@ -160,6 +191,12 @@ HttpMessage *new_HttpMessage(HttpMessageType ty) {
   return result;
 }
 
+/**
+ * Destroy a HttpMessage object.
+ *
+ * @param msg the HttpMessage to destroy
+ * 
+ */
 void delete_HttpMessage(HttpMessage *msg) {
   if (msg == NULL) {
     return;
@@ -186,9 +223,13 @@ void delete_HttpMessage(HttpMessage *msg) {
 }
 
 /**
- * @return a pointer to HttpRequest object.
+ * Parse a HTTP Message.
  *
- * Refer to document for declaration of typedef HttpMessage.
+ * @return a pointer to HttpMessage object.
+ * @param f The input source for the HTTP Message
+ * @param ty The HttpMessageType 
+ * @param ex The exception object
+ * @param debug The debug mode
  */
 HttpMessage *HttpMessage_parse(FILE *f, HttpMessageType ty, Exception *ex,
                                bool debug) {

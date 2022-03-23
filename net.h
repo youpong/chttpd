@@ -1,3 +1,6 @@
+/**
+ * @file net.h
+ */
 #pragma once
 
 #include "util.h"
@@ -34,15 +37,18 @@ Socket *ServerSocket_accept(Socket *, Exception *);
 void url_decode(char *dest, char *src);
 
 /* http lib */
+
+/// Http Message Type
 typedef enum {
-  HM_REQ, // Http Request
-  HM_RES, // Http Response
+  HM_REQ, ///< Http Request
+  HM_RES, ///< Http Response
 } HttpMessageType;
 
+/// Http Message Method Type
 typedef enum {
-  HMMT_GET,
-  HMMT_HEAD,
-  HMMT_UNKNOWN, // not implemented method
+  HMMT_GET,     ///< GET
+  HMMT_HEAD,    ///< HEAD
+  HMMT_UNKNOWN, ///< not implemented method
 } HttpMessageMethodType;
 
 /**

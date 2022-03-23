@@ -11,6 +11,13 @@
 #include <sys/types.h> // stat(2)
 #include <unistd.h>    // stat(2)
 
+/**
+ * Creates a new File object from the path string.
+ *
+ * @param path string
+ * @return a pointer to a File object
+ * @return NULL if error occured
+ */
 File *new_File(char *path) {
 
   struct stat st;
@@ -41,6 +48,11 @@ File *new_File(char *path) {
   return file;
 }
 
+/**
+ * Destroys the File object.
+ *
+ * @param file the pointer to the File object
+ */
 void delete_File(File *file) {
   if (file == NULL)
     return;
@@ -49,8 +61,14 @@ void delete_File(File *file) {
   free(file);
 }
 
-// storage duration: dynamic
-// caller frees allocated memory for result.
+/**
+ * Returns the path to the parent directory.
+ *
+ * caller must free the allocated memory stores the parent path.
+ *
+ * @return the path to the parent directory
+ * @param path string
+ */
 char *parent_path(char *path) {
   char *ret = strdup(path);
 
@@ -65,8 +83,14 @@ char *parent_path(char *path) {
   return ret;
 }
 
-// storage duration: dynamic
-// caller frees allocated memory for result.
+/**
+ * Returns the filename component of the path
+ *
+ * caller must free allocated the memory stores filename.
+ *
+ * @return filename
+ * @param path
+ */
 char *filename(char *path) {
   char *p = strrchr(path, '/');
   if (p == NULL)
@@ -75,8 +99,14 @@ char *filename(char *path) {
   return strdup(p + 1);
 }
 
-// storage duration: dynamic
-// caller frees allocated memory for result.
+/**
+ * Returns the extension component of the path
+ *
+ * caller must free the allocated memory stores the extension
+ * 
+ * @return extension
+ * @param path
+ */
 char *extension(char *path) {
   char *fname = filename(path);
   char *p = strrchr(fname, '.');

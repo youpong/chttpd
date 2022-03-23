@@ -19,7 +19,7 @@
 #include <time.h>
 #include <unistd.h>
 
-pid_t Pids[MAX_SERVERS];
+static pid_t Pids[MAX_SERVERS];
 
 static void cleanup(int);
 static void header_put(HttpMessage *msg, char *key, char *value);
@@ -35,6 +35,8 @@ static void write_msg(HttpMessage *, HttpMessage *, FILE *);
 static int write_log(FILE *, Socket *, time_t *, HttpMessage *, HttpMessage *);
 
 /**
+ * Starts Http Server
+ *
  * @param opt
  */
 void server_start(Option *opt) {

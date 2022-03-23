@@ -15,7 +15,7 @@ static Map *new_MimeMap();
 static Option *Option_parse(int argc, char **argv, Exception *ex);
 static void print_usage(char *);
 
-/** Mime */
+/** a Mime map*/
 Map *MimeMap;
 
 /**
