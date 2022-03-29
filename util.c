@@ -10,6 +10,18 @@
 
 char *ErrorMsg;
 
+//
+// Args
+//
+
+/**
+ * Creates a new Args object
+ * TODO: rename Args Arr_Iter
+ *
+ * @return a pointer to a new Args object 
+ * @param argc the count of the arguments
+ * @param argv the vector of the arguments
+ */
 Args *new_Args(int argc, char **argv) {
   Args *args = malloc(sizeof(Args));
   args->argc = argc;
@@ -17,14 +29,31 @@ Args *new_Args(int argc, char **argv) {
   return args;
 }
 
+/**
+ * Deletes the Args object
+ *
+ * @param args
+ */
 void delete_Args(Args *args) {
   free(args);
 }
 
+/**
+ * Returns true if the Args has a next argument.
+ *
+ * @return true if the Args has a next argument.
+ * @param args 
+ */
 bool Args_hasNext(Args *args) {
   return args->argc > 0;
 }
 
+/**
+ * Returns the next argument
+ *
+ * @return the next argument
+ * @param args
+ */
 char *Args_next(Args *args) {
   char *ret = *(args->argv);
   args->argc--;
@@ -33,6 +62,15 @@ char *Args_next(Args *args) {
   return ret;
 }
 
+//
+// Vector
+//
+
+/**
+ * Creates a new Vector object
+ *
+ * @return a pointer to a new Vector object
+ */
 Vector *new_Vector() {
   Vector *vec = calloc(1, sizeof(Vector));
   vec->capacity = 16;
@@ -41,6 +79,11 @@ Vector *new_Vector() {
   return vec;
 }
 
+/**
+ * Deletes the Vector object
+ *
+ * @param vec
+ */
 void delete_Vector(Vector *vec) {
   for (int i = 0; i < vec->len; i++)
     free(vec->data[i]);
@@ -48,6 +91,13 @@ void delete_Vector(Vector *vec) {
   free(vec);
 }
 
+/**
+ * Pushes the element to the tail of the Vector.  
+ * automatically expand the Vector if necessary.
+ *
+ * @param vec
+ * @param elem
+ */
 void Vector_push(Vector *vec, void *elem) {
   if (vec->capacity == vec->len) {
     vec->capacity *= 2;
@@ -56,14 +106,34 @@ void Vector_push(Vector *vec, void *elem) {
   vec->data[vec->len++] = elem;
 }
 
+/**
+ * Pops the element from the tail of the vector.
+ *
+ * @param vec
+ */
 void *Vector_pop(Vector *vec) {
   return vec->data[--vec->len];
 }
 
+/**
+ * Returns the element from tail of the Vector.
+ *
+ * @return the element from tail of the Vector.
+ * @param vec
+ */
 void *Vector_last(Vector *vec) {
   return vec->data[vec->len - 1];
 }
 
+//
+// Map
+//
+
+/**
+ * Creates a new Map object
+ *
+ * @return a pointer to a new Map object
+ */
 Map *new_Map() {
   Map *map = malloc(sizeof(Map));
   map->keys = new_Vector();
@@ -71,17 +141,38 @@ Map *new_Map() {
   return map;
 }
 
+/**
+ * Destroys the Map object
+ *
+ * @param map
+ */
 void delete_Map(Map *map) {
   delete_Vector(map->vals);
   delete_Vector(map->keys);
   free(map);
 }
 
+/**
+ * Associates the value with the key in this map
+ *
+ * @param map
+ * @param key
+ * @param val
+ */
 void Map_put(Map *map, char *key, void *val) {
   Vector_push(map->keys, key);
   Vector_push(map->vals, val);
 }
 
+/**
+ * Returns the value to which the key is mapped, or NULL if the map contains no mapping 
+ * for the key.
+ *
+ * @return the value to witch the key is mapped, or NULL if the map contains no mapping
+ *         for the key.
+ * @param map
+ * @param key
+ */
 void *Map_get(Map *map, char *key) {
   for (int i = map->keys->len - 1; i >= 0; i--) {
     if (strcmp(map->keys->data[i], key) == 0) {
@@ -95,6 +186,11 @@ void *Map_get(Map *map, char *key) {
 // StringBuffer
 //
 
+/**
+ * Creates a new StringBuffer object.
+ *
+ * @return a pointer to a new StringBuffer object
+ */
 StringBuffer *new_StringBuffer() {
   StringBuffer *sb = calloc(1, sizeof(StringBuffer));
 
@@ -106,12 +202,23 @@ StringBuffer *new_StringBuffer() {
   return sb;
 }
 
+/**
+ * Destroys the StringBuffer object.
+ *
+ * @param sb
+ */
 void delete_StringBuffer(StringBuffer *sb) {
   delete_Vector(sb->_body);
   free(sb->_buf);
   free(sb);
 }
 
+/**
+ * Appends the string to StringBuffer.
+ *
+ * @param sb
+ * @param string
+ */
 void StringBuffer_append(StringBuffer *sb, char *string) {
   if (sb->_buf_len != 0) {
     sb->_buf[sb->_buf_len] = '\0';
@@ -123,6 +230,12 @@ void StringBuffer_append(StringBuffer *sb, char *string) {
   sb->len += strlen(string);
 }
 
+/**
+ * Appends the char to StringBuffer.
+ *
+ * @param sb
+ * @param c
+ */
 void StringBuffer_appendChar(StringBuffer *sb, char c) {
   if (sb->_buf_len + 1 >= sb->_buf_siz) {
     sb->_buf[sb->_buf_len] = '\0';
@@ -135,6 +248,14 @@ void StringBuffer_appendChar(StringBuffer *sb, char c) {
   sb->len++;
 }
 
+/**
+ * Creates string by StringBuffer
+ *
+ * Caller must free the allocated memory stores the string.
+ *
+ * @return a string 
+ * @param sb
+ */
 char *StringBuffer_toString(StringBuffer *sb) {
   char *str = calloc(sb->len + 1, sizeof(char));
 
@@ -147,12 +268,27 @@ char *StringBuffer_toString(StringBuffer *sb) {
   return str;
 }
 
+/**
+ * duplicate a integer
+ *
+ * @return a pointer to the duplicated integer
+ * @param n
+ */
 int *intdup(int n) {
   int *num = malloc(sizeof(int));
   *num = n;
   return num;
 }
 
+//
+// for testing
+//
+
+/**
+ * put a error message to stderr, then exit with failure status code
+ *
+ * @parma fmt
+ */
 noreturn void error(char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -161,12 +297,26 @@ noreturn void error(char *fmt, ...) {
   exit(1);
 }
 
+/**
+ * Assert the expected and actual are equal integer.
+ * 
+ * @param line
+ * @param expected
+ * @param actual
+ */
 void expect(int line, int expected, int actual) {
   if (expected == actual)
     return;
   error("%d: %d expected, but got %d", line, expected, actual);
 }
 
+/**
+ * Assert the extected and actual are equal string.
+ *
+ * @param line
+ * @param expected
+ * @param actual
+ */
 void expect_str(int line, char *expected, char *actual) {
   if (expected == NULL)
     error("%d: non-NULL is expected, but \"expected\" is NULL", line);
@@ -177,12 +327,26 @@ void expect_str(int line, char *expected, char *actual) {
   return;
 }
 
+/**
+ * Assert the expected and actual point are equal.
+ *
+ * @param line
+ * @param expected
+ * @param actual
+ */
 void expect_ptr(int line, void *expected, void *actual) {
   if (expected == actual)
     return;
   error("%d: %d expected, but got %d", line, expected, actual);
 }
 
+/**
+ * Assert the expected and the actual are equal boolean value
+ *
+ * @param line
+ * @param expected
+ * @param actual
+ */
 void expect_bool(int line, bool expected, bool actual) {
   if (expected == actual)
     return;

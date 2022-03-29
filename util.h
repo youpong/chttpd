@@ -1,4 +1,7 @@
 // -*- mode: c -*-
+/**
+ * @file util.h
+ */
 #pragma once
 
 #include <stdbool.h>     // bool
