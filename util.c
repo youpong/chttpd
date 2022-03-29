@@ -11,53 +11,52 @@
 char *ErrorMsg;
 
 //
-// Args
+// ArgsIter
 //
 
 /**
- * Creates a new Args object
- * TODO: rename Args Arr_Iter
+ * Creates a new ArgsIter object
  *
- * @return a pointer to a new Args object 
+ * @return a pointer to a new ArgsIter object 
  * @param argc the count of the arguments
  * @param argv the vector of the arguments
  */
-Args *new_Args(int argc, char **argv) {
-  Args *args = malloc(sizeof(Args));
-  args->argc = argc;
-  args->argv = argv;
-  return args;
+ArgsIter *new_ArgsIter(int argc, char **argv) {
+  ArgsIter *this = malloc(sizeof(ArgsIter));
+  this->argc = argc;
+  this->argv = argv;
+  return this;
 }
 
 /**
- * Deletes the Args object
+ * Deletes the ArgsIter object
  *
- * @param args
+ * @param this a pointer to ArgsIter object
  */
-void delete_Args(Args *args) {
-  free(args);
+void delete_ArgsIter(ArgsIter *this) {
+  free(this);
 }
 
 /**
  * Returns true if the Args has a next argument.
  *
  * @return true if the Args has a next argument.
- * @param args 
+ * @param this a pointer to ArgsIter object
  */
-bool Args_hasNext(Args *args) {
-  return args->argc > 0;
+bool ArgsIter_hasNext(ArgsIter *this) {
+  return this->argc > 0;
 }
 
 /**
  * Returns the next argument
  *
  * @return the next argument
- * @param args
+ * @param this a pointer to ArgsIter object
  */
-char *Args_next(Args *args) {
-  char *ret = *(args->argv);
-  args->argc--;
-  args->argv++;
+char *ArgsIter_next(ArgsIter *this) {
+  char *ret = *(this->argv);
+  this->argc--;
+  this->argv++;
 
   return ret;
 }

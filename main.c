@@ -63,15 +63,15 @@ static Map *new_MimeMap() {
 }
 
 static Option *Option_parse(int argc, char **argv, Exception *ex) {
-  Args *args = new_Args(argc, argv);
+  ArgsIter *iter = new_ArgsIter(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
 
   opts->port = -1; // -1: not setted
 
-  opts->prog_name = strdup(Args_next(args));
+  opts->prog_name = strdup(ArgsIter_next(iter));
 
-  while (Args_hasNext(args)) {
-    char *arg = Args_next(args);
+  while (ArgsIter_hasNext(iter)) {
+    char *arg = ArgsIter_next(iter);
 
     //
     // options ...
@@ -81,19 +81,19 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
       continue;
     }
     if (strcmp(arg, "-r") == 0) {
-      if (!Args_hasNext(args)) {
+      if (!ArgsIter_hasNext(iter)) {
         ex->msg = "option require an argument -- 'r'";
         goto IllegalArgument;
       }
-      opts->document_root = strdup(Args_next(args));
+      opts->document_root = strdup(ArgsIter_next(iter));
       continue;
     }
     if (strcmp(arg, "-l") == 0) {
-      if (!Args_hasNext(args)) {
+      if (!ArgsIter_hasNext(iter)) {
         ex->msg = "option require an argument -- 'l'";
         goto IllegalArgument;
       }
-      opts->access_log = strdup(Args_next(args));
+      opts->access_log = strdup(ArgsIter_next(iter));
       continue;
     }
 
@@ -112,7 +112,7 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     ex->msg = "too many arguments";
     goto IllegalArgument;
   }
-  delete_Args(args);
+  delete_ArgsIter(iter);
 
   //
   // set default values...
@@ -134,7 +134,7 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   //
 IllegalArgument:
   ex->ty = O_IllegalArgument;
-  delete_Args(args);
+  delete_ArgsIter(iter);
   return opts;
 }
 

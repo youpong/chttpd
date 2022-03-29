@@ -20,15 +20,16 @@ typedef struct {
   char *msg;
 } Exception;
 
+/// Iterator.
 typedef struct {
   int argc;
   char **argv;
-} Args;
+} ArgsIter;
 
-Args *new_Args(int, char **);
-void delete_Args(Args *);
-bool Args_hasNext(Args *);
-char *Args_next(Args *);
+ArgsIter *new_ArgsIter(int, char **);
+void delete_ArgsIter(ArgsIter *);
+bool ArgsIter_hasNext(ArgsIter *);
+char *ArgsIter_next(ArgsIter *);
 
 typedef struct {
   void **data;
