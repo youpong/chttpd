@@ -10,6 +10,8 @@ function error() {
     exit 1
 }
 
+# show version
+echo './httpd 0.0.0' | cmp - <(./httpd -v 2>&1) || error "$LINENO"
 
 # start server
 $prog $PORT &

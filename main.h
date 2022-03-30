@@ -6,6 +6,7 @@
 #include "util.h"
 
 // clang-format off
+#define VERSION      "0.0.0"
 #define HTTP_VERSION "HTTP/1.1"
 #define SERVER_NAME  "Dali"
 #define DEFAULT_PORT 8088
@@ -16,6 +17,7 @@ typedef struct {
   char *prog_name;
   bool debug;
   bool test;
+  bool version;  
   char *document_root;
   char *access_log;
   int port;

@@ -36,6 +36,11 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
+  if (opt->version) {
+    fprintf(stderr, "%s %s\n", opt->prog_name, VERSION);
+    return EXIT_SUCCESS;
+  }
+
   MimeMap = new_MimeMap();
   server_start(opt);
 
@@ -78,6 +83,10 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
     //
     if (strcmp(arg, "-test") == 0) {
       opts->test = true;
+      continue;
+    }
+    if (strcmp(arg, "-v") == 0) {
+      opts->version = true;
       continue;
     }
     if (strcmp(arg, "-r") == 0) {
