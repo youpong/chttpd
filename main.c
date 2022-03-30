@@ -150,6 +150,7 @@ IllegalArgument:
 static void print_usage(char *prog_name) {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [PORT]\n", prog_name);
+  fprintf(stderr, "%s -v\n", prog_name);  
   fprintf(stderr, "%s -test\n", prog_name);
 }
 
