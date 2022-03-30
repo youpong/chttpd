@@ -15,7 +15,7 @@ The web server runs on Ubuntu-20.04 x86_64.
 To start the server, run the following command:
 
 ```bash
-$ ./httpd [-r DOCUMENT_ROOT] [PORT]
+$ ./httpd [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [-p PORT]
 ```
 
 To stop the server, just press Ctrl+C on the command line.
@@ -26,13 +26,18 @@ options:
 
 - `-l ACCESS_LOG` : set access log (default: access.log)
 
-arguments:
+- `-p PORT` : listen port PORT (default: 8088)
 
-- `PORT` : listen port PORT (default: 8088)
+To show the version, run the following command:
+
+```bash
+$ ./httpd -v
+```
+
 
 ## BUILD
 
-Run the following command:
+To build, run the following command:
 
 ```bash
 $ make all
@@ -40,7 +45,7 @@ $ make all
 
 ## TEST
 
-Run the following command:
+To test, run the following command:
 
 ```bash
 $ make check
