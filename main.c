@@ -5,8 +5,8 @@
 #include "file.h"
 #include "net.h"
 
-#include <stdlib.h>     // atoi(3)
-#include <string.h>     // strcmp(3)
+#include <stdlib.h> // atoi(3)
+#include <string.h> // strcmp(3)
 
 static void run_all_test();
 static void run_all_test_main();
@@ -19,7 +19,7 @@ static void print_usage(char *);
 Map *MimeMap;
 
 /**
- * 
+ *
  */
 int main(int argc, char **argv) {
   Exception *ex = calloc(1, sizeof(Exception));
@@ -78,42 +78,50 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   while (ArgsIter_hasNext(iter)) {
     char *arg = ArgsIter_next(iter);
 
-    //
-    // options ...
-    //
-    if (strcmp(arg, "-test") == 0) {
-      opts->test = true;
-      continue;
-    }
-    if (strcmp(arg, "-v") == 0) {
-      opts->version = true;
-      continue;
-    }
-    if (strcmp(arg, "-r") == 0) {
-      if (!ArgsIter_hasNext(iter)) {
-        ex->msg = "option require an argument -- 'r'";
-        goto IllegalArgument;
+    if (arg[0] == '-') {
+      //
+      // options ...
+      //
+      if (strcmp(arg, "-test") == 0) {
+        opts->test = true;
+        continue;
       }
-      opts->document_root = strdup(ArgsIter_next(iter));
-      continue;
-    }
-    if (strcmp(arg, "-l") == 0) {
-      if (!ArgsIter_hasNext(iter)) {
-        ex->msg = "option require an argument -- 'l'";
-        goto IllegalArgument;
+      if (strcmp(arg, "-v") == 0) {
+        opts->version = true;
+        continue;
       }
-      opts->access_log = strdup(ArgsIter_next(iter));
-      continue;
+      if (strcmp(arg, "-r") == 0) {
+        if (!ArgsIter_hasNext(iter)) {
+          ex->msg = "option require an argument -- 'r'";
+          goto IllegalArgument;
+        }
+        opts->document_root = strdup(ArgsIter_next(iter));
+        continue;
+      }
+      if (strcmp(arg, "-l") == 0) {
+        if (!ArgsIter_hasNext(iter)) {
+          ex->msg = "option require an argument -- 'l'";
+          goto IllegalArgument;
+        }
+        opts->access_log = strdup(ArgsIter_next(iter));
+        continue;
+      }
+
+      ex->msg = "unknown option";
+      goto IllegalArgument;
     }
 
     //
-    // arguments ...
+    // argument PORT
     //
+
+    // PORT must be start with digit '0-9'
+    if (arg[0] < '0' || '9' < arg[0]) {
+      ex->msg = "PORT must be a number";
+      goto IllegalArgument;
+    }
+
     if (opts->port < 0) {
-      if (atoi(arg) < 0) {
-        ex->msg = "PORT must be non-negative";
-        goto IllegalArgument;
-      }
       opts->port = atoi(arg);
       continue;
     }
@@ -150,7 +158,7 @@ IllegalArgument:
 static void print_usage(char *prog_name) {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [PORT]\n", prog_name);
-  fprintf(stderr, "%s -v\n", prog_name);  
+  fprintf(stderr, "%s -v\n", prog_name);
   fprintf(stderr, "%s -test\n", prog_name);
 }
 
@@ -201,11 +209,16 @@ static void test_Option_parse() {
   expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
   free(opt);
 
-  char *arg_neg[] = {"./httpd", "-1"};
-  opt = Option_parse(2, arg_neg, ex);
-  expect_str(__LINE__, "PORT must be non-negative", ex->msg);
+  char *arg_unknown[] = {"./httpd", "-1"};
+  opt = Option_parse(2, arg_unknown, ex);
+  expect_str(__LINE__, "unknown option", ex->msg);
   free(opt);
 
+  char *arg_nan[] = {"./httpd", "a"};
+  opt = Option_parse(2, arg_nan, ex);
+  expect_str(__LINE__, "PORT must be a number", ex->msg);
+  free(opt);
+  
   char *arg_many[] = {"./httpd", "80", "80"};
   opt = Option_parse(3, arg_many, ex);
   expect_str(__LINE__, "too many arguments", ex->msg);

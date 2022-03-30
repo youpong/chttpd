@@ -17,7 +17,7 @@ char *ErrorMsg;
 /**
  * Creates a new ArgsIter object
  *
- * @return a pointer to a new ArgsIter object 
+ * @return a pointer to a new ArgsIter object
  * @param argc the count of the arguments
  * @param argv the vector of the arguments
  */
@@ -91,7 +91,7 @@ void delete_Vector(Vector *vec) {
 }
 
 /**
- * Pushes the element to the tail of the Vector.  
+ * Pushes the element to the tail of the Vector.
  * automatically expand the Vector if necessary.
  *
  * @param vec
@@ -164,11 +164,11 @@ void Map_put(Map *map, char *key, void *val) {
 }
 
 /**
- * Returns the value to which the key is mapped, or NULL if the map contains no mapping 
- * for the key.
+ * Returns the value to which the key is mapped, or NULL if the map contains no
+ * mapping for the key.
  *
- * @return the value to witch the key is mapped, or NULL if the map contains no mapping
- *         for the key.
+ * @return the value to witch the key is mapped, or NULL if the map contains no
+ * mapping for the key.
  * @param map
  * @param key
  */
@@ -252,7 +252,7 @@ void StringBuffer_appendChar(StringBuffer *sb, char c) {
  *
  * Caller must free the allocated memory stores the string.
  *
- * @return a string 
+ * @return a string
  * @param sb
  */
 char *StringBuffer_toString(StringBuffer *sb) {
@@ -298,7 +298,7 @@ noreturn void error(char *fmt, ...) {
 
 /**
  * Assert the expected and actual are equal integer.
- * 
+ *
  * @param line
  * @param expected
  * @param actual

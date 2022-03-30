@@ -103,7 +103,7 @@ char *filename(char *path) {
  * Returns the extension component of the path
  *
  * caller must free the allocated memory stores the extension
- * 
+ *
  * @return extension
  * @param path
  */

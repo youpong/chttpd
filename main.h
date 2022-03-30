@@ -17,7 +17,7 @@ typedef struct {
   char *prog_name;
   bool debug;
   bool test;
-  bool version;  
+  bool version;
   char *document_root;
   char *access_log;
   int port;

@@ -42,7 +42,7 @@ void delete_Socket(Socket *sock) {
 }
 
 /**
- * TODO: exception 
+ * TODO: exception
  * Creates a new Socket object for the server
  *
  * @return a pointer to Socket object
@@ -79,7 +79,7 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 }
 
 /**
- * TODO: exception 
+ * TODO: exception
  * Accepts a connection on Socket
  *
  * @return a new connected Socket
@@ -112,7 +112,8 @@ Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
  * @param dest the decoded string
  * @param src the string to decode
  *
- * @see https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
+ * @see
+ * https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
  * @see https://url.spec.whatwg.org/
  */
 void url_decode(char *dest, char *src) {
@@ -195,7 +196,7 @@ HttpMessage *new_HttpMessage(HttpMessageType ty) {
  * Destroy a HttpMessage object.
  *
  * @param msg the HttpMessage to destroy
- * 
+ *
  */
 void delete_HttpMessage(HttpMessage *msg) {
   if (msg == NULL) {
@@ -227,7 +228,7 @@ void delete_HttpMessage(HttpMessage *msg) {
  *
  * @return a pointer to HttpMessage object.
  * @param f The input source for the HTTP Message
- * @param ty The HttpMessageType 
+ * @param ty The HttpMessageType
  * @param ex The exception object
  * @param debug The debug mode
  */
