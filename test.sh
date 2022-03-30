@@ -14,7 +14,7 @@ function error() {
 echo './httpd 0.0.0' | cmp - <(./httpd -v 2>&1) || error "$LINENO"
 
 # start server
-$prog $PORT &
+$prog -p $PORT &
 
 # Normal request
 curl -s --head 127.0.0.1:${PORT}/hello.html | head -1 | grep 200 > /dev/null || error "$LINENO"

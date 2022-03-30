@@ -106,27 +106,20 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         opts->access_log = strdup(ArgsIter_next(iter));
         continue;
       }
+      if (strcmp(arg, "-p") == 0) {
+        if (!ArgsIter_hasNext(iter)) {
+          ex->msg = "option require an argument -- 'p'";
+          goto IllegalArgument;
+        }
+        opts->port = atoi(ArgsIter_next(iter));
+        continue;
+      }
 
       ex->msg = "unknown option";
       goto IllegalArgument;
     }
 
-    //
-    // argument PORT
-    //
-
-    // PORT must be start with digit '0-9'
-    if (arg[0] < '0' || '9' < arg[0]) {
-      ex->msg = "PORT must be a number";
-      goto IllegalArgument;
-    }
-
-    if (opts->port < 0) {
-      opts->port = atoi(arg);
-      continue;
-    }
-
-    ex->msg = "too many arguments";
+    ex->msg = "unknown argument";
     goto IllegalArgument;
   }
   delete_ArgsIter(iter);
@@ -157,7 +150,7 @@ IllegalArgument:
 
 static void print_usage(char *prog_name) {
   fprintf(stderr, "Usage:\n");
-  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [PORT]\n", prog_name);
+  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [-p PORT]\n", prog_name);
   fprintf(stderr, "%s -v\n", prog_name);
   fprintf(stderr, "%s -test\n", prog_name);
 }
@@ -179,8 +172,8 @@ static void test_Option_parse() {
   expect_str(__LINE__, opt->access_log, "access.log");
   free(opt);
 
-  char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "80"};
-  opt = Option_parse(6, arg_full, ex);
+  char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "-p", "80"};
+  opt = Option_parse(8, arg_full, ex);
   expect(__LINE__, 80, opt->port);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "root");
@@ -191,12 +184,6 @@ static void test_Option_parse() {
   opt = Option_parse(2, test_opt, ex);
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_bool(__LINE__, true, opt->test);
-  free(opt);
-
-  char *arg_port[] = {"./httpd", "80"};
-  opt = Option_parse(2, arg_port, ex);
-  expect_str(__LINE__, opt->prog_name, "./httpd");
-  expect(__LINE__, 80, opt->port);
   free(opt);
 
   //
@@ -216,12 +203,7 @@ static void test_Option_parse() {
 
   char *arg_nan[] = {"./httpd", "a"};
   opt = Option_parse(2, arg_nan, ex);
-  expect_str(__LINE__, "PORT must be a number", ex->msg);
-  free(opt);
-  
-  char *arg_many[] = {"./httpd", "80", "80"};
-  opt = Option_parse(3, arg_many, ex);
-  expect_str(__LINE__, "too many arguments", ex->msg);
+  expect_str(__LINE__, "unknown argument", ex->msg);
   free(opt);
 }
 
