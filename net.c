@@ -79,16 +79,16 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 }
 
 /**
- * Accepts a connection on Socket
+ * Accepts a connection on Socket object
  *
- * @return a new connected Socket
- * @param sv_sock the pointer to Socket
- * @param ex the pointer to Exception
+ * @return a new connected Socket object
+ * @param self the pointer to Socket object
+ * @param ex the pointer to Exception object
  */
-Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
+Socket *ServerSocket_accept(Socket *self, Exception *ex) {
     Socket *sock = new_Socket(S_CLT);
 
-    sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr, &sock->addr_len);
+    sock->_fd = accept(self->_fd, (struct sockaddr *)sock->addr, &sock->addr_len);
     if (sock->_fd < 0) {
         ex->ty = E_Failure;
         ex->msg = "accept";

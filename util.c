@@ -22,41 +22,41 @@ char *ErrorMsg;
  * @param argv the vector of the arguments
  */
 ArgsIter *new_ArgsIter(int argc, char **argv) {
-    ArgsIter *this = malloc(sizeof(ArgsIter));
-    this->argc = argc;
-    this->argv = argv;
-    return this;
+    ArgsIter *self = malloc(sizeof(ArgsIter));
+    self->argc = argc;
+    self->argv = argv;
+    return self;
 }
 
 /**
  * Deletes the ArgsIter object
  *
- * @param this a pointer to ArgsIter object
+ * @param self a pointer to ArgsIter object
  */
-void delete_ArgsIter(ArgsIter *this) {
-    free(this);
+void delete_ArgsIter(ArgsIter *self) {
+    free(self);
 }
 
 /**
  * Returns true if the Args has a next argument.
  *
  * @return true if the Args has a next argument.
- * @param this a pointer to ArgsIter object
+ * @param self a pointer to ArgsIter object
  */
-bool ArgsIter_hasNext(ArgsIter *this) {
-    return this->argc > 0;
+bool ArgsIter_hasNext(ArgsIter *self) {
+    return self->argc > 0;
 }
 
 /**
  * Returns the next argument
  *
  * @return the next argument
- * @param this a pointer to ArgsIter object
+ * @param self a pointer to ArgsIter object
  */
-char *ArgsIter_next(ArgsIter *this) {
-    char *ret = *(this->argv);
-    this->argc--;
-    this->argv++;
+char *ArgsIter_next(ArgsIter *self) {
+    char *ret = *(self->argv);
+    self->argc--;
+    self->argv++;
 
     return ret;
 }
