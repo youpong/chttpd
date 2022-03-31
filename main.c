@@ -44,15 +44,9 @@ int main(int argc, char **argv) {
   MimeMap = new_MimeMap();
   server_start(opt);
 
-  // System will delete bellow objects soon.
-  // - Map       MimeMap
-  // - Option    opt
-  // - Exception ex
-
   return EXIT_SUCCESS;
 }
 
-// MimeMap: don't use delete_Map()
 static Map *new_MimeMap() {
   Map *map = new_Map();
 
@@ -71,9 +65,14 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   ArgsIter *iter = new_ArgsIter(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
 
-  opts->port = -1; // -1: not setted
-
   opts->prog_name = strdup(ArgsIter_next(iter));
+  
+  //
+  // set default values...
+  //
+  opts->port = DEFAULT_PORT;
+  opts->document_root = strdup("www");
+  opts->access_log = strdup("access.log");
 
   while (ArgsIter_hasNext(iter)) {
     char *arg = ArgsIter_next(iter);
@@ -114,27 +113,13 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         opts->port = atoi(ArgsIter_next(iter));
         continue;
       }
-
+      // else ...
       ex->msg = "unknown option";
       goto IllegalArgument;
     }
-
+    // else ...
     ex->msg = "unknown argument";
     goto IllegalArgument;
-  }
-  delete_ArgsIter(iter);
-
-  //
-  // set default values...
-  //
-  if (opts->port < 0) {
-    opts->port = DEFAULT_PORT;
-  }
-  if (opts->document_root == NULL) {
-    opts->document_root = strdup("www");
-  }
-  if (opts->access_log == NULL) {
-    opts->access_log = strdup("access.log");
   }
 
   return opts;
