@@ -79,7 +79,6 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 }
 
 /**
- * TODO: exception
  * Accepts a connection on Socket
  *
  * @return a new connected Socket
@@ -89,18 +88,25 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 Socket *ServerSocket_accept(Socket *sv_sock, Exception *ex) {
     Socket *sock = new_Socket(S_CLT);
 
-    if ((sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr,
-                            &sock->addr_len)) < 0) {
+    sock->_fd = accept(sv_sock->_fd, (struct sockaddr *)sock->addr, &sock->addr_len);
+    if (sock->_fd < 0) {
+        ex->ty = E_Failure;
         ex->msg = "accept";
-        return NULL;
+        return sock;
     }
-    if ((sock->ips = fdopen(sock->_fd, "r")) == NULL) {
+    
+    sock->ips = fdopen(sock->_fd, "r");
+    if (sock->ips == NULL) {
+        ex->ty = E_Failure;        
         ex->msg = "fdopen";
-        return NULL;
+        return sock;
     }
-    if ((sock->ops = fdopen(sock->_fd, "w")) == NULL) {
+    
+    sock->ops = fdopen(sock->_fd, "w");
+    if (sock->ops == NULL) {
+        ex->ty = E_Failure;        
         ex->msg = "fdopen";
-        return NULL;
+        return sock;
     }
 
     return sock;
