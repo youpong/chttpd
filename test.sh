@@ -11,7 +11,7 @@ function error() {
 }
 
 # show version
-echo './httpd 0.0.0' | cmp - <(./httpd -v 2>&1) || error "$LINENO"
+echo './httpd 0.1.0' | cmp - <(./httpd -v 2>&1) || error "$LINENO"
 
 # start server
 $prog -p $PORT &
