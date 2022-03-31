@@ -34,7 +34,6 @@ To show the version, run the following command:
 $ ./httpd -v
 ```
 
-
 ## BUILD
 
 To build, run the following command:
@@ -49,6 +48,14 @@ To test, run the following command:
 
 ```bash
 $ make check
+```
+
+## API Docs
+
+To generate api docs, run the following command:
+
+```bash
+$ make docs
 ```
 
 ## Reference
