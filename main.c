@@ -35,7 +35,10 @@ int main(int argc, char **argv) {
     run_all_test();
     return EXIT_SUCCESS;
   }
-
+  if (opt->help) {
+    print_usage(opt->prog_name);
+    return EXIT_SUCCESS;
+  }
   if (opt->version) {
     fprintf(stderr, "%s %s\n", opt->prog_name, VERSION);
     return EXIT_SUCCESS;
@@ -66,7 +69,7 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   Option *opts = calloc(1, sizeof(Option));
 
   opts->prog_name = ArgsIter_next(iter);
-  
+
   //
   // set default values...
   //
@@ -85,13 +88,17 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         opts->test = true;
         continue;
       }
+      if (strcmp(arg, "-h") == 0) {
+        opts->help = true;
+        continue;
+      }
       if (strcmp(arg, "-v") == 0) {
         opts->version = true;
         continue;
       }
       if (strcmp(arg, "-r") == 0) {
         if (!ArgsIter_hasNext(iter)) {
-          ex->ty = O_IllegalArgument;            
+          ex->ty = O_IllegalArgument;
           ex->msg = "option require an argument -- 'r'";
           break;
         }
@@ -100,7 +107,7 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
       }
       if (strcmp(arg, "-l") == 0) {
         if (!ArgsIter_hasNext(iter)) {
-          ex->ty = O_IllegalArgument;                        
+          ex->ty = O_IllegalArgument;
           ex->msg = "option require an argument -- 'l'";
           break;
         }
@@ -109,7 +116,7 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
       }
       if (strcmp(arg, "-p") == 0) {
         if (!ArgsIter_hasNext(iter)) {
-          ex->ty = O_IllegalArgument;            
+          ex->ty = O_IllegalArgument;
           ex->msg = "option require an argument -- 'p'";
           break;
         }
@@ -117,12 +124,12 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
         continue;
       }
       // else ...
-      ex->ty = O_IllegalArgument;            
+      ex->ty = O_IllegalArgument;
       ex->msg = "unknown option";
       break;
     }
     // else ...
-    ex->ty = O_IllegalArgument;            
+    ex->ty = O_IllegalArgument;
     ex->msg = "unknown argument";
     break;
   }
@@ -132,18 +139,18 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
 
 static void print_usage(char *prog_name) {
   fprintf(stderr, "Usage:\n");
-  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [-p PORT]\n", prog_name);
+  fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [-p PORT]\n",
+          prog_name);
+  fprintf(stderr, "%s -h\n", prog_name);
   fprintf(stderr, "%s -v\n", prog_name);
-  fprintf(stderr, "%s -test\n", prog_name);
 }
 
-static void test_Option_parse() {
+/**
+ * normal cases...
+ */
+static void test_Option_parse_normal() {
   Option *opt;
   Exception *ex = calloc(1, sizeof(Exception));
-
-  //
-  // normal cases...
-  //
 
   char *arg_min[] = {"./httpd"};
   opt = Option_parse(1, arg_min, ex);
@@ -152,45 +159,70 @@ static void test_Option_parse() {
   expect_str(__LINE__, opt->prog_name, "./httpd");
   expect_str(__LINE__, opt->document_root, "www");
   expect_str(__LINE__, opt->access_log, "access.log");
-  free(opt);
 
-  char *arg_full[] = {"./httpd", "-r", "root", "-l", "Access.log", "-p", "80"};
-  opt = Option_parse(8, arg_full, ex);
+  char *arg_full[] = {"./HTTPD", "-r", "WWW", "-l", "ACCESS.LOG", "-p", "80"};
+  opt = Option_parse(7, arg_full, ex);
+  expect(__LINE__, ex->ty, E_Okay);
   expect(__LINE__, 80, opt->port);
-  expect_str(__LINE__, opt->prog_name, "./httpd");
-  expect_str(__LINE__, opt->document_root, "root");
-  expect_str(__LINE__, opt->access_log, "Access.log");
-  free(opt);
+  expect_str(__LINE__, opt->prog_name, "./HTTPD");
+  expect_str(__LINE__, opt->document_root, "WWW");
+  expect_str(__LINE__, opt->access_log, "ACCESS.LOG");
 
-  char *test_opt[] = {"./httpd", "-test"};
-  opt = Option_parse(2, test_opt, ex);
-  expect_str(__LINE__, opt->prog_name, "./httpd");
+  char *arg_help[] = {"./httpd", "-h"};
+  opt = Option_parse(2, arg_help, ex);
+  expect(__LINE__, ex->ty, E_Okay);
+  expect_bool(__LINE__, true, opt->help);
+
+  char *arg_ver[] = {"./httpd", "-v"};
+  opt = Option_parse(2, arg_ver, ex);
+  expect(__LINE__, ex->ty, E_Okay);
+  expect_bool(__LINE__, true, opt->version);
+
+  char *arg_test[] = {"./httpd", "-test"};
+  opt = Option_parse(2, arg_test, ex);
+  expect(__LINE__, ex->ty, E_Okay);
   expect_bool(__LINE__, true, opt->test);
-  free(opt);
+}
 
-  //
-  // abnormal cases...
-  //
+/**
+ * abnormal cases...
+ */
+static void test_Option_parse_abnormal() {
+  Option *opt;
+  Exception *ex = calloc(1, sizeof(Exception));
 
-  char *arg_omit[] = {"./httpd", "-r"};
-  opt = Option_parse(2, arg_omit, ex);
+  ex->ty = E_Okay;
+  char *arg_r[] = {"./httpd", "-r"};
+  opt = Option_parse(2, arg_r, ex);
   expect(__LINE__, ex->ty, O_IllegalArgument);
   expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
-  free(opt);
 
-  char *arg_unknown[] = {"./httpd", "-1"};
-  opt = Option_parse(2, arg_unknown, ex);
+  ex->ty = E_Okay;
+  char *arg_l[] = {"./httpd", "-l"};
+  opt = Option_parse(2, arg_l, ex);
+  expect(__LINE__, ex->ty, O_IllegalArgument);
+  expect_str(__LINE__, "option require an argument -- 'l'", ex->msg);
+
+  ex->ty = E_Okay;
+  char *arg_p[] = {"./httpd", "-p"};
+  opt = Option_parse(2, arg_p, ex);
+  expect(__LINE__, ex->ty, O_IllegalArgument);
+  expect_str(__LINE__, "option require an argument -- 'p'", ex->msg);
+
+  ex->ty = E_Okay;
+  char *arg_unknown_opt[] = {"./httpd", "-1"};
+  opt = Option_parse(2, arg_unknown_opt, ex);
   expect_str(__LINE__, "unknown option", ex->msg);
-  free(opt);
 
-  char *arg_nan[] = {"./httpd", "a"};
-  opt = Option_parse(2, arg_nan, ex);
+  ex->ty = E_Okay;
+  char *arg_unknown_arg[] = {"./httpd", "a"};
+  opt = Option_parse(2, arg_unknown_arg, ex);
   expect_str(__LINE__, "unknown argument", ex->msg);
-  free(opt);
 }
 
 static void run_all_test_main() {
-  test_Option_parse();
+  test_Option_parse_normal();
+  test_Option_parse_abnormal();
 }
 
 static void run_all_test() {

@@ -16,6 +16,7 @@
 typedef struct {
   char *prog_name;
   bool debug;
+  bool help;
   bool test;
   bool version;
   char *document_root;
