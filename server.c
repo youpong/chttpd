@@ -49,7 +49,7 @@ void server_start(Option *opt) {
     }
 
     Socket *sv_sock = new_ServerSocket(opt->port, ex);
-    if (sv_sock == NULL)
+    if (ex->ty != E_Okay)
         error("Error: new_ServerSock: %s: %s", ex->msg, strerror(errno));
     printf("listen: %s:%d\n", inet_ntoa(sv_sock->addr->sin_addr),
            ntohs(sv_sock->addr->sin_port));

@@ -42,11 +42,9 @@ void delete_Socket(Socket *sock) {
 }
 
 /**
- * TODO: exception
  * Creates a new Socket object for the server
  *
  * @return a pointer to Socket object
- * @return NULL if error occurs
  * @param port number
  * @param ex a pointer to Exception
  */
@@ -55,8 +53,9 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 
     /* create a socket, endpoint of connection */
     if ((sv_sock->_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        ex->ty = E_Failure;
         ex->msg = "socket";
-        return NULL;
+        return sv_sock;
     }
 
     /* bind */
@@ -65,14 +64,16 @@ Socket *new_ServerSocket(int port, Exception *ex) {
     addr->sin_port = htons(port);
     addr->sin_addr.s_addr = INADDR_ANY;
     if (bind(sv_sock->_fd, (struct sockaddr *)addr, sv_sock->addr_len) < 0) {
+        ex->ty = E_Failure;
         ex->msg = "bind";
-        return NULL;
+        return sv_sock;
     }
 
     /* listen */
     if (listen(sv_sock->_fd, LISTEN_QUEUE) == -1) {
+        ex->ty = E_Failure;
         ex->msg = "listen";
-        return NULL;
+        return sv_sock;
     }
 
     return sv_sock;
