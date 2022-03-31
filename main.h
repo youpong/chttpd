@@ -14,14 +14,14 @@
 // clang-format on
 
 typedef struct {
-  char *prog_name;
-  bool debug;
-  bool help;
-  bool test;
-  bool version;
-  char *document_root;
-  char *access_log;
-  int port;
+    char *prog_name;
+    bool debug;
+    bool help;
+    bool test;
+    bool version;
+    char *document_root;
+    char *access_log;
+    int port;
 } Option;
 
 void server_start(Option *);

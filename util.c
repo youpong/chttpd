@@ -22,10 +22,10 @@ char *ErrorMsg;
  * @param argv the vector of the arguments
  */
 ArgsIter *new_ArgsIter(int argc, char **argv) {
-  ArgsIter *this = malloc(sizeof(ArgsIter));
-  this->argc = argc;
-  this->argv = argv;
-  return this;
+    ArgsIter *this = malloc(sizeof(ArgsIter));
+    this->argc = argc;
+    this->argv = argv;
+    return this;
 }
 
 /**
@@ -34,7 +34,7 @@ ArgsIter *new_ArgsIter(int argc, char **argv) {
  * @param this a pointer to ArgsIter object
  */
 void delete_ArgsIter(ArgsIter *this) {
-  free(this);
+    free(this);
 }
 
 /**
@@ -44,7 +44,7 @@ void delete_ArgsIter(ArgsIter *this) {
  * @param this a pointer to ArgsIter object
  */
 bool ArgsIter_hasNext(ArgsIter *this) {
-  return this->argc > 0;
+    return this->argc > 0;
 }
 
 /**
@@ -54,11 +54,11 @@ bool ArgsIter_hasNext(ArgsIter *this) {
  * @param this a pointer to ArgsIter object
  */
 char *ArgsIter_next(ArgsIter *this) {
-  char *ret = *(this->argv);
-  this->argc--;
-  this->argv++;
+    char *ret = *(this->argv);
+    this->argc--;
+    this->argv++;
 
-  return ret;
+    return ret;
 }
 
 //
@@ -71,11 +71,11 @@ char *ArgsIter_next(ArgsIter *this) {
  * @return a pointer to a new Vector object
  */
 Vector *new_Vector() {
-  Vector *vec = calloc(1, sizeof(Vector));
-  vec->capacity = 16;
-  vec->data = calloc(vec->capacity, sizeof(void *));
-  vec->len = 0;
-  return vec;
+    Vector *vec = calloc(1, sizeof(Vector));
+    vec->capacity = 16;
+    vec->data = calloc(vec->capacity, sizeof(void *));
+    vec->len = 0;
+    return vec;
 }
 
 /**
@@ -84,10 +84,10 @@ Vector *new_Vector() {
  * @param vec
  */
 void delete_Vector(Vector *vec) {
-  for (int i = 0; i < vec->len; i++)
-    free(vec->data[i]);
-  free(vec->data);
-  free(vec);
+    for (int i = 0; i < vec->len; i++)
+        free(vec->data[i]);
+    free(vec->data);
+    free(vec);
 }
 
 /**
@@ -98,11 +98,11 @@ void delete_Vector(Vector *vec) {
  * @param elem
  */
 void Vector_push(Vector *vec, void *elem) {
-  if (vec->capacity == vec->len) {
-    vec->capacity *= 2;
-    vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
-  }
-  vec->data[vec->len++] = elem;
+    if (vec->capacity == vec->len) {
+        vec->capacity *= 2;
+        vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
+    }
+    vec->data[vec->len++] = elem;
 }
 
 /**
@@ -111,7 +111,7 @@ void Vector_push(Vector *vec, void *elem) {
  * @param vec
  */
 void *Vector_pop(Vector *vec) {
-  return vec->data[--vec->len];
+    return vec->data[--vec->len];
 }
 
 /**
@@ -121,7 +121,7 @@ void *Vector_pop(Vector *vec) {
  * @param vec
  */
 void *Vector_last(Vector *vec) {
-  return vec->data[vec->len - 1];
+    return vec->data[vec->len - 1];
 }
 
 //
@@ -134,10 +134,10 @@ void *Vector_last(Vector *vec) {
  * @return a pointer to a new Map object
  */
 Map *new_Map() {
-  Map *map = malloc(sizeof(Map));
-  map->keys = new_Vector();
-  map->vals = new_Vector();
-  return map;
+    Map *map = malloc(sizeof(Map));
+    map->keys = new_Vector();
+    map->vals = new_Vector();
+    return map;
 }
 
 /**
@@ -146,9 +146,9 @@ Map *new_Map() {
  * @param map
  */
 void delete_Map(Map *map) {
-  delete_Vector(map->vals);
-  delete_Vector(map->keys);
-  free(map);
+    delete_Vector(map->vals);
+    delete_Vector(map->keys);
+    free(map);
 }
 
 /**
@@ -159,8 +159,8 @@ void delete_Map(Map *map) {
  * @param val
  */
 void Map_put(Map *map, char *key, void *val) {
-  Vector_push(map->keys, key);
-  Vector_push(map->vals, val);
+    Vector_push(map->keys, key);
+    Vector_push(map->vals, val);
 }
 
 /**
@@ -173,12 +173,12 @@ void Map_put(Map *map, char *key, void *val) {
  * @param key
  */
 void *Map_get(Map *map, char *key) {
-  for (int i = map->keys->len - 1; i >= 0; i--) {
-    if (strcmp(map->keys->data[i], key) == 0) {
-      return map->vals->data[i];
+    for (int i = map->keys->len - 1; i >= 0; i--) {
+        if (strcmp(map->keys->data[i], key) == 0) {
+            return map->vals->data[i];
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
 
 //
@@ -191,14 +191,14 @@ void *Map_get(Map *map, char *key) {
  * @return a pointer to a new StringBuffer object
  */
 StringBuffer *new_StringBuffer() {
-  StringBuffer *sb = calloc(1, sizeof(StringBuffer));
+    StringBuffer *sb = calloc(1, sizeof(StringBuffer));
 
-  sb->len = 0;
-  sb->_body = new_Vector();
-  sb->_buf_siz = 255 + 1;
-  sb->_buf = calloc(sb->_buf_siz, sizeof(char));
+    sb->len = 0;
+    sb->_body = new_Vector();
+    sb->_buf_siz = 255 + 1;
+    sb->_buf = calloc(sb->_buf_siz, sizeof(char));
 
-  return sb;
+    return sb;
 }
 
 /**
@@ -207,9 +207,9 @@ StringBuffer *new_StringBuffer() {
  * @param sb
  */
 void delete_StringBuffer(StringBuffer *sb) {
-  delete_Vector(sb->_body);
-  free(sb->_buf);
-  free(sb);
+    delete_Vector(sb->_body);
+    free(sb->_buf);
+    free(sb);
 }
 
 /**
@@ -219,14 +219,14 @@ void delete_StringBuffer(StringBuffer *sb) {
  * @param string
  */
 void StringBuffer_append(StringBuffer *sb, char *string) {
-  if (sb->_buf_len != 0) {
-    sb->_buf[sb->_buf_len] = '\0';
-    Vector_push(sb->_body, strdup(sb->_buf));
-    sb->_buf_len = 0;
-  }
+    if (sb->_buf_len != 0) {
+        sb->_buf[sb->_buf_len] = '\0';
+        Vector_push(sb->_body, strdup(sb->_buf));
+        sb->_buf_len = 0;
+    }
 
-  Vector_push(sb->_body, strdup(string));
-  sb->len += strlen(string);
+    Vector_push(sb->_body, strdup(string));
+    sb->len += strlen(string);
 }
 
 /**
@@ -236,15 +236,15 @@ void StringBuffer_append(StringBuffer *sb, char *string) {
  * @param c
  */
 void StringBuffer_appendChar(StringBuffer *sb, char c) {
-  if (sb->_buf_len + 1 >= sb->_buf_siz) {
-    sb->_buf[sb->_buf_len] = '\0';
-    Vector_push(sb->_body, strdup(sb->_buf));
-    sb->_buf_len = 0;
-  }
+    if (sb->_buf_len + 1 >= sb->_buf_siz) {
+        sb->_buf[sb->_buf_len] = '\0';
+        Vector_push(sb->_body, strdup(sb->_buf));
+        sb->_buf_len = 0;
+    }
 
-  sb->_buf[sb->_buf_len] = c;
-  sb->_buf_len++;
-  sb->len++;
+    sb->_buf[sb->_buf_len] = c;
+    sb->_buf_len++;
+    sb->len++;
 }
 
 /**
@@ -256,15 +256,15 @@ void StringBuffer_appendChar(StringBuffer *sb, char c) {
  * @param sb
  */
 char *StringBuffer_toString(StringBuffer *sb) {
-  char *str = calloc(sb->len + 1, sizeof(char));
+    char *str = calloc(sb->len + 1, sizeof(char));
 
-  for (int i = 0; i < sb->_body->len; i++)
-    strcat(str, sb->_body->data[i]);
+    for (int i = 0; i < sb->_body->len; i++)
+        strcat(str, sb->_body->data[i]);
 
-  sb->_buf[sb->_buf_len] = '\0';
-  strcat(str, sb->_buf);
+    sb->_buf[sb->_buf_len] = '\0';
+    strcat(str, sb->_buf);
 
-  return str;
+    return str;
 }
 
 /**
@@ -274,9 +274,9 @@ char *StringBuffer_toString(StringBuffer *sb) {
  * @param n
  */
 int *intdup(int n) {
-  int *num = malloc(sizeof(int));
-  *num = n;
-  return num;
+    int *num = malloc(sizeof(int));
+    *num = n;
+    return num;
 }
 
 //
@@ -289,11 +289,11 @@ int *intdup(int n) {
  * @parma fmt
  */
 noreturn void error(char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
-  exit(1);
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    exit(1);
 }
 
 /**
@@ -304,9 +304,9 @@ noreturn void error(char *fmt, ...) {
  * @param actual
  */
 void expect(int line, int expected, int actual) {
-  if (expected == actual)
-    return;
-  error("%d: %d expected, but got %d", line, expected, actual);
+    if (expected == actual)
+        return;
+    error("%d: %d expected, but got %d", line, expected, actual);
 }
 
 /**
@@ -317,13 +317,13 @@ void expect(int line, int expected, int actual) {
  * @param actual
  */
 void expect_str(int line, char *expected, char *actual) {
-  if (expected == NULL)
-    error("%d: non-NULL is expected, but \"expected\" is NULL", line);
-  if (actual == NULL)
-    error("%d: non-NULL is expected, but \"actual\" is NULL", line);
-  if (strcmp(expected, actual) != 0)
-    error("%d: \"%s\" expected, but got \"%s\"", line, expected, actual);
-  return;
+    if (expected == NULL)
+        error("%d: non-NULL is expected, but \"expected\" is NULL", line);
+    if (actual == NULL)
+        error("%d: non-NULL is expected, but \"actual\" is NULL", line);
+    if (strcmp(expected, actual) != 0)
+        error("%d: \"%s\" expected, but got \"%s\"", line, expected, actual);
+    return;
 }
 
 /**
@@ -334,9 +334,9 @@ void expect_str(int line, char *expected, char *actual) {
  * @param actual
  */
 void expect_ptr(int line, void *expected, void *actual) {
-  if (expected == actual)
-    return;
-  error("%d: %d expected, but got %d", line, expected, actual);
+    if (expected == actual)
+        return;
+    error("%d: %d expected, but got %d", line, expected, actual);
 }
 
 /**
@@ -347,10 +347,10 @@ void expect_ptr(int line, void *expected, void *actual) {
  * @param actual
  */
 void expect_bool(int line, bool expected, bool actual) {
-  if (expected == actual)
-    return;
-  if (actual == true)
-    error("%d: 'false' expected, but got 'true'", line);
-  else
-    error("%d: 'true' expected, but got 'false'", line);
+    if (expected == actual)
+        return;
+    if (actual == true)
+        error("%d: 'false' expected, but got 'true'", line);
+    else
+        error("%d: 'true' expected, but got 'false'", line);
 }

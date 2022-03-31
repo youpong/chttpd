@@ -5,15 +5,15 @@
 
 /// file type
 typedef enum {
-  F_DIR,   ///< directory
-  F_FILE,  ///< regular file
-  F_OTHER, ///< other
+    F_DIR,   ///< directory
+    F_FILE,  ///< regular file
+    F_OTHER, ///< other
 } FileType;
 
 typedef struct {
-  FileType ty;
-  char *path;
-  int len;
+    FileType ty;
+    char *path;
+    int len;
 } File;
 
 File *new_File(char *path);

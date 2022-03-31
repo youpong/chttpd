@@ -14,20 +14,20 @@
 #define LISTEN_QUEUE 6
 
 typedef enum {
-  S_SRV, // server socket
-  S_CLT, // client socket
+    S_SRV, // server socket
+    S_CLT, // client socket
 } SocketType;
 
 typedef struct {
-  SocketType _ty; // for internal: type of socket(Server/Client)
+    SocketType _ty; // for internal: type of socket(Server/Client)
 
-  struct sockaddr_in *addr;
-  socklen_t addr_len;
+    struct sockaddr_in *addr;
+    socklen_t addr_len;
 
-  int _fd; // for internal: file descriptor
+    int _fd; // for internal: file descriptor
 
-  FILE *ips; // Input Stream
-  FILE *ops; // Output Stream
+    FILE *ips; // Input Stream
+    FILE *ops; // Output Stream
 } Socket;
 
 Socket *new_ServerSocket(int, Exception *);
@@ -40,15 +40,15 @@ void url_decode(char *dest, char *src);
 
 /// Http Message Type
 typedef enum {
-  HM_REQ, ///< Http Request
-  HM_RES, ///< Http Response
+    HM_REQ, ///< Http Request
+    HM_RES, ///< Http Response
 } HttpMessageType;
 
 /// Http Message Method Type
 typedef enum {
-  HMMT_GET,     ///< GET
-  HMMT_HEAD,    ///< HEAD
-  HMMT_UNKNOWN, ///< not implemented method
+    HMMT_GET,     ///< GET
+    HMMT_HEAD,    ///< HEAD
+    HMMT_UNKNOWN, ///< not implemented method
 } HttpMessageMethodType;
 
 /**
@@ -77,24 +77,24 @@ typedef enum {
  * field-value    = *( field-content | LWS)
  */
 typedef struct {
-  HttpMessageType _ty; // for internal: type of message(request/response)
+    HttpMessageType _ty; // for internal: type of message(request/response)
 
-  // start-line (Request-Line|Status-Line)
-  char *request_line; // for log
-  char *method;
-  HttpMessageMethodType method_ty;
-  char *request_uri;
-  char *filename; // pick out from request_uri
-  char *http_version;
-  char *status_code;
-  char *reason_phrase;
+    // start-line (Request-Line|Status-Line)
+    char *request_line; // for log
+    char *method;
+    HttpMessageMethodType method_ty;
+    char *request_uri;
+    char *filename; // pick out from request_uri
+    char *http_version;
+    char *status_code;
+    char *reason_phrase;
 
-  // message-header
-  Map *header_map;
+    // message-header
+    Map *header_map;
 
-  // message-body
-  char *body;
-  int body_len;
+    // message-body
+    char *body;
+    int body_len;
 
 } HttpMessage;
 

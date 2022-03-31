@@ -9,21 +9,22 @@
 
 /* util.c */
 typedef enum {
-  E_Okay,
-  HM_EmptyRequest,
-  HM_BadRequest,
-  O_IllegalArgument,
+    E_Okay,
+    E_Failure,
+    HM_EmptyRequest,
+    HM_BadRequest,
+    O_IllegalArgument,
 } ExceptionType;
 
 typedef struct {
-  ExceptionType ty;
-  char *msg;
+    ExceptionType ty;
+    char *msg;
 } Exception;
 
 /// Iterator.
 typedef struct {
-  int argc;
-  char **argv;
+    int argc;
+    char **argv;
 } ArgsIter;
 
 ArgsIter *new_ArgsIter(int, char **);
@@ -32,9 +33,9 @@ bool ArgsIter_hasNext(ArgsIter *);
 char *ArgsIter_next(ArgsIter *);
 
 typedef struct {
-  void **data;
-  int capacity;
-  int len;
+    void **data;
+    int capacity;
+    int len;
 } Vector;
 
 Vector *new_Vector();
@@ -44,8 +45,8 @@ void *Vector_pop(Vector *);
 void *Vector_last(Vector *);
 
 typedef struct {
-  Vector *keys;
-  Vector *vals;
+    Vector *keys;
+    Vector *vals;
 } Map;
 
 Map *new_Map();
@@ -58,12 +59,12 @@ void Map_put(Map *, char *, void *);
 void *Map_get(Map *, char *);
 
 typedef struct {
-  int len;
-  Vector *_body;
+    int len;
+    Vector *_body;
 
-  char *_buf;
-  int _buf_len;
-  int _buf_siz;
+    char *_buf;
+    int _buf_len;
+    int _buf_siz;
 } StringBuffer;
 
 StringBuffer *new_StringBuffer();
