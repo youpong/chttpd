@@ -65,14 +65,14 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
   ArgsIter *iter = new_ArgsIter(argc, argv);
   Option *opts = calloc(1, sizeof(Option));
 
-  opts->prog_name = strdup(ArgsIter_next(iter));
+  opts->prog_name = ArgsIter_next(iter);
   
   //
   // set default values...
   //
   opts->port = DEFAULT_PORT;
-  opts->document_root = strdup("www");
-  opts->access_log = strdup("access.log");
+  opts->document_root = "www";
+  opts->access_log = "access.log";
 
   while (ArgsIter_hasNext(iter)) {
     char *arg = ArgsIter_next(iter);
@@ -91,45 +91,42 @@ static Option *Option_parse(int argc, char **argv, Exception *ex) {
       }
       if (strcmp(arg, "-r") == 0) {
         if (!ArgsIter_hasNext(iter)) {
+          ex->ty = O_IllegalArgument;            
           ex->msg = "option require an argument -- 'r'";
-          goto IllegalArgument;
+          break;
         }
-        opts->document_root = strdup(ArgsIter_next(iter));
+        opts->document_root = ArgsIter_next(iter);
         continue;
       }
       if (strcmp(arg, "-l") == 0) {
         if (!ArgsIter_hasNext(iter)) {
+          ex->ty = O_IllegalArgument;                        
           ex->msg = "option require an argument -- 'l'";
-          goto IllegalArgument;
+          break;
         }
-        opts->access_log = strdup(ArgsIter_next(iter));
+        opts->access_log = ArgsIter_next(iter);
         continue;
       }
       if (strcmp(arg, "-p") == 0) {
         if (!ArgsIter_hasNext(iter)) {
+          ex->ty = O_IllegalArgument;            
           ex->msg = "option require an argument -- 'p'";
-          goto IllegalArgument;
+          break;
         }
         opts->port = atoi(ArgsIter_next(iter));
         continue;
       }
       // else ...
+      ex->ty = O_IllegalArgument;            
       ex->msg = "unknown option";
-      goto IllegalArgument;
+      break;
     }
     // else ...
+    ex->ty = O_IllegalArgument;            
     ex->msg = "unknown argument";
-    goto IllegalArgument;
+    break;
   }
 
-  return opts;
-
-  //
-  // catch parse error
-  //
-IllegalArgument:
-  ex->ty = O_IllegalArgument;
-  delete_ArgsIter(iter);
   return opts;
 }
 
