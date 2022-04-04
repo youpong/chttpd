@@ -14,15 +14,15 @@ static void test_Vector() {
     }
 
     // clang-format off
-  expect(__LINE__, 100, vec->len);
-  expect(__LINE__,   0, *(int *)vec->data[ 0]);
-  expect(__LINE__,  50, *(int *)vec->data[50]);
-  expect(__LINE__,  99, *(int *)vec->data[99]);
-  expect(__LINE__,  99, *(int *)Vector_last(vec));
+    expect(__LINE__, 100, vec->len);
+    expect(__LINE__,   0, *(int *)vec->data[ 0]);
+    expect(__LINE__,  50, *(int *)vec->data[50]);
+    expect(__LINE__,  99, *(int *)vec->data[99]);
+    expect(__LINE__,  99, *(int *)Vector_last(vec));
 
-  expect(__LINE__,  99, *(int *)Vector_pop(vec));  
-  expect(__LINE__,  98, *(int *)Vector_last(vec));
-  expect(__LINE__,  99, vec->len);
+    expect(__LINE__,  99, *(int *)Vector_pop(vec));  
+    expect(__LINE__,  98, *(int *)Vector_last(vec));
+    expect(__LINE__,  99, vec->len);
     // clang-format on
 
     delete_Vector(vec);
@@ -99,9 +99,9 @@ static void test_strcmp() {
     // compare empty string
     //
     // clang-format off
-  expect(__LINE__,  true, strcmp("",  "") == 0);
-  expect(__LINE__, false, strcmp("A", "") == 0);
-  expect(__LINE__, false, strcmp("", "A") == 0);
+    expect(__LINE__, true,  strcmp("",  "") == 0);
+    expect(__LINE__, false, strcmp("A", "") == 0);
+    expect(__LINE__, false, strcmp("", "A") == 0);
     // clang-format on
 }
 

@@ -54,11 +54,11 @@ static Map *new_MimeMap() {
     Map *map = new_Map();
 
     // clang-format off
-  Map_put(map, "css" , "text/css" );
-  Map_put(map, "gif" , "image/gif");
-  Map_put(map, "html", "text/html");
-  Map_put(map, "png" , "image/png");
-  Map_put(map, "wmv" , "video/x-ms-wmv");
+    Map_put(map, "css" , "text/css" );
+    Map_put(map, "gif" , "image/gif");
+    Map_put(map, "html", "text/html");
+    Map_put(map, "png" , "image/png");
+    Map_put(map, "wmv" , "video/x-ms-wmv");
     // clang-format on
 
     return map;

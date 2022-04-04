@@ -163,7 +163,7 @@ void url_decode(char *dest, char *src) {
         continue;
 
         int len;
-    IllegalByteSequence : 
+    IllegalByteSequence:
         // append to dest '%' and trailing 2..0 bytes
         len = q - p + 1;
         if (*q == '\0') // not copy '\0'

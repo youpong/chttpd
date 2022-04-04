@@ -134,31 +134,31 @@ static void test_new_File() {
 
 static void test_parent_path() {
     // clang-format off
-  // absolute path
-  expect_str(__LINE__, "/java/net", parent_path("/java/net/URL.java"));
-  expect_str(__LINE__, "/java",     parent_path("/java/net"));
-  expect_str(__LINE__, "",          parent_path("/java"));
+    // absolute path
+    expect_str(__LINE__, "/java/net", parent_path("/java/net/URL.java"));
+    expect_str(__LINE__, "/java",     parent_path("/java/net"));
+    expect_str(__LINE__, "",          parent_path("/java"));
 
-  // relative path
-  expect_str(__LINE__, "www", parent_path("www/index.html"));
-  expect_str(__LINE__, "",    parent_path("www"));
-  expect_str(__LINE__, "",    parent_path(""));
+    // relative path
+    expect_str(__LINE__, "www", parent_path("www/index.html"));
+    expect_str(__LINE__, "",    parent_path("www"));
+    expect_str(__LINE__, "",    parent_path(""));
     // clang-format on
 }
 
 static void test_filename() {
     // clang-format off
-  expect_str(__LINE__, "URL.java", filename("/java/net/URL.java"));
-  expect_str(__LINE__, "URL.java", filename("URL.java"));
-  expect_str(__LINE__, "", filename(""));
+    expect_str(__LINE__, "URL.java", filename("/java/net/URL.java"));
+    expect_str(__LINE__, "URL.java", filename("URL.java"));
+    expect_str(__LINE__, "",         filename(""));
     // clang-format on
 }
 
 static void test_extension() {
     // clang-format off
-  expect_str(__LINE__, "ext", extension("dir/foo.ext"));
-  expect_str(__LINE__, "",    extension("dir/foo."));
-  expect_ptr(__LINE__, NULL,  extension("dir.name/foo"));
+    expect_str(__LINE__, "ext", extension("dir/foo.ext"));
+    expect_str(__LINE__, "",    extension("dir/foo."));
+    expect_ptr(__LINE__, NULL,  extension("dir.name/foo"));
     // clang-format on
 }
 

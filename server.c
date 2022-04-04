@@ -327,14 +327,14 @@ static int write_log(FILE *out, Socket *sock, time_t *req_time,
 
     char *buf;
     // clang-format off
-  size = fprintf(out, "%s - - [%s] \"%s\" %s %s \"%s\" \"%s\"\n",
-	  inet_ntoa(sock->addr->sin_addr),
-	  buf = formatted_time(&req_tm, timezone),
-	  req->request_line,
-	  res->status_code,
-	  header_get(res, "Content-Length", "\"-\""),	  
-	  header_get(req, "Referer", "-"),
-	  header_get(req, "User-Agent", "-"));
+    size = fprintf(out, "%s - - [%s] \"%s\" %s %s \"%s\" \"%s\"\n",
+                   inet_ntoa(sock->addr->sin_addr),
+                   buf = formatted_time(&req_tm, timezone),
+                   req->request_line,
+                   res->status_code,
+                   header_get(res, "Content-Length", "\"-\""),
+                   header_get(req, "Referer", "-"),
+                   header_get(req, "User-Agent", "-"));
     // clang-format on
     fflush(out);
 
@@ -510,16 +510,16 @@ static void test_write_log() {
     //
 
     // clang-format off
-  char *expected =
-    "0.0.0.0 "                      // client ip addr
-    "- "                            // client identity(identd)
-    "- "                            // user id
-    "[15/Oct/2020:13:58:36 +0900] " // request accept time
-    "\"GET /hello.html HTTP/1.1\" " // request-line
-    "200 "                          // Status-Code
-    "199 "                          // content length
-    "\"http://localhost:8080/hello2.html\" " // Referer
-    "\"Dali/0.1\"";                // User-Agent
+    char *expected =
+        "0.0.0.0 "                      // client ip addr
+        "- "                            // client identity(identd)
+        "- "                            // user id
+        "[15/Oct/2020:13:58:36 +0900] " // request accept time
+        "\"GET /hello.html HTTP/1.1\" " // request-line
+        "200 "                          // Status-Code
+        "199 "                          // content length
+        "\"http://localhost:8080/hello2.html\" " // Referer
+        "\"Dali/0.1\"";                // User-Agent
     // clang-format on
     expect(__LINE__, strlen(expected), strlen(buf));
     int i = 0;
@@ -536,12 +536,12 @@ static void test_write_log() {
 
 static void test_get_mime_type() {
     // clang-format off
-  expect_str(__LINE__, "text/html",  get_mime_type("www/index.html"));
-  expect_str(__LINE__, "text/html",  get_mime_type("/index.html"));  
-  expect_str(__LINE__, "text/plain", get_mime_type("www/extless"));
-  expect_str(__LINE__, "text/plain", get_mime_type("a.unknownext"));
-  expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));
-  // clang-format on  
+    expect_str(__LINE__, "text/html",  get_mime_type("www/index.html"));
+    expect_str(__LINE__, "text/html",  get_mime_type("/index.html"));  
+    expect_str(__LINE__, "text/plain", get_mime_type("www/extless"));
+    expect_str(__LINE__, "text/plain", get_mime_type("a.unknownext"));
+    expect_str(__LINE__, "text/plain", get_mime_type(".dotfile"));
+    // clang-format on  
 }
 
 void run_all_test_server() {
