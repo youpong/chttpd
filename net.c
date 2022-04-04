@@ -89,23 +89,24 @@ Socket *new_ServerSocket(int port, Exception *ex) {
 Socket *ServerSocket_accept(Socket *self, Exception *ex) {
     Socket *sock = new_Socket(S_CLT);
 
-    sock->_fd = accept(self->_fd, (struct sockaddr *)sock->addr, &sock->addr_len);
+    sock->_fd =
+        accept(self->_fd, (struct sockaddr *)sock->addr, &sock->addr_len);
     if (sock->_fd < 0) {
         ex->ty = E_Failure;
         ex->msg = "accept";
         return sock;
     }
-    
+
     sock->ips = fdopen(sock->_fd, "r");
     if (sock->ips == NULL) {
-        ex->ty = E_Failure;        
+        ex->ty = E_Failure;
         ex->msg = "fdopen";
         return sock;
     }
-    
+
     sock->ops = fdopen(sock->_fd, "w");
     if (sock->ops == NULL) {
-        ex->ty = E_Failure;        
+        ex->ty = E_Failure;
         ex->msg = "fdopen";
         return sock;
     }
@@ -161,17 +162,16 @@ void url_decode(char *dest, char *src) {
         p += 3;
         continue;
 
-    IllegalByteSequence : { // clang-format off
-      // append to dest '%' and trailing 2..0 bytes
-      int len = q - p + 1;
-      if (*q == '\0') // not copy '\0'
-	len--;
+        int len;
+    IllegalByteSequence : 
+        // append to dest '%' and trailing 2..0 bytes
+        len = q - p + 1;
+        if (*q == '\0') // not copy '\0'
+            len--;
 
-      memcpy(dest, p, len);
-      dest += len;
-      p += len;
-    }
-                            // clang-format on
+        memcpy(dest, p, len);
+        dest += len;
+        p += len;
     }
 
     *dest = '\0';

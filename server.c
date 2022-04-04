@@ -63,7 +63,7 @@ void server_start(Option *opt) {
         case 0: // child
             while (true) {
                 Socket *sock = ServerSocket_accept(sv_sock, ex);
-                if (ex->ty != E_Okay) 
+                if (ex->ty != E_Okay)
                     error("Error: ServerSock_accept: %s: %s", ex->msg,
                           strerror(errno));
                 printf("open pid: %d, address: %s, port: %d\n", getpid(),
