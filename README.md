@@ -39,7 +39,7 @@ $ ./httpd -v
 To build, run the following command:
 
 ```bash
-$ make all
+$ make -j${nproc} all
 ```
 
 ## TEST

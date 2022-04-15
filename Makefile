@@ -22,6 +22,8 @@ CFLAGS = -g -Wall -std=c17 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 #LIBS = -lefence -lc
 LIBS = -lc 
 
+LDFLAGS = -fuse-ld=mold
+
 TARGET = httpd
 TEST   = test
 SRCS = main.c server.c net.c file.c util.c util_test.c
@@ -51,7 +53,7 @@ check: $(TARGET) $(TEST)
 	./$(TEST)
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LIBS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
 main.o:      util.h file.h net.h main.h       
 server.o:    util.h file.h net.h main.h  
