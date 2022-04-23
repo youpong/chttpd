@@ -27,7 +27,7 @@ typedef struct {
     char **argv;
 } ArgsIter;
 
-ArgsIter *new_ArgsIter(int, const char **);
+ArgsIter *new_ArgsIter(int, char **);
 void delete_ArgsIter(ArgsIter *);
 bool ArgsIter_hasNext(ArgsIter *);
 char *ArgsIter_next(ArgsIter *);
@@ -52,11 +52,7 @@ typedef struct {
 Map *new_Map();
 void delete_Map(Map *);
 void Map_put(Map *, char *, void *);
-/**
- * @return value
- * @return NULL key is not found
- */
-void *Map_get(Map *, char *);
+void *Map_get(Map *, const char *);
 
 typedef struct {
     int len;

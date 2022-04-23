@@ -23,8 +23,8 @@ static pid_t Pids[MAX_SERVERS];
 
 static void cleanup(int);
 static void header_put(HttpMessage *msg, char *key, char *value);
-static char *header_get(HttpMessage *msg, char *key, char *default_val);
-static File *new_File2(char *parent_path, char *child_path);
+static char *header_get(HttpMessage *msg, const char *key, char *default_val);
+static File *new_File2(const char *parent_path, const char *child_path);
 
 static void handle_connection(Socket *sock, FILE *log, Option *opt);
 static HttpMessage *new_HttpResponse(HttpMessage *, Option *, Exception *ex);
@@ -232,7 +232,7 @@ static void header_put(HttpMessage *msg, char *key, char *value) {
     Map_put(msg->header_map, strdup(key), strdup(value));
 }
 
-static char *header_get(HttpMessage *msg, char *key, char *default_val) {
+static char *header_get(HttpMessage *msg, const char *key, char *default_val) {
     char *val;
 
     if (msg == NULL)
@@ -243,7 +243,7 @@ static char *header_get(HttpMessage *msg, char *key, char *default_val) {
     return val;
 }
 
-static File *new_File2(char *parent_path, char *child_path) {
+static File *new_File2(const char *parent_path, const char *child_path) {
     File *file;
     StringBuffer *sb = new_StringBuffer();
     char *path;

@@ -13,7 +13,7 @@ static void run_all_test_main();
 
 static Map *new_MimeMap();
 static Option *Option_parse(int argc, const char **argv, Exception *ex);
-static void print_usage(char *);
+static void print_usage(const char *);
 
 /** a Mime map*/
 Map *MimeMap;
@@ -137,7 +137,7 @@ static Option *Option_parse(int argc, const char **argv, Exception *ex) {
     return opts;
 }
 
-static void print_usage(char *prog_name) {
+static void print_usage(const char *prog_name) {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s [-r DOCUMENT_ROOT] [-l ACCESS_LOG] [-p PORT]\n",
             prog_name);

@@ -21,7 +21,7 @@ char *ErrorMsg;
  * @param argc the count of the arguments
  * @param argv the vector of the arguments
  */
-ArgsIter *new_ArgsIter(int argc, const char **argv) {
+ArgsIter *new_ArgsIter(int argc, char **argv) {
     ArgsIter *self = malloc(sizeof(ArgsIter));
     self->argc = argc;
     self->argv = argv;
@@ -172,7 +172,7 @@ void Map_put(Map *map, char *key, void *val) {
  * @param map
  * @param key
  */
-void *Map_get(Map *map, char *key) {
+void *Map_get(Map *map, const char *key) {
     for (int i = map->keys->len - 1; i >= 0; i--) {
         if (strcmp(map->keys->data[i], key) == 0) {
             return map->vals->data[i];
