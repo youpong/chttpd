@@ -18,7 +18,7 @@
  * @return a pointer to a File object
  * @return NULL if error occured
  */
-File *new_File(char *path) {
+File *new_File(const char *path) {
 
     struct stat st;
     if (stat(path, &st) == -1) {
@@ -69,7 +69,7 @@ void delete_File(File *file) {
  * @return the path to the parent directory
  * @param path string
  */
-char *parent_path(char *path) {
+char *parent_path(const char *path) {
     char *ret = strdup(path);
 
     for (char *p = ret + strlen(ret); p >= ret; p--) {
@@ -91,7 +91,7 @@ char *parent_path(char *path) {
  * @return filename
  * @param path
  */
-char *filename(char *path) {
+char *filename(const char *path) {
     char *p = strrchr(path, '/');
     if (p == NULL)
         return strdup(path);
@@ -107,7 +107,7 @@ char *filename(char *path) {
  * @return extension
  * @param path
  */
-char *extension(char *path) {
+char *extension(const char *path) {
     char *fname = filename(path);
     char *p = strrchr(fname, '.');
     if (p == NULL)

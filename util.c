@@ -21,7 +21,7 @@ char *ErrorMsg;
  * @param argc the count of the arguments
  * @param argv the vector of the arguments
  */
-ArgsIter *new_ArgsIter(int argc, char **argv) {
+ArgsIter *new_ArgsIter(int argc, const char **argv) {
     ArgsIter *self = malloc(sizeof(ArgsIter));
     self->argc = argc;
     self->argv = argv;
@@ -218,7 +218,7 @@ void delete_StringBuffer(StringBuffer *sb) {
  * @param sb
  * @param string
  */
-void StringBuffer_append(StringBuffer *sb, char *string) {
+void StringBuffer_append(StringBuffer *sb, const char *string) {
     if (sb->_buf_len != 0) {
         sb->_buf[sb->_buf_len] = '\0';
         Vector_push(sb->_body, strdup(sb->_buf));
@@ -316,7 +316,7 @@ void expect(int line, int expected, int actual) {
  * @param expected
  * @param actual
  */
-void expect_str(int line, char *expected, char *actual) {
+void expect_str(int line, const char *expected, const char *actual) {
     if (expected == NULL)
         error("%d: non-NULL is expected, but \"expected\" is NULL", line);
     if (actual == NULL)
@@ -333,7 +333,7 @@ void expect_str(int line, char *expected, char *actual) {
  * @param expected
  * @param actual
  */
-void expect_ptr(int line, void *expected, void *actual) {
+void expect_ptr(int line, const void *expected, const void *actual) {
     if (expected == actual)
         return;
     error("%d: %d expected, but got %d", line, expected, actual);

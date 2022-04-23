@@ -124,8 +124,8 @@ Socket *ServerSocket_accept(Socket *self, Exception *ex) {
  * https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URLDecoder.html
  * @see https://url.spec.whatwg.org/
  */
-void url_decode(char *dest, char *src) {
-    char *p = src;
+void url_decode(char *dest, const char *src) {
+    const char *p = src;
 
     while (*p) {
         if (*p == '+') {
@@ -143,7 +143,7 @@ void url_decode(char *dest, char *src) {
         //
 
         int n = 0;
-        char *q;
+        const char *q;
         for (q = p + 1; q - p < 3; q++) {
             int d;
             if ('0' <= *q && *q <= '9')

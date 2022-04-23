@@ -34,7 +34,7 @@ Socket *new_ServerSocket(int, Exception *);
 void delete_Socket(Socket *);
 Socket *ServerSocket_accept(Socket *, Exception *);
 
-void url_decode(char *dest, char *src);
+void url_decode(char *dest, const char *src);
 
 /* http lib */
 

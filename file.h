@@ -16,11 +16,11 @@ typedef struct {
     int len;
 } File;
 
-File *new_File(char *path);
+File *new_File(const char *path);
 void delete_File(File *file);
 
-char *parent_path(char *path);
-char *filename(char *path);
-char *extension(char *path);
+char *parent_path(const char *path);
+char *filename(const char *path);
+char *extension(const char *path);
 
 void run_all_test_file();

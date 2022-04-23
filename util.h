@@ -27,7 +27,7 @@ typedef struct {
     char **argv;
 } ArgsIter;
 
-ArgsIter *new_ArgsIter(int, char **);
+ArgsIter *new_ArgsIter(int, const char **);
 void delete_ArgsIter(ArgsIter *);
 bool ArgsIter_hasNext(ArgsIter *);
 char *ArgsIter_next(ArgsIter *);
@@ -69,7 +69,7 @@ typedef struct {
 
 StringBuffer *new_StringBuffer();
 void delete_StringBuffer(StringBuffer *);
-void StringBuffer_append(StringBuffer *sb, char *string);
+void StringBuffer_append(StringBuffer *sb, const char *string);
 void StringBuffer_appendChar(StringBuffer *sb, char c);
 char *StringBuffer_toString(StringBuffer *);
 
@@ -80,8 +80,8 @@ noreturn void error(char *, ...);
 // test
 // __LINE__
 void expect(int line, int expected, int actual);
-void expect_str(int line, char *expected, char *actual);
-void expect_ptr(int line, void *expected, void *actual);
+void expect_str(int line, const char *expected, const char *actual);
+void expect_ptr(int line, const void *expected, const void *actual);
 void expect_bool(int line, bool expected, bool actual);
 
 /* util_test.c */
