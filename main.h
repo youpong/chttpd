@@ -1,6 +1,4 @@
-/**
- * @file main.h
- */
+/** @file */
 #pragma once
 
 #include "util.h"
@@ -27,4 +25,5 @@ typedef struct {
 void server_start(Option *);
 void run_all_test_server();
 
+/** a Mime map*/
 extern Map *MimeMap;

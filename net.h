@@ -1,5 +1,5 @@
-/**
- * @file net.h
+/** @file
+ * provides a interface for network I/O and HTTP.
  */
 #pragma once
 

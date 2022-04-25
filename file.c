@@ -1,6 +1,3 @@
-/**
- * @file file.c
- */
 #include "file.h"
 #include "util.h"
 

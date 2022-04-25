@@ -1,6 +1,3 @@
-/**
- * @file util.c
- */
 #include "util.h"
 
 #include <stdarg.h> // va_start(3)
@@ -268,7 +265,7 @@ char *StringBuffer_toString(StringBuffer *sb) {
 }
 
 /**
- * duplicate a integer
+ * duplicate an integer
  *
  * @return a pointer to the duplicated integer
  * @param n

@@ -1,5 +1,5 @@
-/**
- * @file file.h
+/** @file
+ * defines interface to a file system.
  */
 #pragma once
 

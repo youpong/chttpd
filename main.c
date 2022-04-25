@@ -1,6 +1,3 @@
-/**
- * @file main.c
- */
 #include "main.h"
 #include "file.h"
 #include "net.h"
@@ -15,7 +12,6 @@ static Map *new_MimeMap();
 static Option *Option_parse(int argc, const char **argv, Exception *ex);
 static void print_usage(const char *);
 
-/** a Mime map*/
 Map *MimeMap;
 
 /**

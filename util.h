@@ -1,6 +1,19 @@
 // -*- mode: c -*-
-/**
- * @file util.h
+/** @file
+ * provides utility functions and interface to container, error and test.
+ *
+ * interfaces
+ * \li error - interface to manipulate errors.
+ * \li test - interface for automated testing.
+ *
+ * Containers
+ * \li ArgsIter - an iterator for arguments
+ * \li Vector - an ordered collection.
+ * \li Map - an object that maps keys to values.
+ * \li StringBuffer - mutable sequence of characters.
+ *
+ * Functions
+ * \li intdup - duplicate an integer
  */
 #pragma once
 
