@@ -13,7 +13,7 @@
  * \li StringBuffer - mutable sequence of characters.
  *
  * Functions
- * \li intdup - duplicate an integer
+ * \li intdup() - duplicate an integer
  */
 #pragma once
 
@@ -38,11 +38,12 @@ typedef struct {
 
 /** @struct ArgsIter
  * @brief An iterator for arguments.
- *
+ * 
  * \li new_ArgsIter()
  * \li delete_ArgsIter()
- * \li ArgsIter_hasNext()
- * \li ArgsIter_next()
+ * \li ArgsIter_getProgName() returns name used to invoke the program itself.
+ * \li ArgsIter_hasNext() 
+ * \li ArgsIter_next() get the next argument.
  *
  * @example args_iter.c
  */
