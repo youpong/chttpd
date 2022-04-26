@@ -4,6 +4,24 @@
 #include <stdlib.h> // free(3)
 #include <string.h> // strdup(3)
 
+static void test_ArgsIter() {
+    char *argv_0[] = {"prog-name"};
+    ArgsIter *iter = new_ArgsIter(1, argv_0);
+
+    expect_str(__LINE__, "prog-name", iter->prog_name);
+    expect(__LINE__, false, ArgsIter_hasNext(iter));
+    delete_ArgsIter(iter);
+
+    char *argv_1[] = {"prog-name", "-h"};
+    iter = new_ArgsIter(2, argv_1);
+
+    expect_str(__LINE__, "prog-name", iter->prog_name);
+    expect(__LINE__, true, ArgsIter_hasNext(iter));
+    expect_str(__LINE__, "-h", ArgsIter_next(iter));
+    expect(__LINE__, false, ArgsIter_hasNext(iter));
+    delete_ArgsIter(iter);
+}
+
 static void test_Vector() {
     Vector *vec = new_Vector();
 
@@ -112,6 +130,7 @@ static void test_sizeof() {
 }
 
 void run_all_test_util() {
+    test_ArgsIter();
     test_Vector();
     test_Map();
     test_StringBuffer();

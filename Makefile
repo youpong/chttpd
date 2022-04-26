@@ -34,10 +34,10 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 clean:
-	- rm -f *~ a.out $(TARGET) $(TEST) $(OBJS) 
+	- rm -f *~ a.out TAGS $(TARGET) $(TEST) $(OBJS) 
 
 format:
-	clang-format -i *.[ch] 
+	clang-format -i *.[ch] eg/*.[ch]
 
 docs:
 	doxygen

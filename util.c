@@ -20,8 +20,11 @@ char *ErrorMsg;
  */
 ArgsIter *new_ArgsIter(int argc, char **argv) {
     ArgsIter *self = malloc(sizeof(ArgsIter));
-    self->argc = argc;
-    self->argv = argv;
+
+    self->prog_name = *argv;
+    self->argc = argc - 1;
+    self->argv = argv + 1;
+
     return self;
 }
 
@@ -32,6 +35,13 @@ ArgsIter *new_ArgsIter(int argc, char **argv) {
  */
 void delete_ArgsIter(ArgsIter *self) {
     free(self);
+}
+
+/**
+ * @return name used to invoke the program itself
+ */
+char *ArgsIter_getProgName(ArgsIter *self) {
+    return self->prog_name;
 }
 
 /**

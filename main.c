@@ -9,7 +9,7 @@ static void run_all_test();
 static void run_all_test_main();
 
 static Map *new_MimeMap();
-static Option *Option_parse(int argc, const char **argv, Exception *ex);
+static Option *Option_parse(int argc, char **argv, Exception *ex);
 static void print_usage(const char *);
 
 Map *MimeMap;
@@ -20,7 +20,7 @@ Map *MimeMap;
 int main(int argc, char **argv) {
     Exception *ex = calloc(1, sizeof(Exception));
 
-    Option *opt = Option_parse(argc, (const char **)argv, ex);
+    Option *opt = Option_parse(argc, argv, ex);
     if (ex->ty != E_Okay) {
         fprintf(stderr, "%s\n", ex->msg);
         print_usage(opt->prog_name);
@@ -60,11 +60,11 @@ static Map *new_MimeMap() {
     return map;
 }
 
-static Option *Option_parse(int argc, const char **argv, Exception *ex) {
+static Option *Option_parse(int argc, char **argv, Exception *ex) {
     ArgsIter *iter = new_ArgsIter(argc, argv);
     Option *opts = calloc(1, sizeof(Option));
 
-    opts->prog_name = ArgsIter_next(iter);
+    opts->prog_name = ArgsIter_getProgName(iter);
 
     //
     // set default values...
@@ -148,7 +148,7 @@ static void test_Option_parse_normal() {
     Option *opt;
     Exception *ex = calloc(1, sizeof(Exception));
 
-    const char *arg_min[] = {"./httpd"};
+    char *arg_min[] = {"./httpd"};
     opt = Option_parse(1, arg_min, ex);
     expect(__LINE__, ex->ty, E_Okay);
     expect(__LINE__, opt->port, 8088);
@@ -156,8 +156,7 @@ static void test_Option_parse_normal() {
     expect_str(__LINE__, opt->document_root, "www");
     expect_str(__LINE__, opt->access_log, "access.log");
 
-    const char *arg_full[] = {"./HTTPD",    "-r", "WWW", "-l",
-                              "ACCESS.LOG", "-p", "80"};
+    char *arg_full[] = {"./HTTPD", "-r", "WWW", "-l", "ACCESS.LOG", "-p", "80"};
     opt = Option_parse(7, arg_full, ex);
     expect(__LINE__, ex->ty, E_Okay);
     expect(__LINE__, 80, opt->port);
@@ -165,17 +164,17 @@ static void test_Option_parse_normal() {
     expect_str(__LINE__, opt->document_root, "WWW");
     expect_str(__LINE__, opt->access_log, "ACCESS.LOG");
 
-    const char *arg_help[] = {"./httpd", "-h"};
+    char *arg_help[] = {"./httpd", "-h"};
     opt = Option_parse(2, arg_help, ex);
     expect(__LINE__, ex->ty, E_Okay);
     expect_bool(__LINE__, true, opt->help);
 
-    const char *arg_ver[] = {"./httpd", "-v"};
+    char *arg_ver[] = {"./httpd", "-v"};
     opt = Option_parse(2, arg_ver, ex);
     expect(__LINE__, ex->ty, E_Okay);
     expect_bool(__LINE__, true, opt->version);
 
-    const char *arg_test[] = {"./httpd", "-test"};
+    char *arg_test[] = {"./httpd", "-test"};
     opt = Option_parse(2, arg_test, ex);
     expect(__LINE__, ex->ty, E_Okay);
     expect_bool(__LINE__, true, opt->test);
@@ -189,30 +188,30 @@ static void test_Option_parse_abnormal() {
     Exception *ex = calloc(1, sizeof(Exception));
 
     ex->ty = E_Okay;
-    const char *arg_r[] = {"./httpd", "-r"};
+    char *arg_r[] = {"./httpd", "-r"};
     opt = Option_parse(2, arg_r, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
 
     ex->ty = E_Okay;
-    const char *arg_l[] = {"./httpd", "-l"};
+    char *arg_l[] = {"./httpd", "-l"};
     opt = Option_parse(2, arg_l, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'l'", ex->msg);
 
     ex->ty = E_Okay;
-    const char *arg_p[] = {"./httpd", "-p"};
+    char *arg_p[] = {"./httpd", "-p"};
     opt = Option_parse(2, arg_p, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'p'", ex->msg);
 
     ex->ty = E_Okay;
-    const char *arg_unknown_opt[] = {"./httpd", "-1"};
+    char *arg_unknown_opt[] = {"./httpd", "-1"};
     opt = Option_parse(2, arg_unknown_opt, ex);
     expect_str(__LINE__, "unknown option", ex->msg);
 
     ex->ty = E_Okay;
-    const char *arg_unknown_arg[] = {"./httpd", "a"};
+    char *arg_unknown_arg[] = {"./httpd", "a"};
     opt = Option_parse(2, arg_unknown_arg, ex);
     expect_str(__LINE__, "unknown argument", ex->msg);
 }

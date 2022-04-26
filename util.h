@@ -29,22 +29,43 @@ typedef enum {
     O_IllegalArgument,
 } ExceptionType;
 
+/** @struct Exception
+ */
 typedef struct {
     ExceptionType ty;
     char *msg;
 } Exception;
 
-/// Iterator.
+/** @struct ArgsIter
+ * @brief An iterator for arguments.
+ *
+ * \li new_ArgsIter()
+ * \li delete_ArgsIter()
+ * \li ArgsIter_hasNext()
+ * \li ArgsIter_next()
+ *
+ * @example args_iter.c
+ */
 typedef struct {
+    char *prog_name;
     int argc;
     char **argv;
 } ArgsIter;
 
 ArgsIter *new_ArgsIter(int, char **);
 void delete_ArgsIter(ArgsIter *);
+char *ArgsIter_getProgName(ArgsIter *);
 bool ArgsIter_hasNext(ArgsIter *);
 char *ArgsIter_next(ArgsIter *);
 
+/** @struct Vector
+ *
+ * \li new_Vector();
+ * \li delete_Vector()
+ * \li Vector_push()
+ * \li Vector_pop()
+ * \li Vector_last()
+ */
 typedef struct {
     void **data;
     int capacity;
@@ -57,6 +78,13 @@ void Vector_push(Vector *, void *);
 void *Vector_pop(Vector *);
 void *Vector_last(Vector *);
 
+/** @struct Map
+ *
+ * \li new_Map()
+ * \li delete_Map()
+ * \li Map_put()
+ * \li Map_get()
+ */
 typedef struct {
     Vector *keys;
     Vector *vals;
@@ -67,6 +95,14 @@ void delete_Map(Map *);
 void Map_put(Map *, char *, void *);
 void *Map_get(Map *, const char *);
 
+/** @struct StringBuffer
+ *
+ * new_StringBuffer()
+ * delete_StringBuffer()
+ * StringBuffer_append()
+ * StringBuffer_appendChar()
+ * StringBuffer_toString()
+ */
 typedef struct {
     int len;
     Vector *_body;
@@ -86,8 +122,9 @@ int *intdup(int);
 
 noreturn void error(char *, ...);
 
+//
 // test
-// __LINE__
+//
 void expect(int line, int expected, int actual);
 void expect_str(int line, const char *expected, const char *actual);
 void expect_ptr(int line, const void *expected, const void *actual);
