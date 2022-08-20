@@ -184,35 +184,34 @@ static void test_Option_parse_normal() {
  * abnormal cases...
  */
 static void test_Option_parse_abnormal() {
-    Option *opt;
     Exception *ex = calloc(1, sizeof(Exception));
 
     ex->ty = E_Okay;
     char *arg_r[] = {"./httpd", "-r"};
-    opt = Option_parse(2, arg_r, ex);
+    Option_parse(2, arg_r, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'r'", ex->msg);
 
     ex->ty = E_Okay;
     char *arg_l[] = {"./httpd", "-l"};
-    opt = Option_parse(2, arg_l, ex);
+    Option_parse(2, arg_l, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'l'", ex->msg);
 
     ex->ty = E_Okay;
     char *arg_p[] = {"./httpd", "-p"};
-    opt = Option_parse(2, arg_p, ex);
+    Option_parse(2, arg_p, ex);
     expect(__LINE__, ex->ty, O_IllegalArgument);
     expect_str(__LINE__, "option require an argument -- 'p'", ex->msg);
 
     ex->ty = E_Okay;
     char *arg_unknown_opt[] = {"./httpd", "-1"};
-    opt = Option_parse(2, arg_unknown_opt, ex);
+    Option_parse(2, arg_unknown_opt, ex);
     expect_str(__LINE__, "unknown option", ex->msg);
 
     ex->ty = E_Okay;
     char *arg_unknown_arg[] = {"./httpd", "a"};
-    opt = Option_parse(2, arg_unknown_arg, ex);
+    Option_parse(2, arg_unknown_arg, ex);
     expect_str(__LINE__, "unknown argument", ex->msg);
 }
 

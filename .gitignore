@@ -1,8 +1,19 @@
-TAGS
+# objects
 httpd
-test
 a.out
-access.log
 *.o
+
+# generated api documents
+docs/html/
+docs/latex/
+
+# database for tools
+TAGS
+compile_commands.json
+
+# temporary files
 *~
 \#*#
+
+test
+access.log

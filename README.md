@@ -8,6 +8,14 @@ records apache-like access logs.
 This software is released under [MIT license](./LICENSE).
 
 
+## Prerequisite
+
+* clang
+* clangd
+* make
+* bear
+* doxygen
+
 ## RUNNING
 
 The web server runs on Ubuntu-20.04 x86_64.

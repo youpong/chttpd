@@ -9,8 +9,7 @@
 #   make, efence, etags, clang-format
 #   gdb
 
-CC = clang-12
-#CC = clang
+CC = clang
 
 # _POSIX_C_SOURCE: fdopen(3)
 # _DEFAULT_SOURCE: timezone
@@ -29,12 +28,12 @@ TEST   = test
 SRCS = main.c server.c net.c file.c util.c util_test.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean format docs tags cloc check
+.PHONY: all clean format docs clean-docs tags cloc check
 
 all: $(TARGET)
 
-clean:
-	- rm -f *~ a.out TAGS $(TARGET) $(TEST) $(OBJS) 
+clean: clean-docs
+	- rm -f *~ a.out TAGS $(TARGET) $(TEST) $(OBJS)
 
 format:
 	clang-format -i *.[ch] eg/*.[ch]
@@ -42,8 +41,8 @@ format:
 docs:
 	doxygen
 
-tags:
-	etags $(SRCS) *.h
+clean-docs:
+	- rm -rf docs/html docs/latex
 
 cloc:
 	cloc $(SRCS) *.h
