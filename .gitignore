@@ -10,6 +10,7 @@ docs/latex/
 # database for tools
 TAGS
 compile_commands.json
+.cache/
 
 # temporary files
 *~
